@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pro-sejongpeia"
-version = "1.2.58"
+version = "1.2.59"
 description = "Sejong University integrated library for Python: portal login (SSO) and public school data (세종대 통합 라이브러리, 세종대 로그인 API)"
 readme = "README.md"
 requires-python = ">=3.9"
