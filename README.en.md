@@ -2,6 +2,8 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
+<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="pro-sejongpeia: Sejong University login and student data in one call" width="880">
+
 # pro-sejongpeia
 
 **Pro Sejongpeia: a little utopia for Sejong developers.** Sejong University login and school data for Java, Python and Node.js in one place.
@@ -21,6 +23,21 @@
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ### [▶ Try it live in your browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
+
+<!-- TODO(#50): 시안을 고르면 이 블록 삭제 -->
+<details>
+<summary>Banner drafts (temporary)</summary>
+
+This block is removed once a draft is chosen in issue #50. The banner above is draft A.
+
+<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="a-crimson" width="720"><br>
+<img src="docs/assets/banner/banner-b-terminal.en.svg" alt="b-terminal" width="720"><br>
+<img src="docs/assets/banner/banner-c-flow.en.svg" alt="c-flow" width="720"><br>
+<img src="docs/assets/banner/banner-d-checklist.en.svg" alt="d-checklist" width="720"><br>
+<img src="docs/assets/banner/banner-e-languages.en.svg" alt="e-languages" width="720"><br>
+<img src="docs/assets/banner/banner-f-minimal.en.svg" alt="f-minimal" width="720"><br>
+
+</details>
 
 </div>
 
@@ -51,6 +68,9 @@ session cookies, legacy TLS and HTML/JSON parsing. Same features, same results i
 | Reverse-engineer the portal login form and SSO redirects | `authenticate()` handles the login and SSO chain |
 | Keep session cookies across three Sejong domains | Cookies managed per call, nothing to store |
 | Get past the portal's legacy TLS cipher and firewall | Handled per language (see [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
+| Re-enable the only cipher the portal accepts (`TLS_RSA_WITH_AES_256_CBC_SHA`), which current JDK and OpenSSL defaults block, differently in each language | Handled in Java (JVM setting), Python and Node, and applied automatically at startup in Spring Boot |
+| Work around a firewall that blocks default library User-Agents (and sites that answer 404 without one) | Sends an identifying User-Agent automatically |
+| Avoid locking the account by retrying a wrong password | Wrong password and locked account fail immediately, with no retry |
 | Parse HTML tables (DHC) and a JSON API (SIS) | Typed results |
 | Read the portal's verdict from a 200 response (wrong password, locked account) | Fails fast with `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED` |
 | Log in once for student info, again for contacts | One portal login per call for both |
