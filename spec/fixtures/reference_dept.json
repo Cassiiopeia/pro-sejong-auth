@@ -1,0 +1,25 @@
+{
+  "dl_code_dept": [
+    {
+      "DEPT_CD": "9101", "DEPT_LEVEL_CD": "2", "ORGN_CLSF_CD": "20",
+      "DEPT_L_CD": "9100", "DEPT_L_PRINT": "예시대학", "DEPT_L_NM": "예시대학【9101 학부】", "DEPT_L_NM_ENG": "College of Example",
+      "DEPT_M_CD": "9101", "DEPT_M_PRINT": "예시공학과", "DEPT_M_NM": "예시공학과【9101 학부】", "DEPT_M_NM_ENG": "Department of Example Engineering",
+      "DEPT_S_CD": null, "DEPT_S_PRINT": null, "DEPT_S_NM": "【9101 학부】",
+      "DEPT_NM": "예시대학 예시공학과【9101 학부】", "DEPT_NM_ENG": "Department of Example Engineering", "CLOSE_DT": null
+    },
+    {
+      "DEPT_CD": "9201", "DEPT_LEVEL_CD": "3", "ORGN_CLSF_CD": "20",
+      "DEPT_L_CD": "9100", "DEPT_L_PRINT": "예시대학", "DEPT_L_NM": "예시대학【9201 학부】", "DEPT_L_NM_ENG": "College of Example",
+      "DEPT_M_CD": "9200", "DEPT_M_PRINT": "예시학부", "DEPT_M_NM": "예시학부【9201 학부】", "DEPT_M_NM_ENG": "School of Example Studies",
+      "DEPT_S_CD": "9201", "DEPT_S_PRINT": "예시전공A", "DEPT_S_NM": "예시전공A【9201 학부】",
+      "DEPT_NM": "예시대학 예시학부 예시전공A【9201 학부】", "DEPT_NM_ENG": "Example Major A", "CLOSE_DT": null
+    },
+    {
+      "DEPT_CD": "9301", "DEPT_LEVEL_CD": "2", "ORGN_CLSF_CD": "20",
+      "DEPT_L_CD": "9300", "DEPT_L_PRINT": "", "DEPT_L_NM": "예시칼리지【9301 학부】", "DEPT_L_NM_ENG": null,
+      "DEPT_M_CD": "9301", "DEPT_M_PRINT": "", "DEPT_M_NM": "예시기초과정【9301 학부】", "DEPT_M_NM_ENG": null,
+      "DEPT_S_CD": null, "DEPT_S_PRINT": null, "DEPT_S_NM": "【9301 학부】",
+      "DEPT_NM": "예시칼리지 예시기초과정【9301 학부】", "DEPT_NM_ENG": "Example Basic Course", "CLOSE_DT": null
+    }
+  ]
+}
