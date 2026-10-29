@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T15:39:20Z",
-    "currentVersion": "1.2.22",
+    "lastUpdated": "2026-10-29T15:57:37Z",
+    "currentVersion": "1.2.23",
     "projectType": "spring",
-    "totalReleases": 16,
+    "totalReleases": 17,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,34 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.23",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 55,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * Python 통합 인증이 연락처 조회 실패를 경고 로그로 남김\n\n* **기타**\n  * 배포할 때 GitHub Release를 자동으로 생성\n  * 의존성 보안 업데이트 알림을 월 1회 받도록 설정",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "Python 통합 인증이 연락처 조회 실패를 경고 로그로 남김"
+          ]
+        },
+        "기타": {
+          "title": "기타",
+          "items": [
+            "배포할 때 GitHub Release를 자동으로 생성",
+            "의존성 보안 업데이트 알림을 월 1회 받도록 설정"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.22",
       "project_type": "spring",
