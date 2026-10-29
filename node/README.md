@@ -1,10 +1,12 @@
 # pro-sejongpeia (Node.js)
 
-**세종대 로그인 API (Node.js)** · Sejong University login API
+**세종대학교 통합 라이브러리 (Node.js)** · Sejong University integrated library: portal login and public school data (세종대 로그인 API)
 
 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
 학번과 포털 비밀번호로 세종대 재학생 여부를 확인하고 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. 런타임 의존성 0개, TypeScript 타입 포함, ESM·CommonJS 모두 지원합니다.
+
+로그인 없이 쓰는 학교 공개 데이터(학과 코드, 개설강좌, 학사일정 등)도 같은 패키지에서 제공합니다. 자세한 사용법은 [루트 README](https://github.com/Cassiiopeia/pro-sejongpeia#로그인-없이-쓰는-학교-데이터)를 보세요.
 
 **[▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)** · 호출 한 번에 포털 로그인 한 번 (약 0.7초) · Java·Python 패키지와 같은 결과 · 비밀번호가 틀리면 바로 멈춤 · 매일 실제 포털로 점검
 
@@ -29,7 +31,7 @@ try {
 
 | 함수 | 반환 |
 |---|---|
-| `authenticate(id, pw)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`) |
+| `authenticate(id, pw, { includeRaw })` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`, `includeRaw` 면 `rawHtml`·`rawJson` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지) |
 | `authenticateDhc(id, pw, { includeRaw })` | 학생 정보 + 고전독서 |
 | `authenticateSis(id, pw, { includeRaw })` | 학생 정보 + 이메일, 전화번호, 영문 이름 |
 

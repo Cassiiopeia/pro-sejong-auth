@@ -77,6 +77,9 @@ export interface SejongAuthResult extends SejongStudentInfo {
    */
   parentUnitName: string | null;
   authenticatedAt: Date;
+  // includeRaw 일 때만: DHC 원문 HTML, SIS 원문 JSON (SIS 조회 실패 시 null), 세션값·접속 IP 포함이라 외부 전달 금지
+  rawHtml: string | null;
+  rawJson: string | null;
 }
 
 /** DHC 인증 결과 (rawHtml 은 includeRaw 일 때만) */

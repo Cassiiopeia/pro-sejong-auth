@@ -106,6 +106,9 @@ class SejongAuthResult:
     # 학년도마다 바뀌는 포털 표기 원문, 값 목록으로 분기하지 말 것
     parent_unit_name: Optional[str]
     authenticated_at: datetime
+    # include_raw=True 일 때만: DHC 원문 HTML, SIS 원문 JSON (SIS 조회 실패 시 None), 세션값·접속 IP 포함이라 외부 전달 금지
+    raw_html: Optional[str] = None
+    raw_json: Optional[str] = None
 
 
 @dataclass(frozen=True)

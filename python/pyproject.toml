@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pro-sejongpeia"
-version = "1.2.30"
-description = "Sejong University login API and school data for Python: verify students with portal SSO, plus course lists, calendar, cafeteria and dormitory menus without login (세종대 로그인 API, 개설강좌, 학식)"
+version = "1.2.34"
+description = "Sejong University integrated library for Python: portal login (SSO) and public school data (세종대 통합 라이브러리, 세종대 로그인 API)"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Suh Saechan" }]
-keywords = ["sejong", "sejong-university", "세종대", "authentication", "sso", "student-verification", "course-list", "cafeteria-menu", "academic-calendar"]
+keywords = ["sejong", "sejong-university", "세종대", "authentication", "sso", "student-verification", "school-data", "courses", "academic-calendar", "세종대학교"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",

@@ -6,7 +6,7 @@ Java is the reference. Python uses snake_case, Node uses camelCase (same as Java
 
 | Operation | Java | Python | Node |
 |---|---|---|---|
-| Integrated (DHC + SIS contacts) | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
+| Integrated (DHC + SIS contacts) | `authenticate(id, pw)` / `authenticateWithRaw(id, pw)` | `authenticate(id, pw, include_raw=False)` | `authenticate(id, pw, { includeRaw })` |
 | DHC | `authenticateWithDHC` / `authenticateWithDHCRaw` | `authenticate_dhc(id, pw, include_raw=False)` | `authenticateDhc(id, pw, { includeRaw })` |
 | SIS | `authenticateWithSIS` / `authenticateWithSISRaw` | `authenticate_sis(id, pw, include_raw=False)` | `authenticateSis(id, pw, { includeRaw })` |
 
@@ -29,10 +29,16 @@ Input check first: blank student id or password raises `INVALID_INPUT` before an
 | userCategory | user_category | string or null | same (SIS `dm_UserInfoSch.USER_CLSF_CD_NM`, for example `학부생`) |
 | parentUnitName | parent_unit_name | string or null | portal main page `span.txt4`; null if the portal main call fails, `""` if the page has no usable value |
 | authenticatedAt | authenticated_at | datetime (local time) | |
+| rawHtml | raw_html | string or null | DHC page as received; only with the raw option, otherwise null |
+| rawJson | raw_json | string or null | SIS `initUserInfo` response as received; only with the raw option, null if the SIS lookup failed |
 
 `parentUnitName` is the name of the unit above the major (a college or a school), extracted from the portal screen text as extra information: it can be `""` depending on the student type, never use it to decide authentication. It is the portal text as-is that changes with the academic year, never branch on a list of values.
 
-The integrated call logs in to the portal once and uses that session for DHC, SIS and the portal main page. A failing DHC step fails the whole call. A failing SIS step or portal main step never fails the integrated call.
+The integrated call logs in to the portal once and uses that session for DHC, SIS and the portal main page. The raw option adds no request: it only keeps the responses already received. It is off by default and changes no other field.
+
+Safety: the SIS raw text contains values that look like a session identifier, the client IP and login time. Never pass it to an external client as-is. Its keys and structure can change whenever the school changes them, so it is outside the compatibility guarantee (use the named fields for stable access).
+
+A failing DHC step fails the whole call. A failing SIS step or portal main step never fails the integrated call.
 
 ## DHC result
 

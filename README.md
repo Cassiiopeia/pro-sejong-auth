@@ -2,7 +2,7 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-<img src="docs/assets/banner/banner-a-crimson.ko.svg" alt="pro-sejongpeia: 세종대학교 포털 로그인과 학생 정보를 한 번에" width="880">
+<img src="docs/assets/banner/banner-a-crimson.ko.svg" alt="pro-sejongpeia: 세종대학교 통합 라이브러리, 포털 로그인과 학교 공개 데이터" width="880">
 
 # pro-sejongpeia
 
@@ -10,7 +10,9 @@
 
 > 이전 이름: `pro-sejong-auth`(PyPI, npm), `kr.suhsaechan:sejong-univ-auth`(Maven). 이름과 함께 Python 임포트 이름(`sejongpeia`), Java 패키지(`kr.suhsaechan.sejongpeia`), Spring 설정 접두사(`sejongpeia.*`)도 바뀌었습니다.
 
-**세종대 로그인 API: 세종대학교 포털 인증을 Java·Python·Node에서 한 번에**
+**세종대학교 통합 라이브러리: 포털 로그인(학번 인증)과 로그인 없이 쓰는 학교 공개 데이터(학과 코드, 개설강좌, 학사일정 등)를 Java·Python·Node에서 한 번에**
+
+<sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 · 학교 데이터 라이브러리 (Java · Python · Node)</sub>
 
 한국어 | [English](README.en.md)
 
@@ -24,21 +26,6 @@
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ### [▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
-
-<!-- TODO(#50): 시안을 고르면 이 블록 삭제 -->
-<details>
-<summary>배너 시안 6종 (선택 전 임시)</summary>
-
-이슈 #50에서 시안을 고르면 이 영역은 삭제합니다. 위쪽 배너는 시안 A입니다.
-
-<img src="docs/assets/banner/banner-a-crimson.ko.svg" alt="a-crimson" width="720"><br>
-<img src="docs/assets/banner/banner-b-terminal.ko.svg" alt="b-terminal" width="720"><br>
-<img src="docs/assets/banner/banner-c-flow.ko.svg" alt="c-flow" width="720"><br>
-<img src="docs/assets/banner/banner-d-checklist.ko.svg" alt="d-checklist" width="720"><br>
-<img src="docs/assets/banner/banner-e-languages.ko.svg" alt="e-languages" width="720"><br>
-<img src="docs/assets/banner/banner-f-minimal.ko.svg" alt="f-minimal" width="720"><br>
-
-</details>
 
 </div>
 
@@ -208,7 +195,7 @@ try {
 | 통합: 학생 정보 + 고전독서 + 연락처 | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: 학생 정보 + 고전독서 | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: 학생 정보 + 연락처 | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
-| 원본 응답 포함 (디버깅) | `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
+| 원본 응답 포함 (디버깅) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
 
 통합 인증은 포털에 **한 번만** 로그인하고 같은 세션으로 DHC와 SIS를 조회합니다. SIS(연락처) 조회가 실패해도 학생 정보는 돌려주고, 연락처 칸만 null이 됩니다.
 
@@ -284,7 +271,10 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 | `userCategory` | string 또는 null | 사용자 구분, 예: `학부생` (SIS 실패 시 null) |
 | `parentUnitName` | string 또는 null | 학과의 상위 소속 이름(단과대학 또는 학부), 포털 메인 화면 표기에서 추출 (호출 실패 시 null, 값이 없으면 빈 문자열). 학년도마다 바뀌는 포털 표기 원문이라 값 목록으로 분기하거나 인증 판정에 쓰지 마세요 |
 | `authenticatedAt` | 날짜·시간 | 인증 시각 |
+| `rawHtml` | string 또는 null | DHC 원문 HTML (원본 옵션일 때만) |
+| `rawJson` | string 또는 null | SIS 원문 JSON (원본 옵션일 때만, SIS 실패 시 null) |
 
+- 원본 옵션은 추가 요청 없이 이미 받은 응답만 담습니다. SIS 원문에는 세션 식별자로 보이는 값, 접속 IP, 접속 시각이 들어 있으니 외부 클라이언트에 그대로 내려주지 마세요. 원문의 키와 구조는 학교가 바꾸면 달라질 수 있어 호환성 보장 범위 밖입니다.
 - DHC 결과: 연락처 필드 없음, 원본 옵션 사용 시 `rawHtml` 포함
 - SIS 결과: `userCategory` 포함, 고전독서 필드 없음, `grade`·`status`는 빈 문자열, 원본 옵션 사용 시 `rawJson` 포함
 

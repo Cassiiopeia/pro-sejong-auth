@@ -120,6 +120,19 @@ def test_dhc_raw_html_only_when_requested(dhc_html):
     assert client.authenticate_dhc("21011234", "pw", include_raw=True).raw_html == dhc_html
 
 
+def test_integrated_raw_only_when_requested(dhc_html, sis_json):
+    routes = {LOGIN: [ok()], CLASSIC_SSO: [ok()], CLASSIC_STATUS: [ok(dhc_html)], SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)]}
+    client, _ = client_with(routes)
+    default_result = client.authenticate("21011234", "pw")
+    client, _ = client_with(routes)
+    raw_result = client.authenticate("21011234", "pw", include_raw=True)
+
+    assert (default_result.raw_html, default_result.raw_json) == (None, None)
+    assert (raw_result.raw_html, raw_result.raw_json) == (dhc_html, sis_json)
+    # 켜도 기존 필드는 같음
+    assert (raw_result.name, raw_result.email, raw_result.grade) == (default_result.name, default_result.email, default_result.grade)
+
+
 def test_error_message_never_contains_password():
     client, _ = client_with({LOGIN: [OSError("connection reset")]})
 

@@ -76,6 +76,20 @@ class IntegratedSingleLoginTest {
   }
 
   @Test
+  void 통합인증_원문은_옵션을_켰을_때만_담기고_기존_필드는_같다() throws Exception {
+    SejongAuthResult defaultResult = createEngine(200).authenticate("21011234", "password");
+    SejongAuthResult rawResult = createEngine(200).authenticateWithRaw("21011234", "password");
+
+    assertAll(
+        () -> assertNull(defaultResult.getRawHtml()),
+        () -> assertNull(defaultResult.getRawJson()),
+        () -> assertEquals(readFixture("dhc_status.html"), rawResult.getRawHtml()),
+        () -> assertEquals(readFixture("sis_user_info.json"), rawResult.getRawJson()),
+        () -> assertEquals(defaultResult.getEmail(), rawResult.getEmail()),
+        () -> assertEquals(defaultResult.getName(), rawResult.getName()));
+  }
+
+  @Test
   void SIS가_실패해도_DHC_결과를_돌려주고_연락처는_null() throws Exception {
     SejongAuthResult result = createEngine(500).authenticate("21011234", "password");
 

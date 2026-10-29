@@ -18,9 +18,9 @@ MONO = "ui-monospace,'SF Mono',Menlo,Consolas,monospace"
 TITLE = "pro-sejongpeia"
 COPY = {
     "ko": {
-        "tagline": "세종대학교 포털 로그인과 학생 정보를 한 번에",
-        "tagline_lines": ["세종대학교 포털 로그인과", "학생 정보를 한 번에"],
-        "sub": "학번과 비밀번호로 인증하고 학적 정보까지 받아 옵니다",
+        "tagline": "세종대학교 통합 라이브러리",
+        "tagline_lines": ["세종대학교 통합 라이브러리", "로그인과 학교 데이터를 한 번에"],
+        "sub": "포털 로그인과 학교 공개 데이터를 Java, Python, Node.js로",
         "chips": ["Java", "Python", "Node.js"],
         "checks": ["레거시 TLS 암호 자동 처리", "SSO 쿠키와 리다이렉트 처리", "방화벽 User-Agent 대응",
                    "계정 잠금, 비밀번호 오류 즉시 판정", "DHC 표와 SIS JSON 파싱", "세 언어 동일 동작, 매일 실제 점검"],
@@ -29,9 +29,9 @@ COPY = {
         "hard_title": "직접 구현하면 어려운 것들",
     },
     "en": {
-        "tagline": "Sejong University login and student data in one call",
-        "tagline_lines": ["Sejong University login", "and student data in one call"],
-        "sub": "Authenticate with a student ID and get typed student info",
+        "tagline": "The Sejong University integrated library",
+        "tagline_lines": ["The Sejong University", "integrated library"],
+        "sub": "Portal login and public school data for Java, Python, Node.js",
         "chips": ["Java", "Python", "Node.js"],
         "checks": ["Legacy TLS cipher handled", "SSO cookies and redirects", "Firewall-safe User-Agent",
                    "Instant lock and wrong-password detection", "DHC tables and SIS JSON parsed", "Same in 3 languages, checked daily"],

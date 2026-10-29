@@ -2,7 +2,7 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="pro-sejongpeia: Sejong University login and student data in one call" width="880">
+<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="pro-sejongpeia: the Sejong University integrated library, portal login and public school data" width="880">
 
 # pro-sejongpeia
 
@@ -10,7 +10,7 @@
 
 > Formerly `pro-sejong-auth` (PyPI, npm) and `kr.suhsaechan:sejong-univ-auth` (Maven). The Python import name (`sejongpeia`), the Java package (`kr.suhsaechan.sejongpeia`) and the Spring property prefix (`sejongpeia.*`) changed with the name.
 
-**Sejong University login API for Java, Python and Node.js: verify students in one call**
+**The Sejong University integrated library for Java, Python and Node.js: portal login (student verification) plus public school data without login (department codes, courses, academic calendar and more)**
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 라이브러리 (Java · Python · Node)</sub>
 
@@ -23,21 +23,6 @@
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ### [▶ Try it live in your browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
-
-<!-- TODO(#50): 시안을 고르면 이 블록 삭제 -->
-<details>
-<summary>Banner drafts (temporary)</summary>
-
-This block is removed once a draft is chosen in issue #50. The banner above is draft A.
-
-<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="a-crimson" width="720"><br>
-<img src="docs/assets/banner/banner-b-terminal.en.svg" alt="b-terminal" width="720"><br>
-<img src="docs/assets/banner/banner-c-flow.en.svg" alt="c-flow" width="720"><br>
-<img src="docs/assets/banner/banner-d-checklist.en.svg" alt="d-checklist" width="720"><br>
-<img src="docs/assets/banner/banner-e-languages.en.svg" alt="e-languages" width="720"><br>
-<img src="docs/assets/banner/banner-f-minimal.en.svg" alt="f-minimal" width="720"><br>
-
-</details>
 
 </div>
 
@@ -208,7 +193,7 @@ try {
 | Integrated: student info + classic reading + contact | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: student info + classic reading | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: student info + contact | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
-| With raw response (debugging) | `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
+| With raw response (debugging) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
 
 The integrated call logs in to the portal **once** and reads DHC and SIS with the same session. It still returns student info when the SIS (contact) lookup fails; contact fields are then null.
 
@@ -284,7 +269,10 @@ Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number
 | `userCategory` | string or null | User category, for example `학부생` (null if SIS fails) |
 | `parentUnitName` | string or null | Unit above the major, a college or a school, from the portal main page (null if that call fails, `""` if unavailable). Portal text as-is that changes by academic year: do not branch on a value list or use it to decide authentication |
 | `authenticatedAt` | datetime | Authentication time |
+| `rawHtml` | string or null | DHC page as received (only with the raw option) |
+| `rawJson` | string or null | SIS response as received (only with the raw option, null if SIS fails) |
 
+- The raw option adds no request: it only keeps responses already received. The SIS raw text contains values that look like a session identifier, the client IP and login time, so never pass it to an external client as-is. Its keys and structure can change when the school changes them and are outside the compatibility guarantee.
 - DHC result: no contact fields; `rawHtml` with the raw option
 - SIS result: includes `userCategory`, no classic-reading field, `grade` and `status` are empty strings; `rawJson` with the raw option
 
