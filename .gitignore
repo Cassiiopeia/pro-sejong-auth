@@ -2,6 +2,11 @@
 /.claude/settings.local.json
 /.report
 
+# 작업 과정 문서 (projectops 이슈·보고서·점검 증거, superpowers 설계·계획) 는 추적하지 않음
+# 사용자용 문서(docs/*.md, docs/assets)는 계속 추적
+/docs/projectops/
+/docs/superpowers/
+
 # Gradle
 .gradle/
 build/
