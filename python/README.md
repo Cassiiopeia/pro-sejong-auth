@@ -1,10 +1,12 @@
 # pro-sejongpeia (Python)
 
-**세종대 로그인 API (Python)** · Sejong University login API
+**세종대학교 통합 라이브러리 (Python)** · Sejong University integrated library: portal login and public school data (세종대 로그인 API)
 
 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
 학번과 포털 비밀번호로 세종대 재학생 여부를 확인하고 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. 표준 라이브러리 외 의존성이 없습니다.
+
+로그인 없이 쓰는 학교 공개 데이터(학과 코드, 개설강좌, 학사일정 등)도 같은 패키지에서 제공합니다. 자세한 사용법은 [루트 README](https://github.com/Cassiiopeia/pro-sejongpeia#로그인-없이-쓰는-학교-데이터)를 보세요.
 
 **[▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)** · 호출 한 번에 포털 로그인 한 번 (약 0.8초) · Java·Node 패키지와 같은 결과 · 비밀번호가 틀리면 바로 멈춤 · 매일 실제 포털로 점검
 
