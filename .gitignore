@@ -88,4 +88,4 @@ node/dist/
 
 # SDD workspace
 .superpowers/
-node/src/version.ts
+node/src/common/version.ts

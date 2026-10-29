@@ -20,11 +20,11 @@ An honest description, for developers who depend on this library, of what is pub
 
 | Language | Public API | Internal (do not use directly) |
 |---|---|---|
-| Python | The names in `__all__` of the `sejongpeia` package: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, the result and model classes, `SejongAuthError`, `ErrorCode` | helpers in `sejongpeia.transport`, `sejongpeia.parsers`, `sejongpeia.client`; names and arguments starting with an underscore (`_session_factory`, `_clock`) |
+| Python | The names in `__all__` of the `sejongpeia` package: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, the result and model classes, `SejongAuthError`, `ErrorCode` | the modules and helpers in `sejongpeia.common.*`, `sejongpeia.auth.*`, `sejongpeia.public_data.*` (only the names imported with `from sejongpeia import ...` are public); names and arguments starting with an underscore (`_session_factory`, `_clock`) |
 | Node | The functions, classes and types the package entry point (`pro-sejongpeia`) exports. The `exports` field of `package.json` opens only this one entry point | everything the entry point does not export; options starting with an underscore (`_sessionFactory`, `_nowMilliseconds`) |
-| Java | The public methods of `service.SuhSejongAuthEngine`, `model.*`, `exception.*`, `publicdata.SejongPublicData` and `publicdata.model.*`, `util.SejongTlsSupport`, the property prefix `sejongpeia.*` | `util.CommonUtil`, the caller, mapper and fetcher classes in `publicdata` |
+| Java | The public methods of `auth.service.SuhSejongAuthEngine`, `auth.model.*`, `common.exception.*`, `publicdata.SejongPublicData` and `publicdata.model.*`, `common.util.SejongTlsSupport`, `common.config.SejongAuthProperties`, the property prefix `sejongpeia.*` | `common.util.CommonUtil`, the caller, mapper and fetcher classes in `publicdata` |
 
-Java's `client.*` and `parser.*` are public because using the library without Spring means building and wiring them yourself, as in the [README](../README.en.md) example. Their **constructor shapes can still change** (semi-public). With Spring Boot auto-configuration you are not affected.
+Java's `auth.client.*` and `auth.parser.*` are public because using the library without Spring means building and wiring them yourself, as in the [README](../README.en.md) example. Their **constructor shapes can still change** (semi-public). With Spring Boot auto-configuration you are not affected.
 
 Even inside the public API, the following is **outside the guarantee**.
 

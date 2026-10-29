@@ -1,13 +1,14 @@
 package kr.suhsaechan.sejongpeia.config;
 
-import kr.suhsaechan.sejongpeia.client.SejongPortalClient;
-import kr.suhsaechan.sejongpeia.client.SejongSisClient;
-import kr.suhsaechan.sejongpeia.parser.SejongClassicReadingParser;
-import kr.suhsaechan.sejongpeia.parser.SejongPortalMainParser;
-import kr.suhsaechan.sejongpeia.parser.SejongSisParser;
-import kr.suhsaechan.sejongpeia.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongPortalMainParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
 import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
-import kr.suhsaechan.sejongpeia.service.SuhSejongAuthEngine;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

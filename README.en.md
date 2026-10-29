@@ -114,6 +114,9 @@ dependencies {
 Spring Boot auto-configuration registers a `SuhSejongAuthEngine` bean.
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
@@ -134,6 +137,16 @@ public class AuthController {
 Spring Boot is an optional dependency: plain Java projects do not download it.
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
+
 SejongTlsSupport.ensureLegacyCipherEnabled();   // first thing in main(), before any HTTPS call (see the TLS note)
 SejongAuthProperties properties = new SejongAuthProperties();
 SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),

@@ -302,12 +302,12 @@ if (table == null || table.select("tr").isEmpty()) {
 
 | 클래스 | 역할 | 위치 |
 |--------|------|------|
-| `SejongPortalClient` | HTTP 요청 처리 | `client/SejongPortalClient.java` |
-| `SejongStudentInfoParser` | 학생정보 HTML 파싱 | `parser/SejongStudentInfoParser.java` |
-| `SejongClassicReadingParser` | 고전독서 HTML 파싱 | `parser/SejongClassicReadingParser.java` |
-| `SejongDhcAuthResult` | DHC 인증 결과 모델 | `model/SejongDhcAuthResult.java` |
-| `SejongStudentInfo` | 학생정보 모델 | `model/SejongStudentInfo.java` |
-| `SejongClassicReading` | 고전독서 정보 모델 | `model/SejongClassicReading.java` |
+| `SejongPortalClient` | HTTP 요청 처리 | `auth/client/SejongPortalClient.java` |
+| `SejongStudentInfoParser` | 학생정보 HTML 파싱 | `auth/parser/SejongStudentInfoParser.java` |
+| `SejongClassicReadingParser` | 고전독서 HTML 파싱 | `auth/parser/SejongClassicReadingParser.java` |
+| `SejongDhcAuthResult` | DHC 인증 결과 모델 | `auth/model/SejongDhcAuthResult.java` |
+| `SejongStudentInfo` | 학생정보 모델 | `auth/model/SejongStudentInfo.java` |
+| `SejongClassicReading` | 고전독서 정보 모델 | `auth/model/SejongClassicReading.java` |
 
 ### 설정 프로퍼티
 

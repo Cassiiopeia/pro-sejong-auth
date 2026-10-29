@@ -75,7 +75,7 @@ cd node && npm ci && npm test                     # Node 18+
 
 ## 새 정보 출처 추가하기
 
-학교가 주는 새 정보(개설강좌, 식단 같은 공개 데이터)를 추가하는 방법입니다. 소스는 서로 독립적이고, 공통 계층(`transport`, `errors`)만 함께 씁니다. 그래서 내 소스만 만들면 다른 소스를 건드릴 필요가 없습니다.
+학교가 주는 새 정보(개설강좌, 식단 같은 공개 데이터)를 추가하는 방법입니다. 소스는 서로 독립적이고, 공통 계층(`common`: 에러, HTTP 전송, 버전)만 함께 씁니다. 인증(`auth`)도 공개 데이터와 같은 하나의 소스입니다. 그래서 내 소스만 만들면 다른 소스를 건드릴 필요가 없습니다.
 
 1. **이슈로 제안**합니다 (`새 정보 출처 제안` 이슈 템플릿을 쓰세요). 출처 위치, 로그인 필요 여부, 요청 형태(JSON 또는 HTML), 필드, 개인정보 포함 여부를 적어 주세요. JSON이 아니고 HTML만 있는 정보는 기본 원본으로 삼지 않습니다.
 2. **계약을 먼저** 씁니다: `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다.
@@ -85,18 +85,27 @@ cd node && npm ci && npm test                     # Node 18+
 6. **형태 점검**에 항목을 추가합니다 (`scripts/probe-public-data.py`의 `SOURCES` 표에 한 줄, 계정 없이 도는 점검).
 7. 아래 `새 기능을 추가했다면` 노출 체크를 확인합니다.
 
-의존 규칙은 테스트가 지킵니다: 인증 코드와 공개 데이터는 서로 임포트하지 않습니다(`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). 규칙에 걸리면 공유가 필요한 부분을 `transport`나 `errors`로 옮기세요.
+의존 규칙은 테스트가 지킵니다. 세 계층으로 나뉩니다: 공통(`common`)은 어떤 소스도 임포트하지 않고, 소스(`auth`, `public_data`)는 공통만 임포트하며 서로 임포트하지 않습니다(`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). 규칙에 걸리면 공유가 필요한 부분을 `common`으로 옮기세요. 최상위 진입점(`__init__.py`, `index.ts`, Spring `config`)은 조립만 하므로 모든 계층을 가져올 수 있습니다.
+
+**폴더 구조** (세 언어 같은 모양)
+
+| 계층 | Python `python/src/sejongpeia/` | Node `node/src/` | Java `java/src/main/java/kr/suhsaechan/sejongpeia/` |
+|---|---|---|---|
+| 공통 | `common/` (`errors`, `transport`, `version`) | `common/` (`errors`, `transport`, `version`) | `common/` (`exception`, `util`, `http`, `config`) |
+| 인증 | `auth/` (`client`, `parsers`, `portal_main_parser`, `models`) | `auth/` (`client`, `parsers`, `portalMainParser`, `models`) | `auth/` (`client`, `parser`, `model`, `service`) |
+| 공개 데이터 | `public_data/` (`client`, `models`) | `publicData/` (`client`, `models`) | `publicdata/` (`model`) |
+| 조립 | `__init__.py` | `index.ts` | `config/` (Spring 자동 설정, TLS 초기화) |
 
 **코드를 놓을 위치** (공개 데이터 소스 기준, 메서드 하나에 파일 세 곳이 대응합니다)
 
 | 언어 | 메서드와 요청 | 결과 모델 | 테스트 |
 |---|---|---|---|
-| Python | `python/src/sejongpeia/public_data.py` | `public_data_models.py` | `python/tests/test_public_data.py` |
-| Node | `node/src/publicData.ts` | `publicDataModels.ts` | `node/test/publicData.test.mjs` |
+| Python | `python/src/sejongpeia/public_data/client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData/client.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
 | Java | `publicdata/SejongPublicData.java`, 변환은 `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
 
 - 메서드 이름은 Python `snake_case`, Node와 Java `camelCase`입니다. 쓰지 않은 학교 필드는 `extra`에 담습니다.
-- 로그인이 필요한 소스는 이 절차의 대상이 아닙니다. 인증 코드(`client`, `parsers`)와 얽히므로 이슈에서 먼저 방향을 맞춰 주세요.
+- 로그인이 필요한 소스는 이 절차의 대상이 아닙니다. 소스끼리는 서로 임포트할 수 없어서 로그인 세션을 어떻게 나눌지 설계가 필요하니, 이슈에서 먼저 방향을 맞춰 주세요.
 - 공개 메서드나 결과 필드를 더하거나 바꾸면 [API 안정성 정책](docs/API_STABILITY.md)의 「공개 API」 목록과 [통합 예시](docs/INTEGRATION_EXAMPLES.md)가 여전히 맞는지 확인하세요.
 
 ## 새 기능을 추가했다면

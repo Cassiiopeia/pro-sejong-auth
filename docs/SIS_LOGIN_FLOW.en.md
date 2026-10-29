@@ -360,9 +360,9 @@ try {
 
 | Class | Role | Location |
 |--------|------|------|
-| `SejongSisClient` | Sends HTTP requests | `client/SejongSisClient.java` |
-| `SejongSisParser` | Parses JSON | `parser/SejongSisParser.java` |
-| `SejongSisAuthResult` | SIS auth result model | `model/SejongSisAuthResult.java` |
+| `SejongSisClient` | Sends HTTP requests | `auth/client/SejongSisClient.java` |
+| `SejongSisParser` | Parses JSON | `auth/parser/SejongSisParser.java` |
+| `SejongSisAuthResult` | SIS auth result model | `auth/model/SejongSisAuthResult.java` |
 
 ### Main URL Constants
 

@@ -20,11 +20,11 @@
 
 | 언어 | 공개 API | 내부 (직접 쓰지 마세요) |
 |---|---|---|
-| Python | `sejongpeia` 패키지의 `__all__`에 있는 이름: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, 결과·모델 클래스, `SejongAuthError`, `ErrorCode` | `sejongpeia.transport`, `sejongpeia.parsers`, `sejongpeia.client` 안의 도우미, 밑줄로 시작하는 이름과 인자 (`_session_factory`, `_clock`) |
+| Python | `sejongpeia` 패키지의 `__all__`에 있는 이름: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, 결과·모델 클래스, `SejongAuthError`, `ErrorCode` | `sejongpeia.common.*`, `sejongpeia.auth.*`, `sejongpeia.public_data.*` 안의 모듈과 도우미 (`from sejongpeia import ...`로 가져오는 이름만 공개), 밑줄로 시작하는 이름과 인자 (`_session_factory`, `_clock`) |
 | Node | 패키지 진입점(`pro-sejongpeia`)이 내보내는 함수, 클래스, 타입. `package.json`의 `exports`가 이 진입점 하나만 열어 둡니다 | 진입점에서 내보내지 않는 모든 것, 밑줄로 시작하는 옵션 (`_sessionFactory`, `_nowMilliseconds`) |
-| Java | `service.SuhSejongAuthEngine`의 공개 메서드, `model.*`, `exception.*`, `publicdata.SejongPublicData`와 `publicdata.model.*`, `util.SejongTlsSupport`, 설정 접두사 `sejongpeia.*` | `util.CommonUtil`, `publicdata`의 호출기·매퍼·페처 클래스 |
+| Java | `auth.service.SuhSejongAuthEngine`의 공개 메서드, `auth.model.*`, `common.exception.*`, `publicdata.SejongPublicData`와 `publicdata.model.*`, `common.util.SejongTlsSupport`, `common.config.SejongAuthProperties`, 설정 접두사 `sejongpeia.*` | `common.util.CommonUtil`, `publicdata`의 호출기·매퍼·페처 클래스 |
 
-Java의 `client.*`, `parser.*`는 Spring 없이 쓸 때 [README](../README.md)의 예시처럼 직접 만들어 엮어야 해서 공개되어 있습니다. 그래도 **생성자 모양은 바뀔 수 있는 반공개**입니다. Spring Boot 자동 설정을 쓰면 영향이 없습니다.
+Java의 `auth.client.*`, `auth.parser.*`는 Spring 없이 쓸 때 [README](../README.md)의 예시처럼 직접 만들어 엮어야 해서 공개되어 있습니다. 그래도 **생성자 모양은 바뀔 수 있는 반공개**입니다. Spring Boot 자동 설정을 쓰면 영향이 없습니다.
 
 공개 API라도 아래는 **보장 범위 밖**입니다.
 

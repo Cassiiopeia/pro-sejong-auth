@@ -25,12 +25,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import kr.suhsaechan.sejongpeia.exception.SejongAuthErrorCode;
-import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
+import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
+import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.publicdata.model.CafeteriaPlace;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assumptions;
 
 /**
  * 공개 데이터 12종: fixture 주입 가짜 HTTP 결과 == expected_public_data.json, 캐시, 실패 격리, 입력 검증, 요청 형태

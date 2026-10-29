@@ -27,3 +27,4 @@ Everything the library knows about the school's services lives here. Java, Pytho
 - A failure in one source never blocks another (authentication in particular): return an empty value or the last cached value.
 - Do not log or return internal server details (stack traces, session identifiers, IP addresses, password-state flags).
 - Public pages and endpoints: be gentle (cache, spacing, a bounded number of requests per refresh).
+- Each implementation keeps three layers: `common` (errors, transport, version), `auth` and `public_data` (`publicData`, `publicdata`). A source imports only `common` and never another source. A test per language enforces it (see [CONTRIBUTING](../CONTRIBUTING.md)).

@@ -2,7 +2,7 @@
 
 Every language implementation (Java, Python, Node) follows exactly this flow. When the Sejong portal changes, update this file first, then all three implementations in the same PR.
 
-Reference implementation: `java/src/main/java/kr/suhsaechan/sejongpeia/client/`.
+Reference implementation: `java/src/main/java/kr/suhsaechan/sejongpeia/auth/`.
 
 See also (no login needed): [REFERENCE_DATA.md](REFERENCE_DATA.md) for the public organization / department code tables, and [REFERENCE_DATA_SURVEY.md](REFERENCE_DATA_SURVEY.md) for where the school serves what.
 

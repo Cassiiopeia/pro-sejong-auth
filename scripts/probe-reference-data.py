@@ -16,8 +16,7 @@ from typing import Dict, List, Optional
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python" / "src"))
 
-from sejongpeia.client import USER_AGENT  # noqa: E402
-from sejongpeia.transport import UrllibSession, create_ssl_context  # noqa: E402
+from sejongpeia.common.transport import USER_AGENT, UrllibSession, create_ssl_context  # noqa: E402
 
 BASE_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/"
 REQUEST_INTERVAL_SECONDS = 1
