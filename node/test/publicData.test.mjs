@@ -284,6 +284,14 @@ test('cafeteriaPlaces collects each place once in id order with bounded requests
   assert.equal(requests.length, 10); // 캐시 유효 중에는 요청 없음
 });
 
+test('cafeteriaPlaces: maxPlaceId sets the range and out-of-range values are rejected without a request', async () => {
+  const { publicData, requests } = createPublicData({ outcome: cafeteriaPlaceOutcome({ 1: [cafeteriaRow(1, '첫째')], 14: [cafeteriaRow(14, '열넷째')] }) });
+  assert.deepEqual((await publicData.cafeteriaPlaces({ maxPlaceId: 14 })).map((place) => place.placeId), ['1', '14']);
+  assert.equal(requests.length, 14);
+  for (const invalid of [0, 51, 1.5, '10']) assert.throws(() => publicData.cafeteriaPlaces({ maxPlaceId: invalid }), (error) => error instanceof SejongAuthError && error.code === ErrorCode.INVALID_INPUT);
+  assert.equal(requests.length, 14); // 잘못된 값은 요청 없음
+});
+
 test('cafeteriaPlaces: one failed request fails the whole list and keeps the stale value', async () => {
   let failingPlaceId;
   const outcome = (url) => cafeteriaPlaceOutcome({ 1: [cafeteriaRow(1, '첫째')] }, failingPlaceId)(url);

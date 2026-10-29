@@ -30,8 +30,10 @@ GRADUATE_CALENDAR_URL = "https://{site_id}.sejong.ac.kr/_custom/sejong/_app/cale
 # 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
 GRADUATE_SITE_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,30}")
 CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do"
-# 학교에 식당 목록 API가 없어 번호 1~10을 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
-CAFETERIA_PROBE_PLACE_IDS = tuple(str(place_id) for place_id in range(1, 11))
+# 학교에 식당 목록 API가 없어 번호 1부터 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
+CAFETERIA_DEFAULT_MAX_PLACE_ID = 10
+# 호출자가 올릴 수 있는 상한 (한 번 갱신에 최대 이만큼 요청하므로 학교 서버 부담을 막기 위해 제한)
+CAFETERIA_LIMIT_MAX_PLACE_ID = 50
 CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do"
 DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do"
 DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do"
@@ -345,16 +347,19 @@ class SejongPublicData:
         return self._fetch(("cafeteria_menu", place_id), "GET", f"{CAFETERIA_URL}?{query}", None, None,
                            lambda body: [_to_cafeteria_menu_item(row) for row in _dataset(body, "items")], [])
 
-    def cafeteria_places(self) -> List[CafeteriaPlace]:
-        """학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~10의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
-        하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음)"""
+    def cafeteria_places(self, max_place_id: int = CAFETERIA_DEFAULT_MAX_PLACE_ID) -> List[CafeteriaPlace]:
+        """학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~max_place_id(기본 10, 최대 50)의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+        하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음), 범위 밖 값은 INVALID_INPUT"""
+        if isinstance(max_place_id, bool) or not isinstance(max_place_id, int) or not 1 <= max_place_id <= CAFETERIA_LIMIT_MAX_PLACE_ID:
+            raise SejongAuthError(ErrorCode.INVALID_INPUT, f"Max place id must be an integer from 1 to {CAFETERIA_LIMIT_MAX_PLACE_ID}")
+
         def load_places() -> List[CafeteriaPlace]:
             bodies_by_place_id = {}
-            for place_id in CAFETERIA_PROBE_PLACE_IDS:  # 순서대로 한 건씩, 병렬 요청 없음
+            for place_id in (str(number) for number in range(1, max_place_id + 1)):  # 순서대로 한 건씩, 병렬 요청 없음
                 query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": place_id})
                 bodies_by_place_id[place_id] = self._request_json("GET", f"{CAFETERIA_URL}?{query}", None, None)
             return _to_cafeteria_places(bodies_by_place_id)
-        return self._cached_call(("cafeteria_places",), load_places, [])
+        return self._cached_call(("cafeteria_places", max_place_id), load_places, [])
 
     def campus_places(self, place_type: str = "") -> List[CampusPlace]:
         query = urllib.parse.urlencode({"mode": "getPlaceUserList", "placeType": place_type})

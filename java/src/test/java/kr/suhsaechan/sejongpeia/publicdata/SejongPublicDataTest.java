@@ -246,6 +246,18 @@ class SejongPublicDataTest {
   }
 
   @Test
+  void cafeteria_places_max_place_id_sets_range_and_rejects_out_of_range() {
+    caller.bodyProvider = request -> request.getUrl().endsWith("&placeId=14") ? cafeteriaBody(cafeteriaRow(14, "열넷째", "")) : "{\"items\":[]}";
+    assertEquals(List.of("14"), publicData.cafeteriaPlaces(14).stream().map(CafeteriaPlace::getPlaceId).toList());
+    assertEquals(14, caller.callCount.get());
+    for (int invalid : new int[] {0, 51}) {
+      SejongAuthException error = org.junit.jupiter.api.Assertions.assertThrows(SejongAuthException.class, () -> publicData.cafeteriaPlaces(invalid));
+      assertEquals(SejongAuthErrorCode.INVALID_INPUT, error.getErrorCode());
+    }
+    assertEquals(14, caller.callCount.get()); // 잘못된 값은 요청 없음
+  }
+
+  @Test
   void cafeteria_places_one_failed_request_fails_the_whole_list_and_keeps_stale_value() {
     List<CafeteriaPlace> first = publicData.cafeteriaPlaces();
     assertEquals(1, first.size());
