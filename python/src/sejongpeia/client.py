@@ -53,16 +53,17 @@ class SejongAuthClient:
         self.ssl_verification = ssl_verification
         self._session_factory = _session_factory or self._create_session
 
-    def authenticate(self, student_id: str, password: str) -> SejongAuthResult:
-        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 None)"""
+    def authenticate(self, student_id: str, password: str, include_raw: bool = False) -> SejongAuthResult:
+        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 None, include_raw=True 면 받은 원문만 담음)"""
         self._validate_credentials(student_id, password)
         session = self._session_factory()
         self._login(session, student_id, password, CLASSIC_RETURN_URL)
-        dhc_result = self._fetch_dhc_with_session(session, should_include_raw_html=False)
+        dhc_result = self._fetch_dhc_with_session(session, should_include_raw_html=include_raw)
 
-        email = phone_number = english_name = user_category = None
+        email = phone_number = english_name = user_category = sis_json = None
         try:
-            sis_user_info = parse_sis_user_info(self._fetch_sis_json_with_session(session))
+            sis_json = self._fetch_sis_json_with_session(session)
+            sis_user_info = parse_sis_user_info(sis_json)
             email, phone_number, english_name = sis_user_info.email, sis_user_info.phone_number, sis_user_info.english_name
             user_category = sis_user_info.user_category
         except Exception as error:  # SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
@@ -74,6 +75,7 @@ class SejongAuthClient:
             grade=dhc_result.grade, status=dhc_result.status, classic_reading=dhc_result.classic_reading,
             email=email, phone_number=phone_number, english_name=english_name, user_category=user_category,
             parent_unit_name=parent_unit_name, authenticated_at=datetime.now(),
+            raw_html=dhc_result.raw_html, raw_json=sis_json if include_raw else None,
         )
 
     def authenticate_dhc(self, student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:

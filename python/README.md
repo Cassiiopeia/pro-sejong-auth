@@ -27,7 +27,7 @@ except SejongAuthError as error:
 
 | 함수 | 반환 |
 |---|---|
-| `authenticate(id, pw)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `None`) |
+| `authenticate(id, pw, include_raw=False)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `None`, `include_raw=True` 면 `raw_html`·`raw_json` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지) |
 | `authenticate_dhc(id, pw, include_raw=False)` | 학생 정보 + 고전독서 |
 | `authenticate_sis(id, pw, include_raw=False)` | 학생 정보 + 이메일, 전화번호, 영문 이름 |
 

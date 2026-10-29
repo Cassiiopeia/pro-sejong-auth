@@ -208,7 +208,7 @@ try {
 | Integrated: student info + classic reading + contact | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: student info + classic reading | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: student info + contact | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
-| With raw response (debugging) | `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
+| With raw response (debugging) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
 
 The integrated call logs in to the portal **once** and reads DHC and SIS with the same session. It still returns student info when the SIS (contact) lookup fails; contact fields are then null.
 
@@ -284,7 +284,10 @@ Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number
 | `userCategory` | string or null | User category, for example `학부생` (null if SIS fails) |
 | `parentUnitName` | string or null | Unit above the major, a college or a school, from the portal main page (null if that call fails, `""` if unavailable). Portal text as-is that changes by academic year: do not branch on a value list or use it to decide authentication |
 | `authenticatedAt` | datetime | Authentication time |
+| `rawHtml` | string or null | DHC page as received (only with the raw option) |
+| `rawJson` | string or null | SIS response as received (only with the raw option, null if SIS fails) |
 
+- The raw option adds no request: it only keeps responses already received. The SIS raw text contains values that look like a session identifier, the client IP and login time, so never pass it to an external client as-is. Its keys and structure can change when the school changes them and are outside the compatibility guarantee.
 - DHC result: no contact fields; `rawHtml` with the raw option
 - SIS result: includes `userCategory`, no classic-reading field, `grade` and `status` are empty strings; `rawJson` with the raw option
 

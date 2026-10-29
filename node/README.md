@@ -29,7 +29,7 @@ try {
 
 | 함수 | 반환 |
 |---|---|
-| `authenticate(id, pw)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`) |
+| `authenticate(id, pw, { includeRaw })` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`, `includeRaw` 면 `rawHtml`·`rawJson` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지) |
 | `authenticateDhc(id, pw, { includeRaw })` | 학생 정보 + 고전독서 |
 | `authenticateSis(id, pw, { includeRaw })` | 학생 정보 + 이메일, 전화번호, 영문 이름 |
 

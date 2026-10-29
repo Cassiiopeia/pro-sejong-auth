@@ -66,20 +66,33 @@ public class SuhSejongAuthEngine {
    * @throws SejongAuthException 인증 실패 시
    */
   public SejongAuthResult authenticate(String studentId, String password) {
+    return authenticateIntegrated(studentId, password, false);
+  }
+
+  /**
+   * 통합 인증 (받은 원문 포함): authenticate 와 같고 DHC 원본 HTML, SIS 원본 JSON 을 결과에 담음 (추가 요청 없음)
+   */
+  public SejongAuthResult authenticateWithRaw(String studentId, String password) {
+    return authenticateIntegrated(studentId, password, true);
+  }
+
+  private SejongAuthResult authenticateIntegrated(String studentId, String password, boolean shouldIncludeRaw) {
     validateCredentials(studentId, password);
     log.info("[sejong auth] integrated auth started : studentId={}", studentId);
 
     // 1. 포털 로그인 1회 + DHC에서 학생 정보·고전독서 (실패 시 예외)
     SejongPortalSession session = portalClient.openSession(studentId, password);
-    SejongDhcAuthResult dhcResult = buildDhcResult(portalClient.fetchClassicStatusHtml(session), false);
+    SejongDhcAuthResult dhcResult = buildDhcResult(portalClient.fetchClassicStatusHtml(session), shouldIncludeRaw);
 
     // 2. 같은 세션으로 SIS 연락처 3개, 영어 이름, 사용자 구분 (실패해도 DHC 정보만으로 결과 반환)
     String email = null;
     String phoneNumber = null;
     String englishName = null;
     String userCategory = null;
+    String sisJson = null;
     try {
       String json = sisClient.fetchInitUserInfoJson(session);
+      sisJson = json;
       sisParser.ensureLoggedIn(json);
       email = sisParser.parseEmail(json);
       phoneNumber = sisParser.parsePhoneNumber(json);
@@ -107,6 +120,8 @@ public class SuhSejongAuthEngine {
         .userCategory(userCategory)
         .parentUnitName(parentUnitName)
         .authenticatedAt(LocalDateTime.now())
+        .rawHtml(dhcResult.getRawHtml())
+        .rawJson(shouldIncludeRaw ? sisJson : null)
         .build();
 
     log.info("[sejong auth] integrated auth completed : studentId={}", studentId);

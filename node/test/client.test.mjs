@@ -89,6 +89,18 @@ test('dhcRawHtmlOnlyWhenRequested', async () => {
   assert.equal((await client.authenticateDhc('21011234', 'pw', { includeRaw: true })).rawHtml, dhcHtml);
 });
 
+test('integratedRawOnlyWhenRequested', async () => {
+  const routes = () => ({
+    [LOGIN]: [ok()], [CLASSIC_SSO]: [ok()], [CLASSIC_STATUS]: [ok(dhcHtml)], [SIS_SSO]: [ok()], [SIS_USER_INFO]: [ok(sisJson)],
+  });
+  const defaultResult = await clientWith(routes()).client.authenticate('21011234', 'pw');
+  const rawResult = await clientWith(routes()).client.authenticate('21011234', 'pw', { includeRaw: true });
+  assert.deepEqual([defaultResult.rawHtml, defaultResult.rawJson], [null, null]);
+  assert.deepEqual([rawResult.rawHtml, rawResult.rawJson], [dhcHtml, sisJson]);
+  // 켜도 기존 필드는 같음
+  assert.deepEqual([rawResult.name, rawResult.email, rawResult.grade], [defaultResult.name, defaultResult.email, defaultResult.grade]);
+});
+
 test('errorMessageNeverContainsPassword', async () => {
   const { client } = clientWith({ [LOGIN]: [new Error('socket hang up')] });
   await assert.rejects(client.authenticateDhc('21011234', 'secret-password-value'), (error) =>
