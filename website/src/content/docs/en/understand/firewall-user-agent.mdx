@@ -1,0 +1,40 @@
+---
+title: Firewall and User-Agent
+description: Why the firewall blocks default library User-Agents and some sites answer 404 without one, and how the library sends an identifying User-Agent on every request.
+---
+
+## Why it is hard
+
+Sometimes login works and TLS passes, yet requests fail oddly. The cause is the `User-Agent` request header. Two behaviors were found in the portal flow.
+
+| Situation | Result |
+|---|---|
+| No `User-Agent` sent | `classic.sejong.ac.kr` answers **404** after SSO |
+| A library default (for example `Python-urllib`) | The firewall of `sjpt.sejong.ac.kr` blocks it and returns an "Alert!!!" HTML page |
+
+Your code is correct in both cases and only the response is strange, so it is easy to blame parsing or the login.
+
+## What the library does
+
+It sends a non-empty, non-default, identifying `User-Agent` on every request. The format fixed in the contract is:
+
+```text
+pro-sejongpeia-<language>/<version>
+```
+
+- Python: `pro-sejongpeia-python/<version>`
+- Node.js: `pro-sejongpeia-node/<version>`
+- Java public data calls: `pro-sejongpeia-java`
+- The User-Agent value the Java authentication requests actually send is not confirmed. The contract uses the format above.
+
+## If you implement it yourself
+
+- Set a non-empty, distinctive `User-Agent` on every HTTP client.
+- Rather than imitating a browser, leave the library name and version visible. It makes finding the cause easier for both sides when something goes wrong.
+- When you get a 404 or an "Alert!!!" page, suspect the header before the parser.
+
+## Next
+
+- [Legacy TLS](../legacy-tls/)
+- [SSO flow](../sso-flow/)
+- Source: [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md)

@@ -1,0 +1,98 @@
+---
+title: 교육과정
+description: 학과 코드와 과목 번호로 권장 학년·학기, 이수 구분, 학점, 교과목 개요를 받는 curriculum_courses 메서드를 설명합니다.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+개설강좌 목록에서 얻은 학과 코드와 과목 번호로, 그 학과 교육과정에서 이 과목이 권장되는 학년·학기, 이수 구분, 학점, 시수와 **교과목 개요**를 받습니다. 교육과정 전체 목록을 주는 메서드는 없고 과목 하나씩 조회합니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
+
+## 메서드
+
+| 언어 | 시그니처 |
+|---|---|
+| Java | `curriculumCourses(String departmentCode, String courseNumber)` |
+| Python | `curriculum_courses(department_code, course_number)` |
+| Node.js | `curriculumCourses({ departmentCode, courseNumber })` |
+
+- `department_code`는 학위 학과의 SIS 코드(`DEPT_CD`)입니다. [학과 목록](../codes/)이나 강의 결과의 `department_code`에서 얻습니다. `course_number`는 강의 결과의 `course_number`(`CURI_NO`)입니다.
+- 반환: `CurriculumCourse` 목록 (확인한 응답은 0건 또는 1건).
+- **학과 코드나 과목 번호가 비어 있으면 `INVALID_INPUT`**을 던지고 요청은 보내지 않습니다 ([에러 코드](../../auth/error-codes/)).
+
+## 요청 메모
+
+- `GET https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=<과목 번호>&deptNo=<학과 코드>`, 응답 배열 `items`. 로그인 불필요.
+- **`Accept: application/json` 헤더가 없으면 학교가 404를 돌려줍니다.** 세 언어 모두 이 헤더를 보냅니다.
+- 학과 코드 `3513`과 `3517`을 시간표 학과 목록(학부)에서 가져와 조회했을 때 각 학과 이름이 돌아왔습니다 (2026-10-30). 교육과정 응답의 `deptCd`와 SIS의 `DEPT_CD`가 같은 코드 체계라는 근거는 이 두 학과입니다.
+- 교과목 개요(`remark`)는 시간표 화면의 `교과목개요` 보고서와 같은 글입니다. 한 과목에서 줄바꿈을 빼고 같은 것을 확인했습니다.
+
+## 결과 필드
+
+필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 모두 문자열이고 없으면 빈 문자열입니다.
+
+| 필드 | 학교 키 | 설명 |
+|---|---|---|
+| `department_code`, `department_name` | `deptCd`, `deptNm` | 학과 코드와 이름 |
+| `category_code` | `orgnClsfCd` | 소속 분류 코드 |
+| `year` | `year` | 교육과정 연도 |
+| `course_number`, `name` | `curiNo`, `curiNm` | 과목 번호, 과목명 |
+| `course_type_code`, `course_type_name` | `curiTypeCd`, `curiTypeNm` | 이수 구분 코드와 이름 |
+| `credits` | `cdt` | 학점 |
+| `lecture_hours`, `practice_hours`, `total_hours` | `lecTmNum`, `exeTmNum`, `curiTm` | 강의, 실습, 총 시수 |
+| `grade_level` | `stuYearCd` | 권장 학년 |
+| `semester_code`, `semester_name` | `smtDanCd`, `smtDanNm` | 권장 학기 코드와 이름 |
+| `overview` | **`remark`** | 교과목 개요 본문 |
+| `extra` | 그 밖의 필드 | 예: `curiYear`, `studentYear`, `sameSlcCnt` |
+
+## 예시
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+// 강의 결과의 학과 코드와 과목 번호로 교육과정 정보 조회 (없으면 빈 목록)
+Lecture lecture = lectures.get(0);
+List<CurriculumCourse> courses = publicData.curriculumCourses(lecture.getDepartmentCode(), lecture.getCourseNumber());
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+# 강의 결과의 학과 코드와 과목 번호로 교육과정 정보 조회 (없으면 빈 목록)
+courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
+if courses:
+    print(courses[0].grade_level, courses[0].semester_name, courses[0].overview)
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+// 강의 결과의 학과 코드와 과목 번호로 교육과정 정보 조회 (없으면 빈 목록)
+const courses = await publicData.curriculumCourses({
+  departmentCode: lectures[0].departmentCode,
+  courseNumber: lectures[0].courseNumber,
+});
+```
+
+</TabItem>
+</Tabs>
+
+개설강좌를 먼저 찾는 방법은 [개설강좌](../lectures/)를 보세요.
+
+## 캐시와 실패 동작
+
+- 학과 코드와 과목 번호 조합마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
+- 학교 실패(연결, 시간 초과, 비정상 응답, `items` 없음)는 마지막 캐시 값 또는 빈 목록입니다. 캐시가 없으면 60초(기본) 동안 요청 없이 빈 목록입니다.
+- **빈 `items`는 정상 응답입니다** (`success: true`). 그 학과의 교육과정에 없는 과목이면 빈 목록이고 오류가 아닙니다.
+- 예외는 빈 학과 코드·과목 번호(`INVALID_INPUT`) 하나뿐입니다.
+
+## 알려진 한계와 확인하지 못한 것
+
+- 학위 학과의 교육과정에 있는 과목만 돌아옵니다. 시도해 본 교양대학 학과와 대학원 학과 각각 하나는 빈 `items`였습니다.
+- 개요는 **현재 교육과정 연도의 교육과정 글**이고, 분반·교수별 글이 아닙니다.
+- `deptCd`와 `DEPT_CD`가 같은 코드 체계라는 확인은 학과 2개분입니다. 더 넓은 범위는 측정하지 않았습니다.
+- 교육과정 **전체 목록**은 제공하지 않습니다. 학교의 목록 요청은 학과 코드를 무시하고 화면 메뉴 번호로 학과를 정하는데, 그 번호가 페이지 HTML에만 있고 학과 코드와의 대응표가 없어서입니다. 한 학과 전체가 필요하면 강의 목록의 과목마다 이 메서드를 부를 수 있지만 과목당 요청이 한 번입니다.
+- 교수의 수업계획서는 제공하지 않습니다. 양식에 교수 이름과 연락처 줄이 있습니다 ([조사 기록](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)).
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

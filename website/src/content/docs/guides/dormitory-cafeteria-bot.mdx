@@ -1,0 +1,151 @@
+---
+title: 기숙사·학식 봇
+description: 오늘의 기숙사 식단, 학식, 기숙사 공지를 메시지 문자열로 만드는 안내 봇 예시를 Java, Python, Node.js로 보여 줍니다.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+오늘의 기숙사 식단, 학식, 기숙사 공지를 메시지 문자열로 만듭니다. 슬랙, 디스코드, 카카오 등 보내는 쪽에 붙이면 됩니다. 로그인이 필요 없습니다.
+
+## 코드
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    class CampusInfoBot {
+
+      static String dormitoryMenuMessage(SejongPublicData publicData) {
+        String today = LocalDate.now().toString();
+        List<DormitoryMenuDay> menuDays = publicData.dormitoryMenu();
+        DormitoryMenuDay menuDay = menuDays.stream().filter(day -> today.equals(day.getDate())).findFirst()
+            .orElse(menuDays.isEmpty() ? null : menuDays.get(0));
+        if (menuDay == null) {
+          return "기숙사 식단을 불러오지 못했습니다";
+        }
+        return "[기숙사 " + menuDay.getDate() + "]\n조식: " + menuDay.getBreakfast()
+            + "\n중식: " + menuDay.getLunch() + "\n석식: " + menuDay.getDinner();
+      }
+
+      static String cafeteriaMessage(SejongPublicData publicData, String placeId) {
+        String today = LocalDate.now().toString();
+        List<CafeteriaMenuItem> items = publicData.cafeteriaMenu(placeId);
+        if (items.isEmpty()) {
+          return placeId + "번 식당: 메뉴 없음";
+        }
+        List<CafeteriaMenuItem> todaysItems = items.stream()
+            .filter(item -> item.getDate().isEmpty() || item.getDate().equals(today)).toList();
+        List<CafeteriaMenuItem> shownItems = todaysItems.isEmpty() ? items : todaysItems;
+        StringBuilder message = new StringBuilder("[" + shownItems.get(0).getPlaceName() + "]");
+        shownItems.stream().limit(5).forEach(item ->
+            message.append("\n").append(item.getMealName()).append(" ").append(item.getMenuName()).append(" ").append(item.getPrice()).append("원"));
+        return message.toString();
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from datetime import date
+
+    from sejongpeia import SejongPublicData
+
+    public_data = SejongPublicData()
+    CAFETERIA_PLACE_IDS = ["1", "3", "4", "5", "6"]  # 학교의 식당 번호 (2026-10-30 확인), 바뀔 수 있음
+
+
+    def dormitory_menu_message() -> str:
+        today = date.today().isoformat()
+        menu_days = public_data.dormitory_menu()
+        # 오늘 날짜가 없으면(주말 갱신 전 등) 학교가 준 첫날을 보여 줌
+        menu_day = next((day for day in menu_days if day.date == today), menu_days[0] if menu_days else None)
+        if menu_day is None:
+            return "기숙사 식단을 불러오지 못했습니다"
+        return f"[기숙사 {menu_day.date}]\n조식: {menu_day.breakfast}\n중식: {menu_day.lunch}\n석식: {menu_day.dinner}"
+
+
+    def cafeteria_message(place_id: str) -> str:
+        items = public_data.cafeteria_menu(place_id)
+        if not items:  # 식당 번호가 없거나 그날 메뉴가 없으면 빈 목록 (둘을 구분하지 못함)
+            return f"{place_id}번 식당: 메뉴 없음"
+        today = date.today().isoformat()
+        # 날짜가 있는 식당은 일주일치가 한 번에 오므로 오늘 것만, 날짜가 없는 식당(상시 메뉴)은 그대로
+        todays_items = [item for item in items if item.date in ("", today)] or items
+        first = todays_items[0]
+        lines = [f"{item.meal_name} {item.menu_name} {item.price}원".strip() for item in todays_items[:5]]
+        return f"[{first.place_name} {first.building_name} {first.location}]\n" + "\n".join(lines)
+
+
+    def latest_dormitory_notice_message() -> str:
+        notices = public_data.dormitory_notices(rows=3)
+        return "\n".join(f"{notice.date} {notice.title}" for notice in notices.items) or "공지를 불러오지 못했습니다"
+
+
+    if __name__ == "__main__":
+        print(dormitory_menu_message())
+        for place_id in CAFETERIA_PLACE_IDS:
+            print(cafeteria_message(place_id))
+        print(latest_dormitory_notice_message())
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { SejongPublicData } from 'pro-sejongpeia';
+
+    const publicData = new SejongPublicData();
+    const CAFETERIA_PLACE_IDS = ['1', '3', '4', '5', '6']; // 학교의 식당 번호 (2026-10-30 확인), 바뀔 수 있음
+    const todayText = () => new Date().toLocaleDateString('sv-SE'); // yyyy-MM-dd (로컬 날짜)
+
+    export async function dormitoryMenuMessage() {
+      const menuDays = await publicData.dormitoryMenu();
+      // 오늘 날짜가 없으면(주말 갱신 전 등) 학교가 준 첫날을 보여 줌
+      const menuDay = menuDays.find((day) => day.date === todayText()) ?? menuDays[0];
+      if (!menuDay) return '기숙사 식단을 불러오지 못했습니다';
+      return `[기숙사 ${menuDay.date}]\n조식: ${menuDay.breakfast}\n중식: ${menuDay.lunch}\n석식: ${menuDay.dinner}`;
+    }
+
+    export async function cafeteriaMessage(placeId) {
+      const items = await publicData.cafeteriaMenu(placeId);
+      if (items.length === 0) return `${placeId}번 식당: 메뉴 없음`; // 식당 번호가 없거나 그날 메뉴가 없으면 빈 목록 (둘을 구분하지 못함)
+      // 날짜가 있는 식당은 일주일치가 한 번에 오므로 오늘 것만, 날짜가 없는 식당(상시 메뉴)은 그대로
+      const todaysItems = items.filter((item) => item.date === '' || item.date === todayText());
+      const shownItems = todaysItems.length > 0 ? todaysItems : items;
+      const lines = shownItems.slice(0, 5).map((item) => `${item.mealName} ${item.menuName} ${item.price}원`.trim());
+      const first = shownItems[0];
+      return `[${first.placeName} ${first.buildingName} ${first.location}]\n${lines.join('\n')}`;
+    }
+
+    export async function latestDormitoryNoticeMessage() {
+      const notices = await publicData.dormitoryNotices({ rows: 3 });
+      return notices.items.map((notice) => `${notice.date} ${notice.title}`).join('\n') || '공지를 불러오지 못했습니다';
+    }
+
+    console.log(await dormitoryMenuMessage());
+    for (const placeId of CAFETERIA_PLACE_IDS) console.log(await cafeteriaMessage(placeId));
+    console.log(await latestDormitoryNoticeMessage());
+    ```
+  </TabItem>
+</Tabs>
+
+## 실행 결과
+
+2026-10-30, 실제 학교 서버로 세 언어 모두 실행했습니다. 앞부분이며 중간을 줄였습니다. 학교 데이터는 바뀌므로 그날의 예입니다.
+
+```text
+[기숙사 2026-10-30]
+조식: 돈육장조림버터비빔밥 음료
+중식: 쌀밥 육개장 부추전 우엉떡잡채 아삭이고추무침 배추김치
+석식: 쌀밥 북어계란국 순살안동찜닭 꼬시래기무침 참나물흑임자무침 배추김치
+[계절밥상 군자관 6층]
+중식 얼갈이된장국 · 오징어제육볶음 · 감자튀김 · ... 7000원
+[진관키친 진관홀 B1층]
+라면 3300원
+...
+2026-10-19 [기숙사] 2026년 10월 정기소독 실시 안내
+```
+
+## 참고
+
+- 식당 번호는 학교 값입니다 (2026-10-30 확인: 1, 3, 4, 5, 6번에 메뉴, 2번은 빈 목록). 번호는 바뀔 수 있고, 어느 식당인지는 결과의 `place_name`으로 알 수 있습니다. 빈 목록은 번호가 틀렸을 때와 그날 메뉴가 없을 때 모두 나옵니다. 식당 목록은 `cafeteria_places()`로도 받을 수 있습니다. [학식](../../data/cafeteria/)
+- 1번 식당은 일주일치가 날짜와 함께 오고, 3~6번은 날짜 없는 상시 메뉴였습니다. 예시는 둘 다 처리합니다.
+- 기숙사 식단은 7일치이며 `dormitory_menu(location="SJ")`입니다. [기숙사](../../data/dormitory/)
+- 학교 서버에 부담을 주지 않도록 봇은 하루 몇 번만 갱신해도 충분합니다 (라이브러리 캐시가 이미 24시간).

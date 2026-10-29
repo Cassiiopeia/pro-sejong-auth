@@ -1,0 +1,132 @@
+---
+title: 공통 규칙
+description: 학교 데이터 15개 메서드가 공유하는 클라이언트, 결과 값 규칙, 캐시, 실패 격리, 요청 방식을 정리합니다.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+학교 데이터(공개 데이터)는 학번과 비밀번호 없이 학교가 공개로 내려주는 정보입니다. Java, Python, Node.js가 같은 메서드, 같은 결과 필드, 같은 값 규칙을 가집니다. 이 페이지는 모든 메서드가 공유하는 규칙입니다. 메서드별 내용은 왼쪽 메뉴의 각 페이지를 보세요.
+
+<Aside type="caution" title="비공식 엔드포인트">
+이 데이터는 학교 웹 화면이 내부에서 부르는 문서화되지 않은 주소에서 가져옵니다. 학교가 예고 없이 바꾸거나 없앨 수 있습니다. 바뀌면 [계약 문서(spec)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)를 먼저 고치고 세 언어를 한 PR에서 고칩니다. 매일 돌아가는 형태 점검은 [매일 도는 실제 포털 점검](../../understand/daily-live-check/)을 보세요.
+</Aside>
+
+## 클라이언트
+
+| 언어 | 진입점 | 이름 표기 |
+|---|---|---|
+| Java | `kr.suhsaechan.sejongpeia.publicdata.SejongPublicData`, 모델은 `kr.suhsaechan.sejongpeia.publicdata.model.*` | `camelCase` 메서드, getter로 필드 접근 |
+| Python | `sejongpeia.SejongPublicData` | `snake_case` 메서드와 필드 |
+| Node.js | 패키지에서 내보내는 `SejongPublicData` 클래스 | `camelCase`, 인자는 객체 하나로 받는 메서드가 많음 |
+
+- Spring Boot는 자동 설정이 `SejongPublicData` 빈을 등록합니다. 일반 Java는 `new SejongPublicData()`로 만들고, 먼저 [레거시 TLS](../../understand/legacy-tls/) 설정이 필요합니다.
+- **프로세스당 하나만** 만들어 쓰세요. 메모리 캐시와 같은 요청 합치기가 인스턴스 안에 있습니다.
+- 호출 방식: Java와 Python은 동기, Node.js는 `Promise`를 돌려줍니다.
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+// Spring Boot 에서는 빈으로 주입받음
+SejongPublicData publicData = new SejongPublicData();
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()  # 프로세스당 하나만 만들어 캐시 공유
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData(); // 프로세스당 하나만 만들어 캐시 공유
+```
+
+</TabItem>
+</Tabs>
+
+### 설정
+
+모두 선택 항목입니다.
+
+| 설정 | Java (`sejongpeia.*`) | Python 인자 | Node.js 옵션 | 기본값 |
+|---|---|---|---|---|
+| 요청 제한 시간 (초) | `timeout-seconds` | `timeout_seconds` | `timeoutSeconds` | 10 |
+| 캐시 유효 시간 (초) | `public-data-cache-ttl-seconds` | `cache_ttl_seconds` | `cacheTtlSeconds` | 86400 |
+| 실패 기억 시간 (초) | `public-data-failure-cache-seconds` | `failure_cache_seconds` | `failureCacheSeconds` | 60 |
+| 캐시 최대 항목 수 | `public-data-cache-max-entries` | `cache_max_entries` | `cacheMaxEntries` | 500 |
+| 인증서 검증 | `ssl-verification` | `ssl_verification` | `sslVerification` | true |
+
+Java는 `application.yml`의 `sejongpeia` 접두사 설정(`SejongAuthProperties`)을 쓰고, Spring 없이 쓸 때는 같은 프로퍼티 객체를 만들어 `new SejongPublicData(properties)`로 넘깁니다. 인증과 공유하는 설정은 [설정](../../auth/configuration/)을 보세요.
+
+## 메서드 15개
+
+| 정보 | Java | Python | Node.js | 페이지 |
+|---|---|---|---|---|
+| 소속 분류 | `organizationCategories()` | `organization_categories()` | `organizationCategories()` | [코드](../codes/) |
+| 학기 | `terms(categoryCode)` | `terms(category_code)` | `terms(categoryCode)` | [코드](../codes/) |
+| 학과 | `departments(categoryCode, year, semesterCode)` | `departments(category_code, year, semester_code)` | `departments({ categoryCode, year, semesterCode })` | [코드](../codes/) |
+| 이수 구분 | `courseTypes()` | `course_types()` | `courseTypes()` | [코드](../codes/) |
+| 선택 영역 | `selectiveDomains()` | `selective_domains()` | `selectiveDomains()` | [코드](../codes/) |
+| 개설강좌 | `lectures(...)` | `lectures(...)` | `lectures({ ... })` | [개설강좌](../lectures/) |
+| 교육과정 과목 | `curriculumCourses(departmentCode, courseNumber)` | `curriculum_courses(department_code, course_number)` | `curriculumCourses({ departmentCode, courseNumber })` | [교육과정](../curriculum/) |
+| 학사일정 | `calendar(...)` | `calendar(...)` | `calendar({ ... })` | [학사일정](../calendar/) |
+| 대학원 학사일정 | `graduateCalendar(siteId, year, month)` | `graduate_calendar(site_id, year, month)` | `graduateCalendar({ siteId, year, month })` | [학사일정](../calendar/) |
+| 기숙사 식단 | `dormitoryMenu(...)` | `dormitory_menu(...)` | `dormitoryMenu(...)` | [기숙사](../dormitory/) |
+| 기숙사 공지 | `dormitoryNotices(...)` | `dormitory_notices(...)` | `dormitoryNotices({ ... })` | [기숙사](../dormitory/) |
+| 학식 메뉴 | `cafeteriaMenu(placeId)` | `cafeteria_menu(place_id)` | `cafeteriaMenu(placeId)` | [학식](../cafeteria/) |
+| 학식 식당 목록 | `cafeteriaPlaces()` | `cafeteria_places()` | `cafeteriaPlaces()` | [학식](../cafeteria/) |
+| 캠퍼스 장소 | `campusPlaces(...)` | `campus_places(...)` | `campusPlaces(...)` | [캠퍼스 장소](../campus-places/) |
+| 비교과 일정 | `extracurricularEvents(...)` | `extracurricular_events(...)` | `extracurricularEvents({ ... })` | [비교과 프로그램](../extracurricular/) |
+
+## 결과 값 규칙
+
+세 언어가 같습니다. 필드 대응의 기준은 [`scripts/generate-public-data-fixtures.py`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/scripts/generate-public-data-fixtures.py)이고, 테스트는 같은 기대 결과 파일([`expected_public_data.json`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/fixtures/public_data/expected_public_data.json))과 비교합니다.
+
+- **학교 값 그대로**: 코드표나 이름 매핑을 라이브러리가 들고 있지 않습니다. 학과, 학기, 식당 번호 같은 값은 학교가 바꾸면 달라집니다. 값 목록으로 분기하는 코드를 만들지 마세요.
+- **없는 값은 빈 문자열**: 값이 없거나 `null`이면 빈 문자열입니다. 숫자 필드도 문자열로 옵니다. 예외는 `views`, `total`(정수)과 `latitude`, `longitude`(실수)이고, 이 필드는 값이 없으면 `0`과 `0.0`입니다.
+- **행은 버리지 않음**: 이상한 행 하나가 목록 전체를 실패시키지 않습니다. 목록 전체를 담는 컨테이너(`data`, `items`, `events`, `root`, `dl_*`)가 없거나 배열이 아닐 때만 실패입니다.
+- **스칼라는 텍스트로**: 문자열은 그대로, 숫자는 평범한 십진 표기, 불리언은 `true`와 `false`로 바꿉니다.
+- **`extra`**: 매핑에 쓰지 않은 학교 필드를 `문자열: 문자열` 맵으로 담습니다. 비어 있거나 `null`인 값, 아래 제외 목록은 뺍니다. 객체나 배열 값은 공백 없는 JSON 문자열이 됩니다. 학교가 필드를 더하면 새 릴리스 없이도 `extra`에 나타날 수 있습니다. 기숙사 모델과 학식 메뉴 항목(`CafeteriaMenuItem`)에는 `extra`가 없습니다.
+- **`extra` 제외 목록**: `CD_ALIAS1`~`CD_ALIAS3`(과 `_ENG`), `regname`, `regid`, `STACK_TRACE`. 직원 이름은 `extra`에 들어가지 않습니다.
+- **Python 이름 표기**: 결과 필드는 Python이 `snake_case`, Node.js와 Java가 `camelCase`입니다. 이 문서의 필드 표는 Python 이름을 쓰고, Node.js와 Java는 `camelCase`로 바꿔 읽으면 됩니다 (예: `start_date` > `startDate`).
+
+## 실패 격리
+
+- 연결 실패, 시간 초과, 2xx가 아닌 상태, JSON이 아닌 본문, 기대한 키 없음, `_SUBMIT_ERROR_` 객체는 모두 **예외 없이** 마지막 캐시 값(만료됐어도)을 돌려줍니다. 캐시가 없으면 빈 목록입니다. 기숙사 공지만 빈 객체(`total` 0, 빈 목록)입니다.
+- 학교 서버의 내부 정보(`STACK_TRACE` 등)는 로그와 결과에 내보내지 않습니다.
+- **예외를 던지는 경우는 잘못된 입력뿐입니다.** `curriculum_courses`에 빈 학과 코드나 과목 번호를 주거나, `graduate_calendar`에 형태가 틀린 사이트 이름을 주면 `INVALID_INPUT`이고 요청은 보내지 않습니다. 그 밖의 인자는 예외를 던지지 않습니다 ([에러 코드](../../auth/error-codes/)).
+- 인증과 공개 데이터는 서로 의존하지 않습니다. 공개 데이터가 실패해도 인증 결과는 바뀌지 않고, 반대도 같습니다.
+- **빈 목록은 두 가지 뜻입니다.** 「데이터가 없음」과 「학교 쪽 문제」를 구분하지 못합니다. 화면에는 「불러오지 못했습니다」 같은 안내를 함께 두세요.
+
+## 캐시
+
+- 메서드와 인자 조합마다 메모리에 캐시합니다. 기본 유효 시간은 86400초(하루)이고, 신선한 캐시가 있으면 요청을 보내지 않습니다.
+- 캐시 없이 실패하면 같은 호출은 `failure_cache_seconds`(기본 60초) 동안 요청 없이 빈 값을 돌려줍니다. 만료된 캐시 값이 있으면 실패해도 그 값을 돌려줍니다.
+- 캐시는 최대 `cache_max_entries`(기본 500)개이고, 가득 차면 가장 오래된 항목을 지웁니다. 항목마다 있는 잠금도 함께 지워져서 사용자가 입력한 검색어를 인자로 써도 메모리가 계속 늘지 않습니다.
+- **같은 인자의 동시 호출은 요청 한 번을 나눠 씁니다.**
+- 호출 한 번에 요청은 한 번입니다. 예외는 `cafeteria_places`로, 최대 10번을 한 건씩 차례로 보냅니다 ([학식](../cafeteria/)).
+- 학교 서버에 부담을 주지 않도록 쓰세요. 봇이나 위젯은 하루 몇 번만 갱신해도 충분합니다.
+
+## 요청 방식
+
+- 모든 요청은 라이브러리의 전송 계층을 씁니다. 포털이 허용하는 오래된 TLS 암호 설정([레거시 TLS](../../understand/legacy-tls/))과 식별 가능한 User-Agent(`pro-sejongpeia-<언어>/<버전>`, [방화벽과 User-Agent](../../understand/firewall-user-agent/))를 자동으로 씁니다.
+- SIS(`sjpt.sejong.ac.kr`) 요청: 본문은 JSON(`{"dm_search": ...}`), 헤더 `Content-Type: application/json; charset="UTF-8"`, `Accept: application/json`.
+- 폼 요청(기숙사, 비교과): `application/x-www-form-urlencoded; charset=UTF-8`, `X-Requested-With: XMLHttpRequest`.
+- 기숙사(`happydorm`) 응답은 `text/html` 콘텐츠 타입의 JSON입니다. 본문을 항상 JSON으로 해석합니다.
+- 로그인은 쓰지 않습니다. SIS 코드표와 기숙사 소스는 쿠키 없이도 같은 데이터를 주는 것을 확인했습니다 (2026-10-30). 다른 소스의 쿠키 의존 여부를 따로 조사한 기록은 없습니다.
+
+## 더 보기
+
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md), 학교의 어디에 무엇이 있는지 조사한 기록은 [spec/REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)
+- 사용 예시: [학과·강의 검색](../../guides/department-lecture-search/), [학사일정 위젯](../../guides/academic-calendar/), [기숙사·학식 봇](../../guides/dormitory-cafeteria-bot/)
+- 실패와 캐시가 왜 이렇게 설계됐는지: [실패 격리와 캐시](../../understand/failure-isolation-cache/)
+- 새 출처를 더하는 방법: [새 정보 출처 추가하기](../../contribute/add-data-source/)
+- 하위 호환 보장이 없으니 버전을 고정하세요: [API 안정성](../../api-stability/)

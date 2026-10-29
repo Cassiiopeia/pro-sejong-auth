@@ -1,0 +1,53 @@
+---
+title: SSO 흐름
+description: 포털 로그인 한 번으로 DHC, SIS, 포털 메인을 조회하는 통합 인증의 요청 순서와 쿠키, 리다이렉트 처리를 설명합니다.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+## 왜 어려운가
+
+세종대의 서비스는 도메인이 나뉘어 있습니다 (`portal`, `classic`, `sjpt`). 학번과 비밀번호는 포털에만 보내고, 나머지는 포털이 심어 준 SSO 쿠키로 들어갑니다. 브라우저는 이를 자동으로 하지만 서버 코드에서는 직접 해야 합니다.
+
+- SSO 쿠키(`ssotoken`)는 `.sejong.ac.kr` 전체에 설정되므로, `Domain=.sejong.ac.kr`을 지키는 쿠키 저장소가 필요합니다.
+- SSO 단계는 `303` 같은 리다이렉트로 응답합니다. 301, 302, 303, 307을 자동으로 따라가야 합니다.
+- 호출마다 쿠키 저장소를 새로 만들어야 사용자 사이에 세션이 섞이지 않습니다.
+
+## 통합 인증의 요청 순서
+
+로그인은 한 번이고, 같은 쿠키 저장소로 세 곳을 조회합니다.
+
+<Steps>
+
+1. **포털 로그인.** `portal.sejong.ac.kr`의 로그인 주소에 학번과 비밀번호를 폼으로 보냅니다. 돌아온 200 응답 안의 판정값을 읽어 성공이면 계속합니다 ([로그인 판정](../login-verdict/)).
+
+2. **DHC (`classic.sejong.ac.kr`).** SSO 반환 주소를 열어 세션을 만들고, 고전독서 현황 페이지를 받아 HTML 표를 파싱합니다. 학생 정보와 고전독서가 여기서 나옵니다. 401은 `AUTHENTICATION_FAILED`, 그 밖의 비정상 응답은 `DATA_FETCH_FAILED`, SSO 단계 오류는 `SESSION_ERROR`입니다.
+
+3. **SIS (`sjpt.sejong.ac.kr`).** SSO 주소를 열고 사용자 정보 API를 호출해 JSON을 파싱합니다. 이메일, 전화번호, 영문 이름, 학교 코드가 여기서 나옵니다. 이 단계는 실패해도 통합 호출을 실패시키지 않습니다.
+
+4. **포털 메인 (`portal.sejong.ac.kr`).** 메인 화면에서 학과의 상위 소속 이름을 뽑습니다. 한 번만 시도하고 실패하면 `parentUnitName`이 null입니다.
+
+</Steps>
+
+| 단계 | 호스트 | 형식 | 실패하면 |
+|---|---|---|---|
+| 1 로그인 | `portal.sejong.ac.kr` | 폼 POST, 200 안의 판정값 | 호출 전체 실패 |
+| 2 DHC | `classic.sejong.ac.kr` | HTML | 호출 전체 실패 |
+| 3 SIS | `sjpt.sejong.ac.kr` | JSON | 연락처 필드만 null |
+| 4 포털 메인 | `portal.sejong.ac.kr` | HTML | `parentUnitName`만 null |
+
+로그인 한 번으로 DHC와 SIS를 모두 조회할 수 있다는 것은 2026-10-24에 확인했습니다 (DHC 로그인 뒤에 SIS SSO가 동작).
+
+## DHC나 SIS만 부를 때
+
+- DHC 인증은 로그인 뒤 2단계만, SIS 인증은 SIS용 반환 주소로 로그인한 뒤 3단계만 실행합니다.
+- 학사 업무 기간 조회는 SIS용 반환 주소로 로그인하고, SIS 사용자 정보 뒤에 메뉴 목록과 화면 열기, 목록 요청이 이어집니다 ([학사 업무 기간](../../auth/business-periods/)).
+
+<Aside type="tip" title="직접 구현한다면">
+쿠키 저장소를 호출 단위로 분리하고, 리다이렉트를 따라가고, 단계마다 응답 코드를 구분해 에러로 옮기세요. 상세한 요청과 헤더는 [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md)에 있고, 화면별 설명은 [DHC 로그인 플로우](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/docs/DHC_LOGIN_FLOW.md)와 [SIS 로그인 플로우](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/docs/SIS_LOGIN_FLOW.md)에 있습니다.
+</Aside>
+
+## 이어서 보기
+
+- [로그인 판정과 계정 잠금 방지](../login-verdict/)
+- [실패 격리와 캐시](../failure-isolation-cache/)

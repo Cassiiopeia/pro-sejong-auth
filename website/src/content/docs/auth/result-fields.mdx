@@ -1,0 +1,91 @@
+---
+title: 결과 필드
+description: 통합, DHC, SIS 인증 결과의 필드와 타입, 고전독서 하위 표, SIS 학교 코드, null과 빈 문자열의 규칙을 정리합니다.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+이름은 Java와 Node.js 기준(`camelCase`)입니다. Python은 `snake_case`(`student_id`, `phone_number`)를 씁니다. 원본 스키마는 [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md)입니다.
+
+## 통합 결과
+
+| 필드 | 타입 | 출처 | 규칙 |
+|---|---|---|---|
+| `success` | boolean | | 결과가 돌아왔다면 항상 true |
+| `studentId` | string | DHC | 학번 |
+| `name` | string | DHC | 이름 |
+| `major` | string | DHC | 학과(전공) |
+| `grade` | string | DHC | 학년 |
+| `status` | string | DHC | 학적 상태 (재학, 휴학, 졸업 등 포털 원문) |
+| `classicReading` | object | DHC | 아래 「고전독서」 |
+| `email` | string 또는 null | SIS | SIS 조회가 실패하면 null |
+| `phoneNumber` | string 또는 null | SIS | 같음. `010-1234-5678` 형식 |
+| `englishName` | string 또는 null | SIS | 같음 |
+| `userCategory` | string 또는 null | SIS | 사용자 구분, 예: `학부생` |
+| `parentUnitName` | string 또는 null | 포털 메인 | 포털 메인 호출이 실패하면 null, 쓸 만한 값이 없으면 빈 문자열 |
+| `authenticatedAt` | 날짜·시간 | | 인증 시각 (각 언어의 지역 시간 타입) |
+| SIS 학교 코드 11개 | string 또는 null | SIS | 아래 「SIS 학교 코드」. SIS 조회가 실패하면 null |
+| `extra` | 맵 또는 null | SIS | extra 옵션을 켰을 때만. 아니면 null |
+| `rawHtml` | string 또는 null | DHC | 원문 옵션을 켰을 때만 |
+| `rawJson` | string 또는 null | SIS | 원문 옵션을 켰을 때만. SIS가 실패했으면 null |
+
+<Aside type="caution" title="parentUnitName으로 판정하지 마세요">
+학과 위의 소속 이름(단과대학 또는 학부)을 포털 화면 글자에서 뽑은 보조 정보입니다. 학생 유형에 따라 빈 문자열일 수 있고, 학년도마다 표기가 바뀌는 포털 원문이므로 값 목록으로 분기하거나 인증 판정에 쓰지 마세요.
+</Aside>
+
+## DHC 결과
+
+`success`, `studentId`, `name`, `major`, `grade`, `status`, `classicReading`, `authenticatedAt`, `rawHtml`(원문 옵션일 때만)
+
+연락처 필드는 없습니다.
+
+## SIS 결과
+
+`success`, `studentId`, `name`, `major`, `grade`(항상 빈 문자열), `status`(항상 빈 문자열), `email`, `phoneNumber`, `englishName`, `userCategory`, SIS 학교 코드, `extra`(extra 옵션일 때만), `authenticatedAt`, `rawJson`(원문 옵션일 때만)
+
+고전독서 필드는 없습니다.
+
+## 고전독서 (`classicReading`)
+
+DHC의 「사용자 정보」 표에서 가져오는 포털 원문 문자열 3개와 하위 목록 5개입니다.
+
+| 필드 | 타입 | 규칙 |
+|---|---|---|
+| `completedSemesters` | string | `이수 학기` 원문 (예: `8 학기`). 없으면 빈 문자열 |
+| `certifiedSemesters` | string | `인증완료 학기` 원문. 없으면 빈 문자열 |
+| `certificationStatus` | string | `인증여부` 원문. 자유 문장이라 대체 사유가 들어올 수 있음. 없으면 빈 문자열 |
+
+| 목록 | 항목 필드 |
+|---|---|
+| `certifications` (영역별 인증 현황) | `area`, `requiredCount`, `certifiedCount` |
+| `examRecords` (인증 시험) | `semester`, `area`, `bookTitle`, `examDate`, `score`, `passStatus` |
+| `subjectSubstitutions` (과목 대체 인증) | `semester`, `subjectName`, `area`, `bookTitle`, `completion` |
+| `contestRecords` (대회 인증) | `semester`, `contestName`, `area`, `bookTitle` |
+| `curriculumRecords` (교과연계 인증) | `semester`, `subjectName`, `area`, `bookTitle`, `completion` |
+
+Python 이름은 `snake_case`입니다 (`completed_semesters`, `required_count`, `book_title` 등). 해당 표에 행이 없으면 빈 목록입니다.
+
+## SIS 학교 코드
+
+학교가 준 문자열 그대로입니다. 코드표나 이름 매핑은 라이브러리에 없고, 값이 없으면 빈 문자열입니다. SIS 데이터셋을 `dm_UserInfoSch`, `dm_UserInfoGam`, `dm_UserInfo` 순서로 찾아 처음 나온 비어 있지 않은 값을 씁니다. 기본으로 SIS 결과와 통합 결과에 들어갑니다.
+
+| 필드 (Python) | SIS 키 | 비고 |
+|---|---|---|
+| `departmentCode` (`department_code`) | `DEPT_CD`, 없으면 `DEPT_NO` | 두 값이 같을 것으로 보지만 모든 학적 상태에서 확인하지는 않았습니다 |
+| `organizationClassificationCode` | `ORGN_CLSF_CD` | |
+| `enrollmentStatusCode` | `STATUS_DIV_CD` | 원문 코드뿐이며 모든 상태의 뜻을 확인하지는 않았습니다 |
+| `userClassificationCode` | `USER_CLSF_CD` | |
+| `userClassificationLargeCode` | `USER_CLSF_L_CD` | |
+| `userClassificationMiddleCode` | `USER_CLSF_M_CD` | |
+| `roleCode` / `roleName` | `RPSN_ROLE_CD` / `RPSN_ROLE_CD_NM` | |
+| `menuSystemId` / `menuSystemName` | `MENU_SYS_ID` / `MENU_SYS_NM` | |
+| `locale` | `INTG_LOCALE` | |
+
+`departmentCode`는 [학과·학기 코드](../../data/codes/)의 학과 코드와 같은 체계입니다. 한 학부생 계정으로만 같은 값임을 확인했고, 대학원생, 복수전공 등은 확인하지 못했습니다.
+
+## null과 빈 문자열
+
+- 인증 결과의 필드는 「학교 값이 없음」이면 빈 문자열입니다.
+- SIS와 포털 메인에서 오는 필드는 **그 조회 자체가 실패했을 때** null입니다. 통합 호출은 이때도 성공합니다.
+- 원문(`rawHtml`, `rawJson`)과 `extra`는 옵션을 켜지 않으면 null입니다.
+- 이 값들은 모두 학교 원문이라, 학교가 표기를 바꾸면 달라질 수 있습니다. [API 안정성](../../api-stability/)을 보세요.

@@ -1,0 +1,89 @@
+---
+title: 학사일정 위젯
+description: 오늘부터 30일 안의 학부 학사일정을 시작일 순으로 보여 주는 위젯 예시를 Java, Python, Node.js로 보여 줍니다.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+오늘부터 30일 안의 학부 학사일정을 시작일 순으로 보여 줍니다. 로그인이 필요 없습니다.
+
+## 코드
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    class AcademicCalendarWidget {
+
+      static List<CalendarEvent> upcomingAcademicEvents(SejongPublicData publicData, int daysAhead) {
+        LocalDate today = LocalDate.now();
+        return publicData.calendar(today.toString(), today.plusDays(daysAhead).toString()).stream()
+            .sorted(java.util.Comparator.comparing(CalendarEvent::getStartDate))
+            .toList();
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from datetime import date, timedelta
+
+    from sejongpeia import SejongPublicData
+
+    public_data = SejongPublicData()
+
+
+    def upcoming_academic_events(days_ahead: int = 30) -> list:
+        """오늘부터 days_ahead일 안에 걸쳐 있는 학부 학사일정 (시작일 순)"""
+        today = date.today()
+        events = public_data.calendar(today.isoformat(), (today + timedelta(days=days_ahead)).isoformat())
+        # 날짜는 학교가 주는 yyyy-MM-dd 문자열이라 문자열 정렬이 날짜 순서와 같음
+        return sorted(events, key=lambda event: event.start_date)
+
+
+    if __name__ == "__main__":
+        for event in upcoming_academic_events():
+            period = event.start_date if event.start_date == event.end_date else f"{event.start_date} ~ {event.end_date}"
+            print(f"{period}  {event.title}")
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { SejongPublicData } from 'pro-sejongpeia';
+
+    const publicData = new SejongPublicData();
+
+    /** 오늘부터 daysAhead일 안에 걸쳐 있는 학부 학사일정 (시작일 순) */
+    export async function upcomingAcademicEvents(daysAhead = 30) {
+      const toDateText = (date) => date.toLocaleDateString('sv-SE'); // yyyy-MM-dd (로컬 날짜)
+      const today = new Date();
+      const end = new Date(today.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+      const events = await publicData.calendar({ start: toDateText(today), end: toDateText(end) });
+      // 날짜는 학교가 주는 yyyy-MM-dd 문자열이라 문자열 정렬이 날짜 순서와 같음
+      return events.sort((first, second) => first.startDate.localeCompare(second.startDate));
+    }
+
+    for (const event of await upcomingAcademicEvents()) {
+      const period = event.startDate === event.endDate ? event.startDate : `${event.startDate} ~ ${event.endDate}`;
+      console.log(`${period}  ${event.title}`);
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## 실행 결과
+
+2026-10-30, 실제 학교 서버로 세 언어 모두 실행했고 같은 4건이 나왔습니다. 학교 데이터는 바뀌므로 그날의 예입니다.
+
+```text
+2026-10-27 ~ 2026-11-02  2학기 중간고사 성적 입력
+2026-11-02 ~ 2026-11-26  복수·부전공, 연계융합전공 신청
+2026-11-03 ~ 2026-11-07  2학기 중간고사 성적 열람 및 정정
+2026-11-09 ~ 2026-12-18  세종인재자기설계전공 신청
+```
+
+## 참고
+
+- `calendar(start, end, category_code="0001")`: `0001`이 학부이고, 대학원 일정은 `0002`~`0007` 또는 사이트별 `graduate_calendar(site_id, year, month)`입니다. 날짜 형식 차이(홈페이지는 `yyyy-MM-dd`, 대학원 사이트는 `MM.dd`)는 [학사일정](../../data/calendar/)을 보세요.
+- 위젯이 열릴 때마다 학교에 요청하지 않습니다. 같은 인자는 24시간 캐시됩니다. [실패 격리와 캐시](../../understand/failure-isolation-cache/)
+- 제목은 학교 원문입니다. 영문 제목은 `title_en` / `titleEn`입니다.
+- 학교 서버가 실패하면 빈 목록이 나옵니다. 일정이 없는 기간과 구분되지 않으니 안내를 함께 두세요.

@@ -1,0 +1,95 @@
+---
+title: Raw response and extra options
+description: How to use the raw option that returns the school's raw response and the extra option that returns unnamed SIS fields, the always-excluded keys and safety notes.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+A default result has named fields only. The two options below are for when you need more. Both are off by default and turning them on changes no other field.
+
+## Raw option
+
+Keeps the response the school sent, as is, in the result. For debugging and parser checks.
+
+- Integrated result: the DHC page goes into `rawHtml`, the SIS `initUserInfo` response into `rawJson`. If SIS failed, `rawJson` is null.
+- A DHC result fills `rawHtml` only, a SIS result fills `rawJson` only.
+- **No extra request is made.** It only keeps responses already received.
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    SejongAuthResult result = sejongAuthEngine.authenticateWithRaw(studentId, password);
+    String html = result.getRawHtml();   // DHC raw
+    String json = result.getRawJson();   // SIS raw (null if SIS failed)
+
+    sejongAuthEngine.authenticateWithDHCRaw(studentId, password);   // DHC result + rawHtml
+    sejongAuthEngine.authenticateWithSISRaw(studentId, password);   // SIS result + rawJson
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    result = authenticate(student_id, password, include_raw=True)
+    html, json_text = result.raw_html, result.raw_json
+
+    authenticate_dhc(student_id, password, include_raw=True)   # DHC result + raw_html
+    authenticate_sis(student_id, password, include_raw=True)   # SIS result + raw_json
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    const result = await authenticate(studentId, password, { includeRaw: true });
+    const { rawHtml, rawJson } = result;
+
+    await authenticateDhc(studentId, password, { includeRaw: true });   // DHC result + rawHtml
+    await authenticateSis(studentId, password, { includeRaw: true });   // SIS result + rawJson
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="danger" title="Never pass the raw response outward">
+The SIS raw text contains values that look like a session identifier, the client IP and the login time. Do not hand it to an external client as is.
+</Aside>
+
+## Extra option
+
+Returns the remaining SIS fields the school provides, other than the named ones, as a `{"dataset.FIELD": "value"}` map. It is a way to reach a field the school adds without waiting for a release.
+
+- The source is the scalar fields of the datasets `dm_UserInfoSch`, `dm_UserInfoGam` and `dm_UserInfo`.
+- Available in the integrated and SIS authentication only. A DHC result has no extra.
+- `extra` is null unless the option is on.
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    // arguments: student ID, password, include raw, include extra
+    SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password, false, true);
+    Map<String, String> extra = result.getExtra();
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    result = authenticate(student_id, password, include_extra=True)
+    extra = result.extra   # {"dataset.FIELD": "value"}
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    const result = await authenticate(studentId, password, { includeExtra: true });
+    const { extra } = result;   // { 'dataset.FIELD': 'value' }
+    ```
+  </TabItem>
+</Tabs>
+
+### Always-excluded keys
+
+Keys matching `extraExcludedKeyPattern` in `spec/contract.json` (case-insensitive) never enter extra.
+
+```text
+(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)
+```
+
+That covers session values, client IP, password and account state flags, resident number, bank account, address, staff-name fields (`ALIAS`), phone, mail and birth date. It is still a **best-effort name pattern filter**. Do not forward extra to an external client as is; pick the keys you need.
+
+## Outside the compatibility guarantee
+
+The keys and structure of the raw responses and the keys and values of extra change whenever the school changes them. Do not hang core app logic on them. For stable access use the named fields in [Result fields](../result-fields/). The policy is in [API stability](../../api-stability/).

@@ -1,0 +1,98 @@
+---
+title: Curriculum
+description: The curriculum_courses method returns the suggested year and term, course type, credits and course overview from a department code and course number.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+With a department code and a course number taken from the course listings, get the suggested year and term, course type, credits, hours and the **course overview** from that department's curriculum. There is no method for a whole curriculum list: you look up one course at a time. Common rules are on [Common rules](../overview/).
+
+## Methods
+
+| Language | Signature |
+|---|---|
+| Java | `curriculumCourses(String departmentCode, String courseNumber)` |
+| Python | `curriculum_courses(department_code, course_number)` |
+| Node.js | `curriculumCourses({ departmentCode, courseNumber })` |
+
+- `department_code` is the SIS code (`DEPT_CD`) of a degree department. Get it from the [department list](../codes/) or from a lecture's `department_code`. `course_number` is a lecture's `course_number` (`CURI_NO`).
+- Returns a list of `CurriculumCourse` (0 or 1 rows were seen).
+- **A blank department code or course number raises `INVALID_INPUT`** and no request is sent ([Error codes](../../auth/error-codes/)).
+
+## Request notes
+
+- `GET https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=<course number>&deptNo=<department code>`, response array `items`. No login.
+- **Without the `Accept: application/json` header the school answers 404.** All three languages send it.
+- Department codes `3513` and `3517`, taken from the timetable department list (undergraduate), each returned their own department name (2026-10-30). Those two departments are the basis for saying `deptCd` of the curriculum JSON and `DEPT_CD` are the same code system.
+- The course overview (`remark`) is the same text as the `교과목개요` report of the timetable screen. It was verified equal once, apart from line breaks.
+
+## Result fields
+
+Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing.
+
+| Field | School key | Meaning |
+|---|---|---|
+| `department_code`, `department_name` | `deptCd`, `deptNm` | Department code and name |
+| `category_code` | `orgnClsfCd` | Organization category code |
+| `year` | `year` | Curriculum year |
+| `course_number`, `name` | `curiNo`, `curiNm` | Course number and name |
+| `course_type_code`, `course_type_name` | `curiTypeCd`, `curiTypeNm` | Course type code and name |
+| `credits` | `cdt` | Credits |
+| `lecture_hours`, `practice_hours`, `total_hours` | `lecTmNum`, `exeTmNum`, `curiTm` | Lecture, practice and total hours |
+| `grade_level` | `stuYearCd` | Suggested year level |
+| `semester_code`, `semester_name` | `smtDanCd`, `smtDanNm` | Suggested term code and name |
+| `overview` | **`remark`** | Course overview text |
+| `extra` | other fields | for example `curiYear`, `studentYear`, `sameSlcCnt` |
+
+## Examples
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+// Look up curriculum info with a lecture's department code and course number (empty list if absent)
+Lecture lecture = lectures.get(0);
+List<CurriculumCourse> courses = publicData.curriculumCourses(lecture.getDepartmentCode(), lecture.getCourseNumber());
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+# Look up curriculum info with a lecture's department code and course number (empty list if absent)
+courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
+if courses:
+    print(courses[0].grade_level, courses[0].semester_name, courses[0].overview)
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+// Look up curriculum info with a lecture's department code and course number (empty list if absent)
+const courses = await publicData.curriculumCourses({
+  departmentCode: lectures[0].departmentCode,
+  courseNumber: lectures[0].courseNumber,
+});
+```
+
+</TabItem>
+</Tabs>
+
+To find course listings first, see [Course listings](../lectures/).
+
+## Cache and failure behavior
+
+- Cached for one day (86400 seconds by default) per department code and course number. One request per call.
+- School failures (connection, timeout, bad response, missing `items`) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
+- **An empty `items` is a valid answer** (`success: true`). A course that is not in that department's curriculum gives an empty list, not an error.
+- The only exception that is raised is a blank department code or course number (`INVALID_INPUT`).
+
+## Known limits and what was not verified
+
+- Only courses in a degree department's curriculum come back. One liberal-arts college department and one graduate department that were tried each returned an empty `items`.
+- The overview is the text of the **current curriculum year**, not a per-section or per-instructor text.
+- That `deptCd` and `DEPT_CD` are the same code system was checked for two departments. Wider coverage was not measured.
+- The **whole curriculum list** is not provided. The school's list request decides the department from a screen menu number and ignores the department code, and that number exists only in page HTML with no mapping from department codes. If you need a whole department, you can call this method for each course of its lecture list, one request per course.
+- The instructor syllabus is not provided. Its form carries the instructor's name and contact lines ([survey notes](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)).
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

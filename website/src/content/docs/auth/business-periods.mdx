@@ -1,0 +1,104 @@
+---
+title: 학사 업무 기간
+description: 본인 SIS의 학사일정조회 화면이 주는 업무별 허용 기간을 조회하는 방법, 입력 규칙, 결과 필드, 확인한 범위를 설명합니다.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+수강신청, 성적 조회처럼 **업무가 어느 기간에 허용되는지**를 본인 학사정보시스템(SIS)의 「학사일정조회」 화면과 같은 방식으로 가져옵니다. 로그인이 필요합니다.
+
+이 자료는 학교 공개 학사일정([학사일정](../../data/calendar/))과 **다른 자료**입니다. 공개 학사일정은 학교 행사 일정이고, 이것은 로그인한 본인의 SIS가 업무별로 주는 허용 기간입니다.
+
+## 호출
+
+| 언어 | 메서드 | 연도 / 월 |
+|---|---|---|
+| Java | `fetchSisBusinessPeriods(id, pw, year, month)` | 문자열 `"2026"`, `"10"` (월은 `""`이면 연간 전체) |
+| Python | `fetch_sis_business_periods(id, pw, year, month="")` | 숫자 또는 문자열 |
+| Node.js | `fetchSisBusinessPeriods(id, pw, { year, month })` | 숫자 또는 문자열, `month` 생략 가능 |
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    // 2026년 10월 한 달 (월을 "" 로 두면 2026년 전체)
+    List<SisBusinessPeriod> periods = sejongAuthEngine.fetchSisBusinessPeriods(studentId, password, "2026", "10");
+    for (SisBusinessPeriod period : periods) {
+        System.out.println(period.businessName() + " " + period.scheduleName() + " " + period.period());
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import fetch_sis_business_periods
+
+    # 2026년 10월 한 달 (month 를 비우면 2026년 전체)
+    periods = fetch_sis_business_periods(student_id, password, 2026, 10)
+    for period in periods:
+        print(period.business_name, period.schedule_name, period.period)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { fetchSisBusinessPeriods } from 'pro-sejongpeia';
+
+    // 2026년 10월 한 달 (month 를 생략하면 2026년 전체)
+    const periods = await fetchSisBusinessPeriods(studentId, password, { year: 2026, month: 10 });
+    for (const period of periods) console.log(period.businessName, period.scheduleName, period.period);
+    ```
+  </TabItem>
+</Tabs>
+
+## 입력 규칙
+
+- `year`는 4자리 숫자, `month`는 1~12 또는 빈 값(연간 전체)입니다. 아니면 요청 없이 `INVALID_INPUT`입니다.
+- 학번이나 비밀번호가 비어도 `INVALID_INPUT`입니다.
+
+## 안에서 일어나는 일
+
+학교는 형태가 틀린 요청에 세션을 끊습니다. 그래서 라이브러리는 브라우저와 같은 순서로만 요청합니다.
+
+1. 포털 로그인(SIS용 반환 주소)과 SSO, SIS 사용자 정보 조회
+2. 메뉴 목록 요청: 서버 세션에 메뉴 권한을 올림
+3. 화면 열기 요청
+4. 기간 목록 요청: 본인의 소속 분류, 사용자 구분 코드와 연도, 월을 담음
+
+모든 요청이 한 세션, 로그인 한 번입니다. **어느 단계든 실패하면 재시도 없이 중단합니다.** 요청 순서와 값의 상세는 [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md)의 2d에 있습니다.
+
+<Aside type="note" title="세션 값은 남지 않습니다">
+SIS의 세션 값(통합 사용자 번호, 실행 값, 로그인 시각)은 결과, 로그, 에러 메시지에 들어가지 않습니다. 학교의 오류 문구도 에러 메시지에 옮기지 않고 단계 이름만 남깁니다.
+</Aside>
+
+## 결과 필드
+
+항목 하나가 목록의 한 행입니다. 값은 학교 원문이고 없으면 빈 문자열입니다. 행 하나가 이상해도 목록 전체가 실패하지 않고, 빈 목록도 정상 응답입니다.
+
+| 필드 (Python) | 학교 키 | 비고 |
+|---|---|---|
+| `period` | `PERIOD` | 텍스트. 예: `2026-03-01 ∼ 2026-03-15` |
+| `startDate` (`start_date`), `endDate` (`end_date`) | `START_DT`, `TO_DT` | `yyyyMMdd` 원문. 기간이 열려 있으면 끝이 `29991231` |
+| `scheduleName` | `SCHEDULE` | 일정 이름 |
+| `courseGroupName` | `CORS_SCHE_GRP_CD_NM` | |
+| `target` | `TARGET_AUTH` | 대상 |
+| `businessName` | `SYS_NM` | 업무 이름 |
+| `yearSemester` | `YEAR_SMT` | |
+| `timeText` | `TMS` | |
+| `categoryCode` | `ORGN_CLSF_CD` | |
+| `sortOrder` | `PRT_ORD` | 문자열 |
+| `extra` | 나머지 스칼라 키 | SIS extra와 같은 제외 패턴 ([원문·extra 옵션](../raw-and-extra/)) |
+
+## 에러
+
+| 상황 | 코드 |
+|---|---|
+| 연도·월 형식 오류, 빈 입력 | `INVALID_INPUT` |
+| 응답이 200이 아니거나 비어 있음, 소속·사용자 구분·메뉴 코드가 비어 있음 | `DATA_FETCH_FAILED` |
+| 401 | `AUTHENTICATION_FAILED` |
+| 학교가 로그아웃 오류를 돌려줌 | `SESSION_ERROR` |
+| 그 밖의 학교 오류 | `DATA_FETCH_FAILED` |
+| 기간 정보나 목록 구조가 예상과 다름 | `PARSE_ERROR` |
+
+전체 코드는 [에러 코드](../error-codes/)에 있습니다.
+
+## 확인한 범위
+
+2026-10-30에 **학부생 계정 1개**로 브라우저의 요청 흐름과 비교해 확인했습니다 (2026년 10월 53행, 2026년 전체 160행). 다른 신분(대학원생 등)은 확인하지 못했습니다. 학교가 화면을 바꾸면 달라질 수 있습니다.

@@ -1,0 +1,163 @@
+---
+title: 빠른 시작
+description: Java, Python, Node.js에서 라이브러리를 설치하고 학생 인증과 학교 데이터를 처음 호출하는 방법입니다.
+---
+
+import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. **설치합니다.** 버전은 정확히 고정하세요. 최신 번호는 [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases)나 README의 배지에서 확인합니다 ([API 안정성](../../api-stability/)).
+
+   <Tabs syncKey="language">
+     <TabItem label="Java">
+       Maven Central에서 배포하므로 저장소를 따로 추가하지 않습니다. Java 17 이상, Spring Boot 3.x.
+
+       ```groovy
+       dependencies {
+           implementation "kr.suhsaechan:sejongpeia:<version>"
+       }
+       ```
+
+       ```xml
+       <dependency>
+           <groupId>kr.suhsaechan</groupId>
+           <artifactId>sejongpeia</artifactId>
+           <version><!-- 고정할 버전 --></version>
+       </dependency>
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       Python 3.9 이상, 표준 라이브러리 외 의존성이 없습니다.
+
+       ```bash
+       pip install pro-sejongpeia==<version>
+       ```
+     </TabItem>
+     <TabItem label="Node.js">
+       Node 18 이상, 의존성 0개, TypeScript 타입 포함, ESM과 CommonJS 모두 지원합니다.
+
+       ```bash
+       npm install pro-sejongpeia@<version>
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **학생 인증을 호출합니다.** 학번과 비밀번호로 통합 인증을 한 번 호출합니다.
+
+   <Tabs syncKey="language">
+     <TabItem label="Java">
+       Spring Boot 자동 설정이 `SuhSejongAuthEngine` 빈을 등록합니다.
+
+       ```java
+       @RestController
+       @RequiredArgsConstructor
+       public class AuthController {
+
+           private final SuhSejongAuthEngine sejongAuthEngine;
+
+           @PostMapping("/auth/sejong")
+           public SejongAuthResult authenticate(@RequestParam String studentId,
+                                                @RequestParam String password) {
+               return sejongAuthEngine.authenticate(studentId, password);
+           }
+       }
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       from sejongpeia import authenticate, SejongAuthError, ErrorCode
+
+       try:
+           result = authenticate("21011234", "비밀번호")
+           print(result.name, result.major, result.grade)
+       except SejongAuthError as error:
+           if error.code == ErrorCode.AUTHENTICATION_FAILED:
+               print("학번 또는 비밀번호가 틀렸습니다")
+           elif error.code == ErrorCode.ACCOUNT_LOCKED:
+               print("포털 계정이 잠겼습니다. 포털에서 비밀번호를 재설정하세요")
+       ```
+     </TabItem>
+     <TabItem label="Node.js">
+       ```js
+       import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
+
+       try {
+         const result = await authenticate('21011234', '비밀번호');
+         console.log(result.name, result.major, result.grade);
+       } catch (error) {
+         if (error instanceof SejongAuthError && error.code === ErrorCode.AUTHENTICATION_FAILED) {
+           console.log('학번 또는 비밀번호가 틀렸습니다');
+         } else if (error instanceof SejongAuthError && error.code === ErrorCode.ACCOUNT_LOCKED) {
+           console.log('포털 계정이 잠겼습니다. 포털에서 비밀번호를 재설정하세요');
+         }
+       }
+       ```
+     </TabItem>
+   </Tabs>
+
+   분기는 에러 메시지가 아니라 **코드**로 합니다. 코드 목록은 [에러 코드](../../auth/error-codes/)입니다.
+
+3. **로그인 없이 쓰는 학교 데이터를 호출합니다.** 학과 목록을 받고, 첫 학과의 개설강좌를 조회합니다 (학부, 2026년 2학기). `"20"`(학부)과 학기 값은 학교 값입니다.
+
+   <Tabs syncKey="language">
+     <TabItem label="Java">
+       ```java
+       SejongPublicData publicData = new SejongPublicData();   // Spring에서는 빈으로 주입
+       List<Department> departments = publicData.departments("20", "2026", "20");
+       List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       from sejongpeia import SejongPublicData
+
+       public_data = SejongPublicData()
+       departments = public_data.departments("20", "2026", "20")          # 학부, 2026년 2학기
+       lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+       # 강의의 과목 번호로 그 학과 교육과정의 학년·학기·교과목 개요 (없으면 빈 목록)
+       courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
+       ```
+     </TabItem>
+     <TabItem label="Node.js">
+       ```js
+       import { SejongPublicData } from 'pro-sejongpeia';
+
+       const publicData = new SejongPublicData();
+       const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+       const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
+       ```
+     </TabItem>
+   </Tabs>
+
+   `SejongPublicData`는 **프로세스당 하나만** 만드세요. 메모리 캐시(기본 24시간)와 같은 요청 합치기가 인스턴스 안에 있습니다.
+
+</Steps>
+
+## 일반 Java (Spring 없이)
+
+Spring Boot는 선택 의존성이라 일반 Java 프로젝트는 받지 않습니다. 포털이 허용하는 오래된 TLS 암호를 JVM이 막고 있어서, `main()` **맨 앞**에서 다른 HTTPS 호출보다 먼저 `SejongTlsSupport.ensureLegacyCipherEnabled()`를 불러야 합니다.
+
+```java
+SejongTlsSupport.ensureLegacyCipherEnabled();   // main() 맨 앞, 다른 HTTPS 호출보다 먼저
+SejongAuthProperties properties = new SejongAuthProperties();
+SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),
+    new SejongClassicReadingParser(), new SejongSisClient(properties), new SejongSisParser());
+SejongAuthResult result = engine.authenticate(studentId, password);
+```
+
+늦게 부르면 인증이 `CONNECTION_FAILED`와 원인 안내 메시지로 실패합니다. 이 설정은 JVM 전체에 적용됩니다. 자세한 이유는 [레거시 TLS](../../understand/legacy-tls/)를 보세요. Spring Boot는 시작할 때 자동으로 처리하고, Python과 Node는 자기 연결의 TLS 설정만 바꿉니다.
+
+<Aside type="caution" title="서버에서만 호출하세요">
+브라우저나 앱에서 직접 부르면 비밀번호가 제3자 코드에 노출됩니다. Node 패키지도 서버 전용입니다. 틀린 비밀번호를 반복해서 보내면 포털이 계정을 잠그므로, 누구나 학번을 입력할 수 있는 폼이라면 학번별 실패 횟수를 제한하세요. [로그인 판정과 계정 잠금 방지](../../understand/login-verdict/)
+</Aside>
+
+<Aside type="note" title="빈 목록의 의미">
+공개 데이터는 학교 서버가 실패하면 예외 없이 마지막 캐시 값이나 빈 목록을 돌려줍니다. 빈 목록은 「데이터 없음」일 수도 「학교 쪽 문제」일 수도 있으니, 화면에는 「불러오지 못했습니다」와 같은 안내를 함께 두세요.
+</Aside>
+
+## 다음으로
+
+<LinkCard title="학생 인증 붙이기" description="동아리 가입 폼 예시와 주의할 점." href="../../guides/student-verification/" />
+<LinkCard title="학과·강의 검색" description="학과와 개설강좌를 JSON으로 내려주는 작은 서버." href="../../guides/department-lecture-search/" />
+<LinkCard title="인증 설정" description="제한 시간, 재시도, 인증서 검증." href="../../auth/configuration/" />

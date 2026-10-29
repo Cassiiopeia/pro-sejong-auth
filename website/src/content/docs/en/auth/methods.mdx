@@ -1,0 +1,53 @@
+---
+title: Authentication methods
+description: Method names of the integrated, DHC and SIS logins and the academic business periods lookup in Java, Python and Node.js, and what each one guarantees.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+These are the operations that log in to the portal with a student ID and password. The three languages have the same features and the same results; only the naming differs.
+
+## Method table
+
+| Operation | Java | Python | Node.js |
+|---|---|---|---|
+| Integrated: student info + classic reading + contact | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
+| DHC: student info + classic reading | `authenticateWithDHC(id, pw)` | `authenticate_dhc(id, pw)` | `authenticateDhc(id, pw)` |
+| SIS: student info + contact | `authenticateWithSIS(id, pw)` | `authenticate_sis(id, pw)` | `authenticateSis(id, pw)` |
+| SIS academic business periods (login required) | `fetchSisBusinessPeriods(id, pw, year, month)` | `fetch_sis_business_periods(id, pw, year, month="")` | `fetchSisBusinessPeriods(id, pw, { year, month })` |
+| Include raw response (debugging) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
+| Include the remaining SIS fields | `authenticate(id, pw, false, true)` | `include_extra=True` | `{ includeExtra: true }` |
+
+- In Java these are methods of the `SuhSejongAuthEngine` bean that Spring Boot auto-configuration registers. For use without Spring see [Configuration](../configuration/).
+- In Python the module functions (`from sejongpeia import authenticate`) use a client with default settings. Create a `SejongAuthClient` yourself to change them.
+- In Node.js every method returns a `Promise`. Python and Java calls are synchronous.
+- The raw and extra options are on [Raw response and extra options](../raw-and-extra/), the result fields on [Result fields](../result-fields/).
+
+## What each one guarantees
+
+| Method | Always filled | If it fails |
+|---|---|---|
+| Integrated | Student info and classic reading from DHC | If the DHC step fails, the whole call fails |
+| Integrated (contact etc.) | Email, phone number, English name and school codes from SIS | If the SIS step fails the call still succeeds and only those fields are `null` |
+| Integrated (parent unit) | `parentUnitName` from the portal main page | If the portal main step fails the call still succeeds and the field is `null` |
+| DHC | Student info, classic reading | Throws |
+| SIS | Student info, contact, school codes (`grade` and `status` are always empty strings) | Throws |
+| Business periods | List of periods allowed per business | Throws, without retry |
+
+- The integrated call logs in to the portal **once** and uses the same session for DHC, SIS and the portal main page. Calling student info and contact separately logs in twice, so prefer the one integrated call.
+- A blank student ID or password is rejected with `INVALID_INPUT` before any network call.
+- A wrong password is not retried: the call stops at the first failure. See [Login verdict and account lock protection](../../understand/login-verdict/) for why.
+
+## Measured time
+
+One integrated authentication (2026-10-24, Seoul, median of 5 runs): Java 0.57 s, Python 0.76 s, Node.js 0.69 s. Most of it is the portal's own response time and it varies with the school server.
+
+<Aside type="caution">
+Call it from the server only. Calling it directly from a browser or app exposes the password to third-party code. Never store the password or write it to logs.
+</Aside>
+
+## Next
+
+- [Add student verification](../../guides/student-verification/): a club sign-up example
+- [Error codes](../error-codes/): failure reasons and how to branch
+- [SSO flow](../../understand/sso-flow/): what happens inside the integrated call

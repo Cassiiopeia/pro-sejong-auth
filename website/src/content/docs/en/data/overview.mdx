@@ -1,0 +1,132 @@
+---
+title: Common rules
+description: The client, result value rules, cache, failure isolation and request handling shared by all 15 school data methods.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+School data (public data) is what the school serves publicly, with no student ID or password. Java, Python and Node.js have the same methods, the same result fields and the same value rules. This page covers the rules every method shares. For each method, see its own page in the left menu.
+
+<Aside type="caution" title="Unofficial endpoints">
+This data comes from undocumented addresses that the school's own web screens call internally. The school can change or remove them without notice. When that happens, the [contract document (spec)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md) is updated first and all three languages are fixed in one PR. For the daily shape check, see [Daily live portal check](../../understand/daily-live-check/).
+</Aside>
+
+## Client
+
+| Language | Entry point | Naming |
+|---|---|---|
+| Java | `kr.suhsaechan.sejongpeia.publicdata.SejongPublicData`, models in `kr.suhsaechan.sejongpeia.publicdata.model.*` | `camelCase` methods, fields read through getters |
+| Python | `sejongpeia.SejongPublicData` | `snake_case` methods and fields |
+| Node.js | the `SejongPublicData` class exported by the package | `camelCase`, many methods take one object |
+
+- Spring Boot auto-configuration registers a `SejongPublicData` bean. In plain Java, create it with `new SejongPublicData()`, after the [legacy TLS](../../understand/legacy-tls/) setup.
+- Create **one instance per process**. The in-memory cache and the merging of identical requests live inside the instance.
+- Calling style: Java and Python are synchronous, Node.js returns a `Promise`.
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+// In Spring Boot, inject the bean instead
+SejongPublicData publicData = new SejongPublicData();
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()  # one per process so the cache is shared
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData(); // one per process so the cache is shared
+```
+
+</TabItem>
+</Tabs>
+
+### Settings
+
+All optional.
+
+| Setting | Java (`sejongpeia.*`) | Python argument | Node.js option | Default |
+|---|---|---|---|---|
+| Request timeout (seconds) | `timeout-seconds` | `timeout_seconds` | `timeoutSeconds` | 10 |
+| Cache lifetime (seconds) | `public-data-cache-ttl-seconds` | `cache_ttl_seconds` | `cacheTtlSeconds` | 86400 |
+| Failure memory (seconds) | `public-data-failure-cache-seconds` | `failure_cache_seconds` | `failureCacheSeconds` | 60 |
+| Maximum cache entries | `public-data-cache-max-entries` | `cache_max_entries` | `cacheMaxEntries` | 500 |
+| Certificate verification | `ssl-verification` | `ssl_verification` | `sslVerification` | true |
+
+Java reads the `sejongpeia` prefix of `application.yml` (`SejongAuthProperties`). Without Spring, build the same properties object and pass it to `new SejongPublicData(properties)`. Settings shared with authentication are on [Configuration](../../auth/configuration/).
+
+## The 15 methods
+
+| Data | Java | Python | Node.js | Page |
+|---|---|---|---|---|
+| Organization categories | `organizationCategories()` | `organization_categories()` | `organizationCategories()` | [Codes](../codes/) |
+| Terms | `terms(categoryCode)` | `terms(category_code)` | `terms(categoryCode)` | [Codes](../codes/) |
+| Departments | `departments(categoryCode, year, semesterCode)` | `departments(category_code, year, semester_code)` | `departments({ categoryCode, year, semesterCode })` | [Codes](../codes/) |
+| Course types | `courseTypes()` | `course_types()` | `courseTypes()` | [Codes](../codes/) |
+| Selective domains | `selectiveDomains()` | `selective_domains()` | `selectiveDomains()` | [Codes](../codes/) |
+| Course listings | `lectures(...)` | `lectures(...)` | `lectures({ ... })` | [Course listings](../lectures/) |
+| Curriculum course | `curriculumCourses(departmentCode, courseNumber)` | `curriculum_courses(department_code, course_number)` | `curriculumCourses({ departmentCode, courseNumber })` | [Curriculum](../curriculum/) |
+| Academic calendar | `calendar(...)` | `calendar(...)` | `calendar({ ... })` | [Calendar](../calendar/) |
+| Graduate calendar | `graduateCalendar(siteId, year, month)` | `graduate_calendar(site_id, year, month)` | `graduateCalendar({ siteId, year, month })` | [Calendar](../calendar/) |
+| Dormitory menu | `dormitoryMenu(...)` | `dormitory_menu(...)` | `dormitoryMenu(...)` | [Dormitory](../dormitory/) |
+| Dormitory notices | `dormitoryNotices(...)` | `dormitory_notices(...)` | `dormitoryNotices({ ... })` | [Dormitory](../dormitory/) |
+| Cafeteria menu | `cafeteriaMenu(placeId)` | `cafeteria_menu(place_id)` | `cafeteriaMenu(placeId)` | [Cafeterias](../cafeteria/) |
+| Cafeteria list | `cafeteriaPlaces()` | `cafeteria_places()` | `cafeteriaPlaces()` | [Cafeterias](../cafeteria/) |
+| Campus places | `campusPlaces(...)` | `campus_places(...)` | `campusPlaces(...)` | [Campus places](../campus-places/) |
+| Extracurricular events | `extracurricularEvents(...)` | `extracurricular_events(...)` | `extracurricularEvents({ ... })` | [Extracurricular](../extracurricular/) |
+
+## Result value rules
+
+Identical in the three languages. Field mapping is defined by [`scripts/generate-public-data-fixtures.py`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/scripts/generate-public-data-fixtures.py), and the tests compare against the same expected-result file ([`expected_public_data.json`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/fixtures/public_data/expected_public_data.json)).
+
+- **School values as they are**: the library holds no code tables or name mappings. Department, term and cafeteria values change when the school changes them. Do not branch on lists of values.
+- **Missing values are empty strings**: a missing or `null` value becomes an empty string. Numeric fields also arrive as strings. The exceptions are `views` and `total` (integers) and `latitude` and `longitude` (floating point), which are `0` and `0.0` when missing.
+- **Rows are never dropped**: one odd row does not fail the whole list. Only a missing or non-array **container** (`data`, `items`, `events`, `root`, `dl_*`) is a failure.
+- **Scalars become text**: strings stay as they are, numbers use plain decimal form, booleans become `true` or `false`.
+- **`extra`**: school fields not used by the mapping, as a string-to-string map. Null and empty values and the deny list below are left out. Object or array values become compact JSON strings (no spaces). A field the school adds can show up in `extra` without a release. The dormitory models and the cafeteria menu item (`CafeteriaMenuItem`) have no `extra`.
+- **`extra` deny list**: `CD_ALIAS1` to `CD_ALIAS3` (and their `_ENG` variants), `regname`, `regid`, `STACK_TRACE`. Staff names never appear in `extra`.
+- **Field names**: Python uses `snake_case`, Node.js and Java use `camelCase`. Field tables in these docs use the Python names; read them as `camelCase` for Node.js and Java (for example `start_date` is `startDate`).
+
+## Failure isolation
+
+- A connection failure, timeout, non-2xx status, non-JSON body, missing expected key or `_SUBMIT_ERROR_` object returns the last cached value (even if expired), **without raising**. With no cache, it returns an empty list. Dormitory notices return an empty object (`total` 0, empty lists).
+- School server internals (such as `STACK_TRACE`) are never logged or returned.
+- **Only invalid input raises.** `curriculum_courses` with a blank department code or course number, and `graduate_calendar` with a malformed site name, raise `INVALID_INPUT` without sending a request. No other argument raises ([Error codes](../../auth/error-codes/)).
+- Authentication and public data do not depend on each other. A public data failure never changes an authentication result, and the other way around.
+- **An empty list has two meanings.** It cannot tell "no data" from "a problem on the school side". Show a message such as "could not load" next to it.
+
+## Cache
+
+- Results are cached in memory per method and arguments. The default lifetime is 86400 seconds (one day). A fresh cache entry means no request.
+- After a failure with no cached value, the same call returns the empty value without a request for `failure_cache_seconds` (default 60). A stale cached value is still returned on failure.
+- The cache holds at most `cache_max_entries` (default 500) entries and evicts the oldest when full. The per-key locks go with their entries, so passing user-typed search text as an argument does not grow memory without bound.
+- **Concurrent calls with the same arguments share one request.**
+- One call makes one request. The exception is `cafeteria_places`, which makes up to 10, one after the other ([Cafeterias](../cafeteria/)).
+- Be gentle with the school servers. A bot or widget only needs to refresh a few times a day.
+
+## How requests are sent
+
+- Every request uses the library transport: the legacy TLS cipher the portal allows ([Legacy TLS](../../understand/legacy-tls/)) and an identifying User-Agent (`pro-sejongpeia-<language>/<version>`, see [Firewall and User-Agent](../../understand/firewall-user-agent/)).
+- SIS (`sjpt.sejong.ac.kr`) requests: JSON body (`{"dm_search": ...}`), headers `Content-Type: application/json; charset="UTF-8"` and `Accept: application/json`.
+- Form requests (dormitory, extracurricular): `application/x-www-form-urlencoded; charset=UTF-8` and `X-Requested-With: XMLHttpRequest`.
+- The dormitory (`happydorm`) responses are JSON with a `text/html` content type. The body is always parsed as JSON.
+- No login is used. The SIS code tables and the dormitory source were confirmed to return the same data without any cookie (2026-10-30). For the other sources there is no record of checking cookie dependence.
+
+## Further reading
+
+- Contract sources: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md), and the record of where the school serves what, [spec/REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)
+- Usage examples: [Department and lecture search](../../guides/department-lecture-search/), [Academic calendar widget](../../guides/academic-calendar/), [Dormitory and cafeteria bot](../../guides/dormitory-cafeteria-bot/)
+- Why failure and cache work this way: [Failure isolation and cache](../../understand/failure-isolation-cache/)
+- Adding a new source: [Add a new data source](../../contribute/add-data-source/)
+- Backward compatibility is not guaranteed, so pin your version: [API stability](../../api-stability/)

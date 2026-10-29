@@ -1,0 +1,83 @@
+---
+title: Extracurricular programs
+description: The extracurricular_events method returns extracurricular programs for a period with category, location and detail link.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Query the schedule that the school's extracurricular program portal (`do.sejong.ac.kr`) serves publicly, by period. Each entry has a category, start and end time, location, description and detail link. Results are cached and school-side failures are isolated. Common rules are on [Common rules](../overview/).
+
+## Methods
+
+| Language | Signature |
+|---|---|
+| Java | `extracurricularEvents(String startDate, String endDate)`, `extracurricularEvents(String startDate, String endDate, String category)` |
+| Python | `extracurricular_events(start, end, category="")` |
+| Node.js | `extracurricularEvents({ start, end, category = '' })` |
+
+- `start` and `end` are `yyyy-MM-dd` strings.
+- `category` is the school's category value and defaults to an empty string. This page does not list the possible values. Read the category name from the result's `category_title`.
+- Returns a list of `ExtracurricularEvent`.
+
+## Request notes
+
+- `POST https://do.sejong.ac.kr/ko/process/schedule/getEvents`, form `cid=eco`, `category`, `start`, `end`, `start_year`, `end_year`. The year fields are the first four characters of each date. Response array `events`. No login.
+- Form request headers are `application/x-www-form-urlencoded; charset=UTF-8` and `X-Requested-With: XMLHttpRequest`.
+
+## Result fields
+
+Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing. This model has no `extra`.
+
+| Field | School key | Meaning |
+|---|---|---|
+| `id` | `id` | Program id |
+| `title` | `title` | Title |
+| `start`, `end` | `start`, `end` | Start and end (date-time strings, in a shape like `2099-10-20T14:00:00`) |
+| `category_title` | `category_title` | Category name |
+| `url` | `data.url` | Detail link |
+| `description` | `data.description` | Description |
+| `location` | `data.location` | Location |
+
+`url`, `description` and `location` are read from the `data` object inside the school's row. The date-time format is the school's text, so check real values before you parse it.
+
+## Examples
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+List<ExtracurricularEvent> events = publicData.extracurricularEvents("2026-10-01", "2026-10-31");
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+events = public_data.extracurricular_events("2026-10-01", "2026-10-31")
+for event in events:
+    print(event.start, event.title, event.location)
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+const events = await publicData.extracurricularEvents({ start: '2026-10-01', end: '2026-10-31' });
+```
+
+</TabItem>
+</Tabs>
+
+## Cache and failure behavior
+
+- Cached for one day (86400 seconds by default) per period and category. One request per call.
+- School failures (connection, timeout, bad response, missing `events`) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
+- This method never raises.
+- An empty list cannot tell "no programs in that period" from "a problem on the school side".
+
+## Known limits and what was not verified
+
+- The list of `category` values, the longest period you can request in one call, and response time were not measured on this page. Check them yourself before using a long period.
+- The start and end strings are the school's text. Whether they carry a time zone was not checked.
+- The dates in the example only show the call shape. They do not promise that programs exist in that period.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

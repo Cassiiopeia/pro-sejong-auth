@@ -1,0 +1,111 @@
+---
+title: Add student verification
+description: Check Sejong enrollment from the student ID and password of a sign-up form and keep only student ID, name and major, in three languages.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Take the student ID and password from a sign-up form, check enrollment, and fetch only student ID, name and major. The password is neither stored nor logged.
+
+<Aside type="caution" title="This example was not run">
+It logs in to the real portal and no account was available when this page was written. Method names, arguments, result fields and error codes were matched by reading the source (`__init__.py`, `index.ts`, `SuhSejongAuthEngine.java`) and [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md). In Python and Node only the `INVALID_INPUT` branch was run, by calling with a blank student ID and password (rejected before any network call). Java was only compiled, and the Spring wiring was not verified.
+
+With a real account, `scripts/verify-live.sh` in the repository compares the three languages ([Issues and pull requests](../../contribute/issues-and-prs/)).
+</Aside>
+
+## Code
+
+The user-facing messages are in Korean in the original examples; replace them with your own. `ACTIVE_STATUS = "재학"` is the portal's own string for "enrolled" and must stay as the school sends it.
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    @Service
+    class StudentVerificationService {
+
+      private static final String ACTIVE_STATUS = "재학"; // compare with the school's own string
+
+      private final SuhSejongAuthEngine sejongAuthEngine;
+
+      StudentVerificationService(SuhSejongAuthEngine sejongAuthEngine) {
+        this.sejongAuthEngine = sejongAuthEngine;
+      }
+
+      /** Return only name and major; the password is not kept */
+      String verifySejongStudent(String studentId, String password) {
+        try {
+          SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);
+          boolean isActiveStudent = ACTIVE_STATUS.equals(result.getStatus());
+          return isActiveStudent ? result.getName() + " (" + result.getMajor() + ")" : "Not an enrolled student";
+        } catch (SejongAuthException exception) {
+          SejongAuthErrorCode errorCode = exception.getErrorCode();
+          if (errorCode == SejongAuthErrorCode.AUTHENTICATION_FAILED) {
+            return "Wrong student ID or password";
+          }
+          if (errorCode == SejongAuthErrorCode.ACCOUNT_LOCKED) {
+            return "The portal account is locked. Reset the password on the portal";
+          }
+          return "Cannot verify right now. Try again later";
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import authenticate, SejongAuthError, ErrorCode
+
+    ACTIVE_STATUS = "재학"  # compare with the school's own string (change only here if the portal wording changes)
+
+
+    def verify_sejong_student(student_id: str, password: str) -> dict:
+        """Student verification for club sign-up: return only ID, name and major; the password is not kept"""
+        try:
+            result = authenticate(student_id, password)
+        except SejongAuthError as error:
+            if error.code == ErrorCode.AUTHENTICATION_FAILED:
+                return {"verified": False, "reason": "Wrong student ID or password"}
+            if error.code == ErrorCode.ACCOUNT_LOCKED:
+                return {"verified": False, "reason": "The portal account is locked. Reset the password on the portal"}
+            if error.code == ErrorCode.INVALID_INPUT:
+                return {"verified": False, "reason": "Enter your student ID and password"}
+            return {"verified": False, "reason": "Cannot verify right now. Try again later"}  # connection, parsing, etc.
+
+        return {
+            "verified": result.status == ACTIVE_STATUS,
+            "student_id": result.student_id,
+            "name": result.name,
+            "major": result.major,
+        }
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
+
+    const ACTIVE_STATUS = '재학'; // compare with the school's own string (change only here if the portal wording changes)
+
+    /** Student verification for club sign-up: return only ID, name and major; the password is not kept */
+    export async function verifySejongStudent(studentId, password) {
+      try {
+        const result = await authenticate(studentId, password);
+        return { verified: result.status === ACTIVE_STATUS, studentId: result.studentId, name: result.name, major: result.major };
+      } catch (error) {
+        if (!(error instanceof SejongAuthError)) throw error;
+        if (error.code === ErrorCode.AUTHENTICATION_FAILED) return { verified: false, reason: 'Wrong student ID or password' };
+        if (error.code === ErrorCode.ACCOUNT_LOCKED) return { verified: false, reason: 'The portal account is locked. Reset the password on the portal' };
+        if (error.code === ErrorCode.INVALID_INPUT) return { verified: false, reason: 'Enter your student ID and password' };
+        return { verified: false, reason: 'Cannot verify right now. Try again later' }; // connection, parsing, etc.
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Things to watch
+
+- **Never resend a wrong password repeatedly.** The portal locks the account. The library stops at the first failure, but if anyone can type a student ID into your form, **limit failures per student ID**. [Login verdict and account lock protection](../../understand/login-verdict/)
+- `status` and `major` are the portal's own strings. The `재학` comparison above is an example; keep it as a constant in one place since the wording can change.
+- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter. See [Authentication methods](../../auth/methods/) and [Result fields](../../auth/result-fields/).
+- Call it from a server only. Calling from a browser or app exposes the password to third-party code.
+- Branch on the error **code**, never on the message. [Error codes](../../auth/error-codes/)

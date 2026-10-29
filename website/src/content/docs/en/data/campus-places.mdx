@@ -1,0 +1,86 @@
+---
+title: Campus places
+description: The campus_places method returns buildings and facilities with names, coordinates (latitude and longitude) and guide information.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Get the place list used by the school's campus map. It has names, latitude and longitude and guide information for buildings and facilities, so you can use it directly in a map app or a campus guide service. Common rules are on [Common rules](../overview/).
+
+## Methods
+
+| Language | Signature |
+|---|---|
+| Java | `campusPlaces()`, `campusPlaces(String placeType)` |
+| Python | `campus_places(place_type="")` |
+| Node.js | `campusPlaces(placeType = '')` |
+
+- `place_type` is the school's place type value and defaults to an empty string. This page does not tabulate what an empty value returns or which type values the school accepts. Read the `place_type` and `category` values in the result.
+- Returns a list of `CampusPlace`.
+
+## Request notes
+
+- `GET https://www.sejong.ac.kr/kor/intro/campus-map.do?mode=getPlaceUserList&placeType=<type>`, response array `items`. No login.
+- The contract document has no record of measuring the number of places or the list of type values.
+
+## Result fields
+
+Field names are Python `snake_case`; Node.js and Java use `camelCase`. Missing values are empty strings; latitude and longitude are numbers (`0.0` when missing or unreadable).
+
+| Field | School key | Meaning |
+|---|---|---|
+| `id` | `id` | Place number. A different system from cafeteria numbers ([Cafeterias](../cafeteria/)) |
+| `name`, `name_en` | `placeName`, `placeNameEn` | Korean and English name |
+| `place_type` | `placeType` | Place type |
+| `category` | `welfareCategory` | Facility category |
+| `latitude`, `longitude` | `latitude`, `longitude` | Latitude and longitude (floating point) |
+| `info` | `placeInfo` | Guide information |
+| `phone` | `telNum` | Phone number |
+| `description` | `description` | Description |
+| `extra` | other fields | The school's other fields |
+
+## Examples
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+List<CampusPlace> places = publicData.campusPlaces();
+for (CampusPlace place : places) {
+  System.out.println(place.getName() + " " + place.getLatitude() + "," + place.getLongitude());
+}
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+places = public_data.campus_places()
+for place in places:
+    print(place.name, place.latitude, place.longitude)
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+const places = await publicData.campusPlaces();
+for (const place of places) console.log(place.name, place.latitude, place.longitude);
+```
+
+</TabItem>
+</Tabs>
+
+## Cache and failure behavior
+
+- Cached for one day (86400 seconds by default) per type value. One request per call.
+- School failures (connection, timeout, bad response, missing `items`) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
+- This method never raises.
+- An empty list cannot tell "no places" from "a problem on the school side".
+
+## Known limits and what was not verified
+
+- The place id is a different system from the cafeteria numbers in the menu answers, and nothing links the two (2026-10-30).
+- The value lists of `place_type` and `category`, and whether some places have empty coordinates, were not checked. A missing coordinate is `0.0`, so check before you plot a point.
+- What numbers `phone` contains was not checked. Review the values before you pass them on to outside users.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

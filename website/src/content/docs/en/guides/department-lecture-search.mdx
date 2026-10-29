@@ -1,0 +1,164 @@
+---
+title: Department and lecture search
+description: Build a small server in Java, Python or Node.js that returns departments and course listings as JSON, with the checked results and notes.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+A small server that returns departments and lectures as JSON. A front end only needs these two URLs.
+
+- `GET /departments`: department code, college, department name
+- `GET /lectures?department=<department code>&name=<course name>`: one of the two is required (a rule of this example server; the library returns the whole term when all conditions are empty)
+
+The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) and the semester value are the school's own values; list them with `organization_categories()` and `terms(...)` ([Department and term codes](../../data/codes/)).
+
+## Code
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    @RestController
+    class LectureSearchController {
+
+      private static final String UNDERGRADUATE_CATEGORY = "20";
+      private static final String YEAR = "2026";
+      private static final String SEMESTER = "20";
+
+      private final SejongPublicData publicData;
+
+      LectureSearchController(SejongPublicData publicData) {
+        this.publicData = publicData;
+      }
+
+      @GetMapping("/departments")
+      List<Department> departments() {
+        return publicData.departments(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER);
+      }
+
+      @GetMapping("/lectures")
+      List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
+                             @RequestParam(defaultValue = "") String name) {
+        if (department.isBlank() && name.isBlank()) { // no condition returns the whole term (about 2.4MB undergraduate), so this server requires one
+          return List.of();
+        }
+        return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    A standard library server.
+
+    ```python
+    import json
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    from sejongpeia import SejongPublicData
+
+    public_data = SejongPublicData()  # one per process so the cache is shared
+    UNDERGRADUATE_CATEGORY = "20"     # the school's organization category code (list with organization_categories())
+    YEAR, SEMESTER = "2026", "20"     # list terms with terms(UNDERGRADUATE_CATEGORY)
+
+
+    def search_lectures(department_code: str, course_name: str) -> list:
+        lectures = public_data.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER,
+                                        department_code=department_code, course_name=course_name)
+        return [
+            {"course": lecture.name, "department": lecture.department_name, "schedule": lecture.schedule,
+             "credits": lecture.credits, "course_number": lecture.course_number}
+            for lecture in lectures
+        ]
+
+
+    class LectureSearchHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            url = urlparse(self.path)
+            if url.path == "/departments":
+                departments = public_data.departments(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER)
+                body = [{"code": department.code, "college": department.college_name,
+                         "name": department.major_name or department.unit_name}
+                        for department in departments]
+            elif url.path == "/lectures":
+                query = parse_qs(url.query)
+                department_code = query.get("department", [""])[0].strip()
+                course_name = query.get("name", [""])[0].strip()
+                if not department_code and not course_name:  # no condition returns the whole term (about 2.4MB undergraduate), so this server requires one
+                    self.send_error(400, "department or name is required")
+                    return
+                body = search_lectures(department_code, course_name)
+            else:
+                self.send_error(404)
+                return
+            payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(payload)
+
+
+    if __name__ == "__main__":
+        HTTPServer(("127.0.0.1", 8000), LectureSearchHandler).serve_forever()
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { createServer } from 'node:http';
+    import { SejongPublicData } from 'pro-sejongpeia';
+
+    const publicData = new SejongPublicData(); // one per process so the cache is shared
+    const UNDERGRADUATE_CATEGORY = '20';       // the school's organization category code (list with organizationCategories())
+    const YEAR = '2026';
+    const SEMESTER = '20';                     // list terms with terms(UNDERGRADUATE_CATEGORY)
+
+    async function searchLectures(departmentCode, courseName) {
+      const lectures = await publicData.lectures({
+        categoryCode: UNDERGRADUATE_CATEGORY, year: YEAR, semesterCode: SEMESTER, departmentCode, courseName,
+      });
+      return lectures.map((lecture) => ({
+        course: lecture.name, department: lecture.departmentName, schedule: lecture.schedule,
+        credits: lecture.credits, courseNumber: lecture.courseNumber,
+      }));
+    }
+
+    createServer(async (request, response) => {
+      const url = new URL(request.url, 'http://localhost');
+      let body;
+      if (url.pathname === '/departments') {
+        const departments = await publicData.departments({ categoryCode: UNDERGRADUATE_CATEGORY, year: YEAR, semesterCode: SEMESTER });
+        body = departments.map((department) => ({ code: department.code, college: department.collegeName, name: department.majorName || department.unitName }));
+      } else if (url.pathname === '/lectures') {
+        const departmentCode = (url.searchParams.get('department') ?? '').trim();
+        const courseName = (url.searchParams.get('name') ?? '').trim();
+        if (!departmentCode && !courseName) { // no condition returns the whole term (about 2.4MB undergraduate), so this server requires one
+          response.writeHead(400).end('department or name is required');
+          return;
+        }
+        body = await searchLectures(departmentCode, courseName);
+      } else {
+        response.writeHead(404).end();
+        return;
+      }
+      response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' }).end(JSON.stringify(body));
+    }).listen(8000, '127.0.0.1');
+    ```
+  </TabItem>
+</Tabs>
+
+## What was checked
+
+Checked on 2026-10-30 against the live school servers. Each server was started and called with `curl` (Java: only the library calls were compiled and run, without a server; the Spring wiring was not verified).
+
+- `/departments`: 103 departments (same count in all three languages)
+- `/lectures?name=알고리즘` (a course-name substring): 18 lectures. Shape of one item: `{"course":"알고리즘및실습","department":"컴퓨터공학과","schedule":"화13:00-15:00","credits":"3.0","courseNumber":"009954"}`
+- `/lectures` without a condition: 400 (Python, Node). The Java controller is written to return an empty list in that case, but it was not run as a Spring server (only the library calls were run)
+
+School data changes, so the counts and values above are that day's examples.
+
+## Notes
+
+- Department code, course name and instructor name of `lectures` are all optional. **With all of them empty you get the whole term**: about 2,800 rows and 2.4 MB for undergraduate (as of 2026-10-30, see [Course listings](../../data/lectures/)), so the example server requires a condition. If you need everything, query department by department.
+- Lecture results include the instructor name (`instructor`). The examples return only selected fields; decide which fields to expose when you publish this.
+- Course-name search matched substrings (`알고리즘` 18, `프로그래밍` 73). Some names return 0 (that day `자료구조` returned 0), so show an empty-result hint.
+- A lecture's `course_number` and `department_code` lead on to the department curriculum entry (grade, semester, course overview) with `curriculum_courses`. [Curriculum](../../data/curriculum/)
+- When a school server fails, public data returns an empty list, which looks the same as "no results". Show a hint next to empty results. [Failure isolation and cache](../../understand/failure-isolation-cache/)

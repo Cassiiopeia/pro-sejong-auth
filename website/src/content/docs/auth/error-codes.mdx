@@ -1,0 +1,102 @@
+---
+title: 에러 코드
+description: 인증 호출이 던지는 10개 에러 코드의 의미와 원인, 계정 잠금 대응, 세 언어의 에러 분기 예시를 정리합니다.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+모든 언어가 `code`를 가진 에러 하나를 던집니다. 메시지는 영어이고 바뀔 수 있으므로, 분기는 항상 **코드**로 하세요.
+
+| 언어 | 에러 타입 | 코드를 읽는 곳 |
+|---|---|---|
+| Java | `SejongAuthException` | `getErrorCode()` (`SejongAuthErrorCode`) |
+| Python | `SejongAuthError` | `error.code` (`ErrorCode`) |
+| Node.js | `SejongAuthError` | `error.code` (`ErrorCode`) |
+
+## 코드 표
+
+| 코드 | 의미 | 주로 이럴 때 |
+|---|---|---|
+| `INVALID_INPUT` | 학번이나 비밀번호가 비었음 | 네트워크 호출 전에 거절. 학사 업무 기간의 연도·월 형식 오류도 포함 |
+| `AUTHENTICATION_FAILED` | 학번 또는 비밀번호가 일치하지 않음 | 포털 판정 `erridpwd`/`Error`. 보조로 DHC 401, SIS의 로그아웃 오류 |
+| `ACCOUNT_LOCKED` | 비밀번호를 여러 번 틀려 포털이 계정을 잠금 | 포털 판정 `pwdNeedChg` |
+| `ACCOUNT_UNAVAILABLE` | 포털 계정으로 로그인할 수 없음 | 사용 기간 종료(`invalidDt`) 또는 관리자 차단(`invalid`) |
+| `CONNECTION_FAILED` | 포털에 연결할 수 없음 | 네트워크 오류, 또는 로그인 재시도를 모두 소진 |
+| `CONNECTION_TIMEOUT` | 포털 응답 시간 초과 | 마지막 로그인 시도가 시간 초과 |
+| `SESSION_ERROR` | 포털 세션 처리 오류 | SSO 단계가 2xx가 아닌 응답, 알 수 없는 로그인 판정값 |
+| `DATA_FETCH_FAILED` | 학생 정보 조회 실패 | 데이터 페이지가 200이 아니거나 비어 있음 |
+| `PARSE_ERROR` | 응답 구조가 예상과 다름 | 포털이 화면이나 JSON 구조를 바꿨을 때 |
+| `SSL_CONFIGURATION_ERROR` | TLS 설정 실패 | 클라이언트를 만드는 단계의 TLS 구성 오류 |
+
+Java에는 더 이상 던지지 않는 `INVALID_CREDENTIALS`가 폐기 표시(`@Deprecated`)로 남아 있습니다. 기존 코드가 컴파일되도록 둔 것이고 Python과 Node.js에는 없습니다.
+
+## 계정 잠금
+
+세종대 포털은 비밀번호를 여러 번 틀리면(포털 안내상 약 5회) 계정을 잠급니다.
+
+- 잠금은 [포털 비밀번호 찾기](https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp)에서 비밀번호를 재설정해야 풀립니다. 기다린다고 풀리지 않고, 라이브러리가 대신 풀 수도 없습니다.
+- 라이브러리는 거부된 로그인을 재시도하지 않고 첫 실패에서 추가 요청 없이 멈춥니다.
+- 누구나 학번을 입력할 수 있는 서비스라면 **학번별 실패 횟수를 제한**하세요. 그렇지 않으면 다른 사람이 남의 학번으로 일부러 실패를 반복해 그 학생의 포털 계정을 잠글 수 있습니다.
+
+판정 방식은 [로그인 판정과 계정 잠금 방지](../../understand/login-verdict/)에 있습니다. 정확한 잠금 횟수와 로그인 성공 시 횟수가 초기화되는지는 확인하지 못했습니다.
+
+## 에러 분기 예시
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    try {
+        SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);
+    } catch (SejongAuthException exception) {
+        switch (exception.getErrorCode()) {
+            case AUTHENTICATION_FAILED -> { /* 학번·비밀번호 불일치: 학번별 실패 횟수 올리기 */ }
+            case ACCOUNT_LOCKED -> { /* 포털에서 비밀번호 재설정 안내 */ }
+            case ACCOUNT_UNAVAILABLE -> { /* 사용 기간 종료 또는 차단 */ }
+            case CONNECTION_FAILED, CONNECTION_TIMEOUT -> { /* 포털 장애: 잠시 뒤 재시도 안내 */ }
+            default -> { /* 파싱·세션 오류: 로그에 코드만 남기기 */ }
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import authenticate, SejongAuthError, ErrorCode
+
+    try:
+        result = authenticate(student_id, password)
+    except SejongAuthError as error:
+        if error.code == ErrorCode.AUTHENTICATION_FAILED:
+            ...  # 학번·비밀번호 불일치: 학번별 실패 횟수 올리기
+        elif error.code == ErrorCode.ACCOUNT_LOCKED:
+            ...  # 포털에서 비밀번호 재설정 안내
+        elif error.code in (ErrorCode.CONNECTION_FAILED, ErrorCode.CONNECTION_TIMEOUT):
+            ...  # 포털 장애: 잠시 뒤 재시도 안내
+        else:
+            ...  # 파싱·세션 오류: 로그에 코드만 남기기
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
+
+    try {
+      const result = await authenticate(studentId, password);
+    } catch (error) {
+      if (!(error instanceof SejongAuthError)) throw error;
+      if (error.code === ErrorCode.AUTHENTICATION_FAILED) {
+        // 학번·비밀번호 불일치: 학번별 실패 횟수 올리기
+      } else if (error.code === ErrorCode.ACCOUNT_LOCKED) {
+        // 포털에서 비밀번호 재설정 안내
+      } else if (error.code === ErrorCode.CONNECTION_FAILED || error.code === ErrorCode.CONNECTION_TIMEOUT) {
+        // 포털 장애: 잠시 뒤 재시도 안내
+      } else {
+        // 파싱·세션 오류: 로그에 코드만 남기기
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+공개 데이터(학과, 강좌, 학사일정 등)는 학교 서버가 실패해도 이 에러를 던지지 않고 마지막 캐시 값이나 빈 목록을 돌려줍니다. 예외는 잘못된 입력뿐입니다. 자세한 내용은 [실패 격리와 캐시](../../understand/failure-isolation-cache/)를 보세요.
+</Aside>

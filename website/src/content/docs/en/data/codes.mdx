@@ -1,0 +1,147 @@
+---
+title: Department and term codes
+description: Five methods that return organization category, term, department, course type and selective domain code tables as the school serves them, without login.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+These methods return the code tables used by the lecture timetable screen of the school's student information system (SIS). Department names and codes change every few years, so do not hard-code them: ask these methods. The department codes the school gives here use the same code system as the `departmentCode` in a logged-in student's SIS result. Common rules are on [Common rules](../overview/).
+
+## Methods
+
+| Data | Java | Python | Node.js |
+|---|---|---|---|
+| Organization categories | `organizationCategories()` | `organization_categories()` | `organizationCategories()` |
+| Terms | `terms(categoryCode)` | `terms(category_code)` | `terms(categoryCode)` |
+| Departments | `departments(categoryCode, year, semesterCode)` | `departments(category_code, year, semester_code)` | `departments({ categoryCode, year, semesterCode })` |
+| Course types | `courseTypes()` | `course_types()` | `courseTypes()` |
+| Selective domains | `selectiveDomains()` | `selective_domains()` | `selectiveDomains()` |
+
+All return lists (`OrganizationCategory`, `Term`, `Department`, `CourseType`, `SelectiveDomain`).
+
+## Request notes
+
+- Source: endpoints under `POST /sch/sch/ext/SueOpenTimeQ/` on `sjpt.sejong.ac.kr`, called by the lecture timetable screen (`/app/ext/SueOpenTimeQ.jsp`). **No login is needed** (checked with plain HTTP and no cookie).
+- The body is `{"dm_search": {...}}` JSON, with headers `Content-Type: application/json; charset="UTF-8"` and `Accept: application/json`.
+
+| Method | Endpoint | `dm_search` body | Response dataset |
+|---|---|---|---|
+| Organization categories, course types, selective domains | `doOnload.do` | `{}` | `dl_code_orgn`, `dl_code_curiType`, `dl_code_sltDomain` |
+| Terms | `doYearsmtlist.do` | `ORGN_CLSF_CD` | `dl_code_yearSmt` |
+| Departments | `doLesndeptgroup.do` | `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `YEAR_SMT` (`<year>/<semester code>`) | `dl_code_dept` |
+
+- The three code tables (categories, course types, domains) come from the same `doOnload.do` answer, but each method has its own cache entry.
+- Row counts on 2026-10-30: categories 22, selective domains 31, course types 81, terms 115 (undergraduate `20`) and 57 (graduate `30`), departments 103 (undergraduate `20`, 2026/2).
+- Checked on 2026-10-30 with Python 3.14 and the library transport, and a cookieless browser.
+
+### Organization category codes
+
+These are the values you pass as `ORGN_CLSF_CD` to other methods. Seen: `20` undergraduate, `30` general graduate school, `31`, `33`, `34`, `39`, `3J`, `3K` professional or special graduate schools. Read the name from the result's `name`. Some categories have 0 departments for the current term (closed or merged graduate schools); an empty list is a valid answer.
+
+### Term codes (`semester_code`)
+
+| Code | Term |
+|---|---|
+| `10` | 1st semester |
+| `11` | summer session |
+| `20` | 2nd semester |
+| `21` | winter session |
+
+## Result fields
+
+Field names are Python `snake_case`; Node.js and Java use `camelCase` (for example `name_en` is `nameEn`). Missing values are empty strings, and every model has `extra` (a string map).
+
+### Organization category (`OrganizationCategory`)
+
+| Field | School key | Meaning |
+|---|---|---|
+| `code` | `COM_CD` | Category code |
+| `name`, `name_en` | `CD_NM`, `CD_NM_ENG` | Korean and English name |
+| `extra` | other fields | for example the display order `PRT_ORD` |
+
+The school's response has `CD_ALIAS1` to `CD_ALIAS3` fields, one of which holds a staff member's name. The library neither reads them nor puts them in `extra`.
+
+### Term (`Term`)
+
+| Field | School key | Meaning |
+|---|---|---|
+| `year` | `YEAR` | Year (string) |
+| `semester_code` | `SMT_CD` | Term code (table above) |
+| `code` | `YEAR_SMT_CD` | for example `2026/20` |
+| `name` | `YEAR_SMT_NM` | for example `2026/2학기` |
+
+### Department (`Department`)
+
+| Field | School key | Meaning |
+|---|---|---|
+| `code` | `DEPT_CD` | Department code, the same system as `departmentCode` in a student's SIS result |
+| `level` | `DEPT_LEVEL_CD` | `2` department or division, `3` major inside a division |
+| `college_code`, `college_name` | `DEPT_L_CD`, `DEPT_L_PRINT` | College code and clean name |
+| `unit_code`, `unit_name` | `DEPT_M_CD`, `DEPT_M_PRINT` | Department or division code and name |
+| `major_code`, `major_name` | `DEPT_S_CD`, `DEPT_S_PRINT` | Major code and name (only when `level` is `3`) |
+| `name_en` | `DEPT_NM_ENG` | English name (empty on some rows) |
+
+- When `level` is `2`, `code` equals `unit_code`. When it is `3`, `code` equals `major_code` and the parent is `unit_code`.
+- The `*_PRINT` names are clean. The `*_NM` fields that land in `extra` (such as `DEPT_NM`) carry a decoration like `【3517 학부】`. The library does not strip it to fill a gap.
+- `college_code` is not always a real college. Interdisciplinary majors (`3300`) and a legacy grouping (`2021`) were seen. Use the code as a join key, and do not assume the name is a college.
+- A school row has about 55 columns, many empty. Anything outside the fields above goes to `extra`.
+
+### Course type (`CourseType`) and selective domain (`SelectiveDomain`)
+
+| Model | Fields | School keys |
+|---|---|---|
+| `CourseType` | `code`, `name`, `category_code` | `CURI_TYPE_CD`, `CURI_TYPE_CD_NM`, `ORGN_CLSF_CD` |
+| `SelectiveDomain` | `code`, `name`, `name_en` | `COM_CD`, `CD_NM`, `CD_NM_ENG` |
+
+These are codes with the same names as `course_type_code` and `domain_code` in course listings ([Course listings](../lectures/)). Whether every value in the two tables lines up with the course fields was not verified.
+
+## Examples
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+List<OrganizationCategory> categories = publicData.organizationCategories();
+List<Term> terms = publicData.terms("20");                                 // undergraduate terms
+List<Department> departments = publicData.departments("20", "2026", "20"); // undergraduate, 2026 2nd semester
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+categories = public_data.organization_categories()
+terms = public_data.terms("20")  # undergraduate terms
+departments = public_data.departments("20", "2026", "20")  # undergraduate, 2026 2nd semester
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+const categories = await publicData.organizationCategories();
+const terms = await publicData.terms('20'); // undergraduate terms
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' }); // undergraduate, 2026 2nd semester
+```
+
+</TabItem>
+</Tabs>
+
+For a full example that searches lectures from the department list, see [Department and lecture search](../../guides/department-lecture-search/).
+
+## Cache and failure behavior
+
+- Cached per method and arguments for one day (86400 seconds by default). Departments are cached separately for each category, year and term.
+- One request per call.
+- A connection failure, timeout, missing dataset key or a `_SUBMIT_ERROR_` answer from the school (the school can answer HTTP 200 with an error object) returns the last cached value or an empty list, without raising. The library checks for the expected dataset key and does not trust the status code alone.
+- These five methods never raise for input problems.
+
+## Known limits and what was not verified
+
+- Unofficial and unversioned endpoints. The school can change or remove them without notice.
+- The department list **depends on the term**. Undergraduate rows: 71 (2000/1), 73 (2010/1), 79 (2020/1), 101 (2025/2), 103 (2026/2). Departments are added and given new names by term, so always pass the term you mean.
+- The list covers departments that **offer lectures** in a term (it feeds the timetable filter), not every administrative unit. Non-academic organizations such as centers and offices are not in it.
+- That `code` equals the department code in a student's SIS result was checked with **one undergraduate account** only. Graduate students, double majors, other enrollment statuses and staff accounts were not verified.
+- Comparing with the public "All departments" page of the school website: 42 of 49 names matched (2026-10-30). The rest differ in spelling or appear under other names. That page has no codes.
+- The timetable screen was the only place found that gives both codes and a category dimension. Other places that were looked at are recorded in [REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md).
+- Contract source: [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md)

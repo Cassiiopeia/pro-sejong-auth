@@ -1,0 +1,123 @@
+---
+title: 개설강좌
+description: 학과, 과목명, 교수명으로 개설강좌를 검색하고 모두 비우면 그 학기 전체를 받는 lectures 메서드를 설명합니다.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+학기별 개설강좌를 학과 코드, 과목명, 교수명으로 검색합니다. 세 조건은 모두 선택이고, **모두 비우면 그 학기 전체**를 한 번에 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다. 학과와 학기 코드는 [학과·학기 코드](../codes/)로 확인하세요. 공통 규칙은 [공통 규칙](../overview/)입니다.
+
+## 메서드
+
+| 언어 | 시그니처 |
+|---|---|
+| Java | `lectures(String categoryCode, String year, String semesterCode, String departmentCode, String courseName, String instructorName)` |
+| Python | `lectures(category_code, year, semester_code, department_code="", course_name="", instructor_name="")` |
+| Node.js | `lectures({ categoryCode, year, semesterCode, departmentCode?, courseName?, instructorName? })` |
+
+- `category_code`: 소속 분류(학부 `20`, 일반대학원 `30` 등). `year`: 연도 문자열. `semester_code`: 학기 코드(`10`, `11`, `20`, `21`).
+- Java는 선택 인자도 빈 문자열(`""`)을 직접 넘깁니다.
+- 반환: `Lecture` 목록.
+
+## 요청 메모
+
+- `POST https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/doList.do`, 본문 `{"dm_search": {...}}`, 응답 데이터셋 `dl_main`. 로그인 불필요.
+- `dm_search`에는 `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `YEAR_SMT`(`<연도>/<학기 코드>`), `DEPT_CD`, `CURI_NM`, `EMP_NM`, `LANG_CHK="KOR"`를 담습니다.
+- **나머지 필터 키도 빈 값으로 모두 있어야 합니다.** `SMT_NM`, `CURI_TYPE_CD`, `SLT_DOMAIN_CD`, `CURI_NO`, `CLASS`, `SLT_DEPT_CD`, `PLAN_REG_YN`, `CORS_SCHE_GRP_CD` 중 하나라도 빠지면 학교가 `_SUBMIT_ERROR_`로 답합니다 (2026-10-30, 하나씩 빼 보고 확인). 라이브러리가 항상 전체 키를 보냅니다.
+- **값은 앞뒤 공백을 지운 뒤 보냅니다.** 학교는 공백 한 칸도 검색어로 받아서, 과목명에 공백 하나를 주면 2,786행 중 179행만 돌아왔습니다 (2026-10-30).
+- 학교 화면은 학과, 과목명, 교수명 중 하나를 요구하지만 서버는 요구하지 않습니다.
+
+### 조건을 모두 비웠을 때
+
+2026-10-30, 2026/2학기, 각 한 번씩 호출한 측정입니다.
+
+| 소속 분류 | 행 수 | 크기 | 걸린 시간 |
+|---|---|---|---|
+| 학부 `20` | 2,786 | 2.4 MB | 0.8초 |
+| 대학원 `30` | 1,132 | 0.9 MB | (기록 없음) |
+
+학부 전체에는 학과 102개가 있고, 과목·분반·학과가 같은 행이 반복되지 않았습니다. 전체가 필요하지 않다면 **학과 하나씩** 조회하세요. 학부 한 학기 전체는 캐시 항목 하나가 수 MB이고 `cache_ttl_seconds` 동안 메모리에 남습니다.
+
+## 결과 필드
+
+필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 모두 문자열이고 없으면 빈 문자열입니다. 모델에 `extra`도 있습니다 (학교가 강의 한 건에 주는 필드 33개 중 아래에 쓰지 않은 것).
+
+| 필드 | 학교 키 | 설명 |
+|---|---|---|
+| `course_number` | `CURI_NO` | 과목 번호 |
+| `section` | `CLASS` | 분반 |
+| `name` | `CURI_NM` | 과목명 |
+| `course_type_code`, `course_type_name` | `CURI_TYPE_CD`, `CURI_TYPE_CD_NM` | 이수 구분 코드와 이름 |
+| `domain_code`, `domain_name` | `SLT_DOMAIN_CD`, `SLT_DOMAIN_CD_NM` | 선택 영역 코드와 이름 |
+| `credits` | `CDT` | 학점 (예: `3.0`) |
+| `hours` | `TM_NUM` | 시간 (학교 표기 그대로, 예: `3.0 / 3 / 0`) |
+| `total_hours` | `TOT_TM_NUM` | 총 시간 |
+| `schedule` | `LESN_TIME` | 강의 시간 (예: `화13:00-15:00`) |
+| `room` | `LESN_ROOM` | 강의실 |
+| `instructor` | `LESN_EMP` | 교수 이름 |
+| `grade_level` | `STUDENT_YEAR` | 학년 |
+| `language_code`, `language_name` | `CURI_LANG_CD`, `CURI_LANG_NM` | 강의 언어 |
+| `department_code`, `department_name` | `DEPT_CD`, `SCH_DEPT_ALIAS` | 개설 학과 코드와 이름 |
+| `managing_department` | `MANAGE_DEPT_NM` | 관리 학과 |
+| `remark` | `REMARK` | 비고 |
+| `year`, `semester_code` | `YEAR`, `SMT_CD` | 연도, 학기 코드 |
+
+<Aside type="caution" title="교수 이름이 들어 있습니다">
+`instructor`는 학교 시간표에 공개된 교수 이름입니다. 라이브러리 결과를 외부에 그대로 공개하는 서비스라면 어떤 필드를 내보낼지 직접 정하세요. [학과·강의 검색](../../guides/department-lecture-search/) 예시도 필요한 필드만 골라 내려줍니다.
+</Aside>
+
+## 예시
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+// 학과 하나의 2026년 2학기 강의 (과목명, 교수명은 비움)
+List<Department> departments = publicData.departments("20", "2026", "20");
+List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
+
+// 과목명으로만 검색
+List<Lecture> byName = publicData.lectures("20", "2026", "20", "", "알고리즘", "");
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+departments = public_data.departments("20", "2026", "20")
+lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+
+# 과목명으로만 검색
+by_name = public_data.lectures("20", "2026", "20", course_name="알고리즘")
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
+
+// 과목명으로만 검색
+const byName = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', courseName: '알고리즘' });
+```
+
+</TabItem>
+</Tabs>
+
+강의의 `course_number`와 `department_code`로 그 학과 교육과정의 학년·학기·교과목 개요를 이어서 조회할 수 있습니다 ([교육과정](../curriculum/)).
+
+## 캐시와 실패 동작
+
+- 소속 분류, 연도, 학기, 학과 코드, 과목명, 교수명 조합마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
+- 학교 실패(연결, 시간 초과, 비정상 응답, `_SUBMIT_ERROR_`)는 마지막 캐시 값 또는 빈 목록입니다. 캐시가 없으면 `failure_cache_seconds`(기본 60초) 동안 같은 호출이 요청 없이 빈 목록을 돌려줍니다.
+- `lectures`는 필터 값 때문에 예외를 던지지 않습니다.
+- 빈 목록은 「조건에 맞는 강의가 없음」과 「학교 쪽 문제」 둘 다일 수 있습니다. 2026-10-30에는 과목명 `자료구조`가 0건이었고, `알고리즘`은 18건, `프로그래밍`은 73건(부분 일치)이었습니다.
+
+## 알려진 한계와 확인하지 못한 것
+
+- 비공식 엔드포인트입니다. 필터 키 요구 사항 같은 동작은 학교가 바꾸면 달라집니다.
+- 언어 필터는 `LANG_CHK="KOR"`로 고정해서 보냅니다. 다른 값은 시도하지 않았습니다.
+- 학부와 대학원(`30`) 전체 응답만 측정했습니다. 다른 소속 분류의 크기는 측정하지 않았습니다.
+- 강의 계획서(수업계획서)는 제공하지 않습니다. 강의 계획서 양식에 교수 이름과 연락처 줄이 들어 있어서 기본 제공 대상에서 뺐습니다 ([조사 기록](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)). 교과목 개요는 [교육과정](../curriculum/)의 `overview`로 받을 수 있습니다.
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

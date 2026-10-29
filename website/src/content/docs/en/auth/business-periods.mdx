@@ -1,0 +1,104 @@
+---
+title: Academic business periods
+description: How to fetch the per-business allowed periods that the student's own SIS academic schedule screen shows, with input rules, result fields and what was verified.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Fetches **which business is allowed in which period** (course registration, grade lookup and so on) the way the "학사일정조회" screen of the student's own student information system (SIS) does. Login is required.
+
+This is a **different data set** from the public academic calendar ([Academic calendar](../../data/calendar/)). The public calendar lists school events; this one is the per-business allowed periods that the signed-in student's own SIS provides.
+
+## Call
+
+| Language | Method | Year / month |
+|---|---|---|
+| Java | `fetchSisBusinessPeriods(id, pw, year, month)` | strings `"2026"`, `"10"` (`""` month means the whole year) |
+| Python | `fetch_sis_business_periods(id, pw, year, month="")` | number or string |
+| Node.js | `fetchSisBusinessPeriods(id, pw, { year, month })` | number or string, `month` optional |
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    // October 2026 (an empty month "" returns the whole of 2026)
+    List<SisBusinessPeriod> periods = sejongAuthEngine.fetchSisBusinessPeriods(studentId, password, "2026", "10");
+    for (SisBusinessPeriod period : periods) {
+        System.out.println(period.businessName() + " " + period.scheduleName() + " " + period.period());
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import fetch_sis_business_periods
+
+    # October 2026 (an empty month returns the whole of 2026)
+    periods = fetch_sis_business_periods(student_id, password, 2026, 10)
+    for period in periods:
+        print(period.business_name, period.schedule_name, period.period)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { fetchSisBusinessPeriods } from 'pro-sejongpeia';
+
+    // October 2026 (omit month to get the whole of 2026)
+    const periods = await fetchSisBusinessPeriods(studentId, password, { year: 2026, month: 10 });
+    for (const period of periods) console.log(period.businessName, period.scheduleName, period.period);
+    ```
+  </TabItem>
+</Tabs>
+
+## Input rules
+
+- `year` is 4 digits, `month` is 1-12 or empty (the whole year). Otherwise `INVALID_INPUT` without any request.
+- A blank student ID or password is also `INVALID_INPUT`.
+
+## What happens inside
+
+The school ends the session when it receives a malformed request. The library therefore sends requests only in the same order as the browser.
+
+1. Portal login (with the SIS return address), SSO, and the SIS user info lookup
+2. Menu list request: puts the menu permission into the server session
+3. Open-the-screen request
+4. Period list request: carries the student's own organization and user classification codes plus the year and month
+
+Everything runs in one session with one login. **If any step fails, it stops without retry.** The exact order and values are in step 2d of [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md).
+
+<Aside type="note" title="Session values are never kept">
+The SIS session values (integrated user number, run values, login time) never appear in a result, a log line or an error message. The school's own error text is not copied into the message either; only the step name is.
+</Aside>
+
+## Result fields
+
+One item is one row of the list. Values are the school's text, and a missing value is an empty string. One odd row never fails the whole list, and an empty list is a valid answer.
+
+| Field (Python) | School key | Note |
+|---|---|---|
+| `period` | `PERIOD` | Text, for example `2026-03-01 ∼ 2026-03-15` |
+| `startDate` (`start_date`), `endDate` (`end_date`) | `START_DT`, `TO_DT` | `yyyyMMdd` as is. An open-ended period ends `29991231` |
+| `scheduleName` | `SCHEDULE` | Schedule name |
+| `courseGroupName` | `CORS_SCHE_GRP_CD_NM` | |
+| `target` | `TARGET_AUTH` | Target |
+| `businessName` | `SYS_NM` | Business name |
+| `yearSemester` | `YEAR_SMT` | |
+| `timeText` | `TMS` | |
+| `categoryCode` | `ORGN_CLSF_CD` | |
+| `sortOrder` | `PRT_ORD` | String |
+| `extra` | other scalar keys | Same exclusion pattern as the SIS extra ([Raw response and extra options](../raw-and-extra/)) |
+
+## Errors
+
+| Situation | Code |
+|---|---|
+| Malformed year or month, blank input | `INVALID_INPUT` |
+| Non-200 or empty answer, empty organization, user classification or menu code | `DATA_FETCH_FAILED` |
+| 401 | `AUTHENTICATION_FAILED` |
+| The school answers a logout error | `SESSION_ERROR` |
+| Any other school error | `DATA_FETCH_FAILED` |
+| Missing period info or a list that is not the expected structure | `PARSE_ERROR` |
+
+All codes are in [Error codes](../error-codes/).
+
+## What was verified
+
+Verified on 2026-10-30 with **one undergraduate account**, compared against the browser's own request flow (October 2026: 53 rows, the whole of 2026: 160 rows). Other student types (graduate students and others) are not verified. If the school changes the screen, this can change.
