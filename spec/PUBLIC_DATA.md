@@ -54,6 +54,10 @@ SIS requests: header `Content-Type: application/json; charset="UTF-8"`, `Accept:
 - Concurrent calls with the same arguments share one request. At most one request per call (`lectures`, `calendar` and the others are single requests).
 - Tests run on fixtures through an injectable transport and an injectable clock; no school server in unit tests. Live shape checks are done by `scripts/probe-reference-data.py`.
 
+## Cafeteria place ids
+
+`cafeteria_menu(place_id)` takes the school's own cafeteria number; the library carries no list of them. Checked 2026-10-30 by calling ids 0 to 8: ids 1, 3, 4, 5 and 6 returned menus (each id is one cafeteria, `place_name` and `building_name` tell which), the others returned an empty list. An empty list also happens for a cafeteria with no menu that day, so an empty result does not prove the id is invalid. Ids can change, so check by calling.
+
 ## Not in scope here
 
 Login-required sources (SIS calendar, student record), HTML-only pages, faculty directories (personal data). See the issues linked from #41.
