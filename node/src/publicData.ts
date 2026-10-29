@@ -194,16 +194,12 @@ export class SejongPublicData {
     }));
   }
 
-  /** 개설 강좌 (학과 코드, 과목명, 교수명 중 하나 이상 필요) */
+  /** 개설 강좌 (학과 코드, 과목명, 교수명은 선택, 모두 비우면 그 학기 전체: 학부 약 2,800행·2.4MB) */
   lectures(query: LecturesQuery): Promise<Lecture[]> {
     const { categoryCode, year, semesterCode, departmentCode = '', courseName = '', instructorName = '' } = query;
-    // 전체 조회로 학교 서버에 부하를 주지 않도록 필터 필수
-    if (!departmentCode.trim() && !courseName.trim() && !instructorName.trim()) {
-      throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Lecture search needs a department code, course name or instructor name.');
-    }
     const usedKeys = ['CURI_NO', 'CLASS', 'CURI_NM', 'CURI_TYPE_CD', 'CURI_TYPE_CD_NM', 'SLT_DOMAIN_CD', 'SLT_DOMAIN_CD_NM', 'CDT', 'TM_NUM', 'TOT_TM_NUM',
       'LESN_TIME', 'LESN_ROOM', 'LESN_EMP', 'STUDENT_YEAR', 'CURI_LANG_CD', 'CURI_LANG_NM', 'DEPT_CD', 'SCH_DEPT_ALIAS', 'MANAGE_DEPT_NM', 'REMARK', 'YEAR', 'SMT_CD'];
-    const searchFields = { ...LECTURE_EMPTY_FILTERS, ...termSearchFields(categoryCode, year, semesterCode), DEPT_CD: departmentCode, CURI_NM: courseName, EMP_NM: instructorName, LANG_CHK: 'KOR' };
+    const searchFields = { ...LECTURE_EMPTY_FILTERS, ...termSearchFields(categoryCode, year, semesterCode), DEPT_CD: departmentCode.trim(), CURI_NM: courseName.trim(), EMP_NM: instructorName.trim(), LANG_CHK: 'KOR' };
     return this.fetchSisDataset('lectures', 'doList.do', searchFields, 'dl_main', (row) => ({
       courseNumber: toText(row['CURI_NO']), section: toText(row['CLASS']), name: toText(row['CURI_NM']),
       courseTypeCode: toText(row.CURI_TYPE_CD), courseTypeName: toText(row.CURI_TYPE_CD_NM),

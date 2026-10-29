@@ -417,11 +417,14 @@ class SejongPublicDataTest {
   // ---- 입력 검증
 
   @Test
-  void lectures_without_any_filter_raises_invalid_input_without_request() {
-    SejongAuthException exception = assertThrows(SejongAuthException.class,
-        () -> publicData.lectures("20", "2099", "20", "", "  ", null));
-    assertEquals(SejongAuthErrorCode.INVALID_INPUT, exception.getErrorCode());
-    assertEquals(0, caller.callCount.get());
+  void lectures_without_any_filter_lists_whole_semester_with_one_request() throws Exception {
+    // 학교 서버는 검색 값이 모두 비어도 그 학기 전체를 돌려줌 (2026-10-30 확인)
+    assertFalse(publicData.lectures("20", "2099", "20", "", "  ", null).isEmpty());
+    assertEquals(1, caller.callCount.get());
+    JsonNode search = plainMapper.readTree(caller.lastRequest().getBody()).get("dm_search");
+    assertEquals("", search.get("DEPT_CD").asText());
+    assertEquals("", search.get("CURI_NM").asText());
+    assertEquals("", search.get("EMP_NM").asText());
   }
 
   // ---- 라이브 (환경변수 없으면 건너뜀)
