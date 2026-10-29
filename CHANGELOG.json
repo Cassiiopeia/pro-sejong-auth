@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T15:57:37Z",
-    "currentVersion": "1.2.23",
+    "lastUpdated": "2026-10-29T17:04:56Z",
+    "currentVersion": "1.2.30",
     "projectType": "spring",
-    "totalReleases": 17,
+    "totalReleases": 18,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,48 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.30",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 77,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **새 기능**\n  * 라이브러리 이름을 pro-sejongpeia로 변경 (PyPI·npm `pro-sejongpeia`, Maven `kr.suhsaechan:sejongpeia`)\n  * 로그인 없이 쓰는 학교 데이터 12종 추가: 단과대·학과 코드, 개설강좌, 학사일정, 기숙사 식단·공지, 학식, 캠퍼스 장소, 비교과 일정\n  * 포털 응답에 누락됐던 필드 4개 추가\n\n* **버그 수정**\n  * 개설강좌 조회가 빈 목록을 돌려주던 문제 수정\n\n* **개선**\n  * 새 정보 출처를 쉽게 붙일 수 있는 틀과 의존 규칙 테스트 추가\n  * 공개 데이터 실패 시 마지막 캐시를 돌려주고 다른 기능에 영향을 주지 않도록 개선\n\n* **문서**\n  * README에 로그인 없이 쓰는 학교 데이터 사용법과 구현 난이도 소개 추가, 기여 가이드 보강",
+      "parsed_changes": {
+        "새_기능": {
+          "title": "새 기능",
+          "items": [
+            "라이브러리 이름을 pro-sejongpeia로 변경 (PyPI·npm `pro-sejongpeia`, Maven `kr.suhsaechan:sejongpeia`)",
+            "로그인 없이 쓰는 학교 데이터 12종 추가: 단과대·학과 코드, 개설강좌, 학사일정, 기숙사 식단·공지, 학식, 캠퍼스 장소, 비교과 일정",
+            "포털 응답에 누락됐던 필드 4개 추가"
+          ]
+        },
+        "버그_수정": {
+          "title": "버그 수정",
+          "items": [
+            "개설강좌 조회가 빈 목록을 돌려주던 문제 수정"
+          ]
+        },
+        "개선": {
+          "title": "개선",
+          "items": [
+            "새 정보 출처를 쉽게 붙일 수 있는 틀과 의존 규칙 테스트 추가",
+            "공개 데이터 실패 시 마지막 캐시를 돌려주고 다른 기능에 영향을 주지 않도록 개선"
+          ]
+        },
+        "문서": {
+          "title": "문서",
+          "items": [
+            "README에 로그인 없이 쓰는 학교 데이터 사용법과 구현 난이도 소개 추가, 기여 가이드 보강"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.23",
       "project_type": "spring",
