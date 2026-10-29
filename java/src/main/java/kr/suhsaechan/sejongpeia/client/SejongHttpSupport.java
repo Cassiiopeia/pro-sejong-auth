@@ -31,7 +31,7 @@ import okhttp3.Response;
  * DHC·SIS 클라이언트가 공유 (로그인 폼·쿠키·TLS 설정 단일 원본)
  */
 @Slf4j
-final class SejongHttpSupport {
+public final class SejongHttpSupport {
 
   // 포털 로그인 요청 헤더
   private static final String PORTAL_HOST = "portal.sejong.ac.kr";
@@ -61,7 +61,7 @@ final class SejongHttpSupport {
   /**
    * 공용 OkHttpClient 생성 (연결 풀 공유): 레거시 cipher 보장 > 타임아웃 > (설정 시) SSL 검증 해제
    */
-  static OkHttpClient buildBaseClient(SejongAuthProperties properties) {
+  public static OkHttpClient buildBaseClient(SejongAuthProperties properties) {
     try {
       SejongTlsSupport.ensureLegacyCipherEnabled();
       if (SejongTlsSupport.hasAdjustedDisabledAlgorithms()) {

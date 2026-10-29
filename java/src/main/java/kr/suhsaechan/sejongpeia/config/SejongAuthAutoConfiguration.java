@@ -5,6 +5,7 @@ import kr.suhsaechan.sejongpeia.client.SejongSisClient;
 import kr.suhsaechan.sejongpeia.parser.SejongClassicReadingParser;
 import kr.suhsaechan.sejongpeia.parser.SejongSisParser;
 import kr.suhsaechan.sejongpeia.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
 import kr.suhsaechan.sejongpeia.service.SuhSejongAuthEngine;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -60,5 +61,11 @@ public class SejongAuthAutoConfiguration {
       SejongSisClient sisClient,
       SejongSisParser sisParser) {
     return new SuhSejongAuthEngine(portalClient, studentInfoParser, classicReadingParser, sisClient, sisParser);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public SejongPublicData sejongPublicData(SejongAuthProperties properties) {
+    return new SejongPublicData(properties);
   }
 }

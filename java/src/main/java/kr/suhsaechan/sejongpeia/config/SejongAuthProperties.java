@@ -36,4 +36,7 @@ public class SejongAuthProperties {
 
   /** 고전독서인증현황 페이지 URL */
   private String classicStatusUrl = "https://classic.sejong.ac.kr/classic/reading/status.do";
+
+  /** 공개 데이터(로그인 없는 소스) 캐시 유효 시간 (초, 기본: 86400) */
+  private long publicDataCacheTtlSeconds = 86400;
 }
