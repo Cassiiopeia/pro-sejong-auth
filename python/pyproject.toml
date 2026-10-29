@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pro-sejongpeia"
-version = "1.2.29"
+version = "1.2.30"
 description = "Sejong University login API for Python: verify students with portal SSO in one line (세종대 로그인 API)"
 readme = "README.md"
 requires-python = ">=3.9"
