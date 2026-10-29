@@ -20,6 +20,10 @@ const FORM_HEADERS = { 'Content-Type': 'application/x-www-form-urlencoded; chars
 // 결과 extra 에서 제외: 교직원 이름 등 개인 식별, 서버 내부 정보
 const EXTRA_DENYLIST = new Set(['CD_ALIAS1', 'CD_ALIAS2', 'CD_ALIAS3', 'CD_ALIAS1_ENG', 'CD_ALIAS2_ENG', 'CD_ALIAS3_ENG', 'regname', 'regid', 'STACK_TRACE']);
 const SIS_SUBMIT_ERROR_KEY = '_SUBMIT_ERROR_';
+// 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
+const LECTURE_EMPTY_FILTERS = Object.fromEntries(
+  ['SMT_NM', 'CURI_TYPE_CD', 'SLT_DOMAIN_CD', 'CURI_NO', 'CLASS', 'SLT_DEPT_CD', 'PLAN_REG_YN', 'CORS_SCHE_GRP_CD'].map((key) => [key, '']),
+);
 const DORMITORY_DAYS_PER_WEEK = 7;
 const DEFAULT_CALENDAR_CATEGORY_CODE = '0001';
 const DEFAULT_DORMITORY_LOCATION = 'SJ';
@@ -179,7 +183,7 @@ export class SejongPublicData {
     }
     const usedKeys = ['CURI_NO', 'CLASS', 'CURI_NM', 'CURI_TYPE_CD', 'CURI_TYPE_CD_NM', 'SLT_DOMAIN_CD', 'SLT_DOMAIN_CD_NM', 'CDT', 'TM_NUM', 'TOT_TM_NUM',
       'LESN_TIME', 'LESN_ROOM', 'LESN_EMP', 'STUDENT_YEAR', 'CURI_LANG_CD', 'CURI_LANG_NM', 'DEPT_CD', 'SCH_DEPT_ALIAS', 'MANAGE_DEPT_NM', 'REMARK', 'YEAR', 'SMT_CD'];
-    const searchFields = { ...termSearchFields(categoryCode, year, semesterCode), DEPT_CD: departmentCode, CURI_NM: courseName, EMP_NM: instructorName, LANG_CHK: 'KOR' };
+    const searchFields = { ...LECTURE_EMPTY_FILTERS, ...termSearchFields(categoryCode, year, semesterCode), DEPT_CD: departmentCode, CURI_NM: courseName, EMP_NM: instructorName, LANG_CHK: 'KOR' };
     return this.fetchSisDataset('lectures', 'doList.do', searchFields, 'dl_main', (row) => ({
       courseNumber: toText(row['CURI_NO']), section: toText(row['CLASS']), name: toText(row['CURI_NM']),
       courseTypeCode: toText(row.CURI_TYPE_CD), courseTypeName: toText(row.CURI_TYPE_CD_NM),

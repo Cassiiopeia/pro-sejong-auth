@@ -30,6 +30,9 @@ DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do"
 EXTRACURRICULAR_EVENTS_URL = "https://do.sejong.ac.kr/ko/process/schedule/getEvents"
 
 SIS_CONTENT_TYPE = 'application/json; charset="UTF-8"'
+# 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
+LECTURE_EMPTY_FILTERS = {key: "" for key in (
+    "SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD")}
 FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8"
 SUBMIT_ERROR_MARKER = "_SUBMIT_ERROR_"
 
@@ -250,7 +253,7 @@ class SejongPublicData:
         if not any(str(value or "").strip() for value in (department_code, course_name, instructor_name)):
             raise SejongAuthError(ErrorCode.INVALID_INPUT,
                                   "At least one of department code, course name, instructor name is required")
-        search = {"ORGN_CLSF_CD": category_code, "YEAR": year, "SMT_CD": semester_code,
+        search = {**LECTURE_EMPTY_FILTERS, "ORGN_CLSF_CD": category_code, "YEAR": year, "SMT_CD": semester_code,
                   "YEAR_SMT": f"{year}/{semester_code}", "DEPT_CD": department_code, "CURI_NM": course_name,
                   "EMP_NM": instructor_name, "LANG_CHK": "KOR"}
         return self._sis_dataset("doList.do", search, "dl_main", _to_lecture)

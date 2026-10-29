@@ -119,7 +119,10 @@ def test_sis_request_body_and_headers():
     client.organization_categories()
     assert json.loads(session.requests[1]["data"]) == {"dm_search": {}}
     client.lectures("20", "2099", "20", course_name="예시과목")
+    # 학교가 필터 키 전체를 요구함 (하나라도 빠지면 _SUBMIT_ERROR_)
     assert json.loads(session.requests[2]["data"])["dm_search"] == {
+        **{key: "" for key in ("SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS",
+                               "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD")},
         "ORGN_CLSF_CD": "20", "YEAR": "2099", "SMT_CD": "20", "YEAR_SMT": "2099/20",
         "DEPT_CD": "", "CURI_NM": "예시과목", "EMP_NM": "", "LANG_CHK": "KOR"}
 
