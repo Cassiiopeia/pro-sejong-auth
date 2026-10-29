@@ -3,7 +3,7 @@
 import pytest
 from conftest import read_expected, read_fixture
 
-from sejongpeia.portal_main_parser import parse_parent_unit_name
+from sejongpeia.auth.portal_main_parser import parse_parent_unit_name
 
 
 def portal_main_html(affiliation: str) -> str:

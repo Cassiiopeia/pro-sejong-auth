@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from sejongpeia import ErrorCode, SejongAuthError, SejongPublicData
-from sejongpeia.transport import HttpResponse
+from sejongpeia.common.transport import HttpResponse
 
 from conftest import read_expected, read_fixture
 

@@ -1,12 +1,12 @@
 // 공개 데이터(로그인 없는 소스) 조회: 요청 > JSON 파싱 > 매핑 > 캐시, 업스트림 실패는 마지막 캐시 또는 빈 값 (spec/PUBLIC_DATA.md)
-import { ErrorCode, SejongAuthError } from './errors.js';
+import { ErrorCode, SejongAuthError } from '../common/errors.js';
 import type {
   CafeteriaMenuItem, CafeteriaPlace, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay, DormitoryNotice, DormitoryNotices,
   ExtraFields, ExtracurricularEvent, Lecture, OrganizationCategory, SelectiveDomain, Term,
-} from './publicDataModels.js';
-import { NodeHttpsSession, USER_AGENT, type Session } from './transport.js';
+} from './models.js';
+import { NodeHttpsSession, USER_AGENT, type Session } from '../common/transport.js';
 
-export type * from './publicDataModels.js';
+export type * from './models.js';
 
 const SIS_BASE_URL = 'https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/';
 const HOMEPAGE_BASE_URL = 'https://www.sejong.ac.kr/kor/';

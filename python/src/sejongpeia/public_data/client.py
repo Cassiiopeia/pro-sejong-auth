@@ -11,13 +11,13 @@ import urllib.parse
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from .errors import ErrorCode, SejongAuthError
-from .public_data_models import (
+from ..common.errors import ErrorCode, SejongAuthError
+from .models import (
     CafeteriaMenuItem, CafeteriaPlace, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay,
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
 )
-from .transport import USER_AGENT, create_ssl_context
+from ..common.transport import USER_AGENT, create_ssl_context
 
 LOGGER = logging.getLogger(__name__)
 

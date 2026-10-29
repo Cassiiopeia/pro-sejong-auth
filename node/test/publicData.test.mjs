@@ -1,8 +1,8 @@
 // 공개 데이터: spec/fixtures/public_data 기대값 일치, 요청 형태, 캐시, 실패 격리 (학교 서버 호출 없음)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SejongPublicData } from '../dist/esm/publicData.js';
-import { ErrorCode, SejongAuthError } from '../dist/esm/errors.js';
+import { SejongPublicData } from '../dist/esm/publicData/client.js';
+import { ErrorCode, SejongAuthError } from '../dist/esm/common/errors.js';
 import { readFixture } from './helpers.mjs';
 
 const readPublicFixture = (fileName) => readFixture(`public_data/${fileName}`);

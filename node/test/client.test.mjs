@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ErrorCode, SejongAuthClient, SejongAuthError } from '../dist/esm/index.js';
-import { TimeoutError } from '../dist/esm/transport.js';
+import { TimeoutError } from '../dist/esm/common/transport.js';
 import {
   CLASSIC_SSO, CLASSIC_STATUS, LOGIN, PORTAL_MAIN, SIS_SSO, SIS_USER_INFO, fakeSessionFactory, ok, readExpected, readFixture, status,
 } from './helpers.mjs';

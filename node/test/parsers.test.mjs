@@ -1,8 +1,8 @@
 // spec/fixtures 파싱 결과 == 기대값 (Java, Python 과 같은 기준)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ensurePortalLoginAccepted, parseClassicReading, parseSisUserInfo, parseStudentInfo } from '../dist/esm/parsers.js';
-import { ErrorCode, SejongAuthError } from '../dist/esm/errors.js';
+import { ensurePortalLoginAccepted, parseClassicReading, parseSisUserInfo, parseStudentInfo } from '../dist/esm/auth/parsers.js';
+import { ErrorCode, SejongAuthError } from '../dist/esm/common/errors.js';
 import { readExpected, readFixture } from './helpers.mjs';
 
 test('parseDhcFixture', () => {

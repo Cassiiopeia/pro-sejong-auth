@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Dict, List, Optional
 
-from .errors import ErrorCode, SejongAuthError
+from ..common.errors import ErrorCode, SejongAuthError
 from .models import (
     ClassicCertification,
     ClassicContestRecord,

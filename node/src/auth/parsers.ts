@@ -1,5 +1,5 @@
 // 포털 응답 파싱: DHC 고전독서 페이지 HTML, SIS initUserInfo JSON (규칙: spec/PORTAL_FLOW.md)
-import { ErrorCode, SejongAuthError } from './errors.js';
+import { ErrorCode, SejongAuthError } from '../common/errors.js';
 import type {
   ClassicCertification, ClassicContestRecord, ClassicExamRecord, ClassicSubjectRecord,
   SejongClassicReading, SejongSisSchoolCodes, SejongSisUserInfo, SejongStudentInfo, SisBusinessPeriod,

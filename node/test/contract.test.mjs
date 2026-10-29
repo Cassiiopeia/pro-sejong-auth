@@ -2,10 +2,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import * as client from '../dist/esm/client.js';
-import * as parsers from '../dist/esm/parsers.js';
-import * as transport from '../dist/esm/transport.js';
-import { DEFAULT_MESSAGE_BY_CODE } from '../dist/esm/errors.js';
+import * as client from '../dist/esm/auth/client.js';
+import * as parsers from '../dist/esm/auth/parsers.js';
+import * as transport from '../dist/esm/common/transport.js';
+import { DEFAULT_MESSAGE_BY_CODE } from '../dist/esm/common/errors.js';
 
 const contract = JSON.parse(readFileSync(new URL('../../spec/contract.json', import.meta.url), 'utf8'));
 

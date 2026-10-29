@@ -1,7 +1,7 @@
 // 포털 메인 소속 표기 > 상위 소속명: 보수적 규칙 (틀린 값보다 빈 값, 예외 없음)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseParentUnitName } from '../dist/esm/portalMainParser.js';
+import { parseParentUnitName } from '../dist/esm/auth/portalMainParser.js';
 import { readExpected, readFixture } from './helpers.mjs';
 
 const portalMainHtml = (affiliation) =>

@@ -6,8 +6,8 @@ import re
 import pytest
 from conftest import read_expected, read_fixture
 
-from sejongpeia.errors import ErrorCode, SejongAuthError
-from sejongpeia.parsers import ensure_portal_login_accepted, parse_classic_reading, parse_sis_user_info, parse_student_info
+from sejongpeia.common.errors import ErrorCode, SejongAuthError
+from sejongpeia.auth.parsers import ensure_portal_login_accepted, parse_classic_reading, parse_sis_user_info, parse_student_info
 
 
 def to_snake_case(name: str) -> str:

@@ -1,10 +1,10 @@
 // 세종대 포털 인증 클라이언트: 입력 검증 > 포털 로그인(재시도) > SSO > 데이터 조회 > 파싱 (흐름: spec/PORTAL_FLOW.md)
-import { ErrorCode, SejongAuthError } from './errors.js';
+import { ErrorCode, SejongAuthError } from '../common/errors.js';
 import type { RawOption, SejongAuthResult, SejongSisSchoolCodes, SejongSisUserInfo, SisBusinessPeriod, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
 import {
   SIS_CODE_KEYS_BY_FIELD, parseSisBusinessPeriods, parseSisRunValues, parseSisScreenLoginDate, ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
 import { parseParentUnitName } from './portalMainParser.js';
-import { NodeHttpsSession, TimeoutError, USER_AGENT, type HttpResponse, type RequestOptions, type Session } from './transport.js';
+import { NodeHttpsSession, TimeoutError, USER_AGENT, type HttpResponse, type RequestOptions, type Session } from '../common/transport.js';
 
 export const PORTAL_LOGIN_URL = 'https://portal.sejong.ac.kr/jsp/login/login_action.jsp';
 export const PORTAL_REFERER = 'https://portal.sejong.ac.kr';

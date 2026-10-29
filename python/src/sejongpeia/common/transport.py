@@ -8,7 +8,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from . import __version__
+from .version import __version__
 
 # 포털은 TLS_RSA_WITH_AES_256_CBC_SHA 만 제공 > 기본 cipher 목록에 추가 (spec/PORTAL_FLOW.md)
 PORTAL_CIPHERS = "DEFAULT:AES256-SHA:@SECLEVEL=1"

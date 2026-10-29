@@ -4,17 +4,8 @@
     result = authenticate("21011234", "password")
 """
 
-from importlib.metadata import PackageNotFoundError, version
-
-try:
-    # 버전 단일 원본: pyproject.toml (projectops 가 version.yml 과 함께 갱신)
-    __version__ = version("pro-sejongpeia")
-except PackageNotFoundError:  # 설치 없이 소스로 실행 (테스트)
-    __version__ = "0.0.0-dev"
-
-from .client import SejongAuthClient  # noqa: E402
-from .errors import ErrorCode, SejongAuthError  # noqa: E402
-from .models import (  # noqa: E402
+from .auth.client import SejongAuthClient
+from .auth.models import (
     ClassicCertification,
     ClassicContestRecord,
     ClassicExamRecord,
@@ -25,8 +16,10 @@ from .models import (  # noqa: E402
     SejongSisAuthResult,
     SisBusinessPeriod,
 )
-from .public_data import SejongPublicData  # noqa: E402
-from .public_data_models import (  # noqa: E402
+from .common.errors import ErrorCode, SejongAuthError
+from .common.version import __version__
+from .public_data.client import SejongPublicData
+from .public_data.models import (
     CafeteriaMenuItem, CafeteriaPlace, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay,
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
