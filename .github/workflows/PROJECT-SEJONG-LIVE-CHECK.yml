@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Decide whether to run
         id: gate
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           HAS_TEST_ACCOUNT: ${{ secrets.SEJONG_TEST_STUDENT_ID != '' && secrets.SEJONG_TEST_PASSWORD != '' }}
         with:
@@ -53,20 +53,20 @@ jobs:
             core.setOutput('should_run', 'true');
             core.setOutput('open_issue_number', openFailureIssue ? String(openFailureIssue.number) : '');
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         if: steps.gate.outputs.should_run == 'true'
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         if: steps.gate.outputs.should_run == 'true'
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         if: steps.gate.outputs.should_run == 'true'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: steps.gate.outputs.should_run == 'true'
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.gate.outputs.should_run == 'true'
         with:
           node-version: 22
@@ -83,7 +83,7 @@ jobs:
 
       - name: Report failure as issue
         if: failure() && steps.check.outcome == 'failure' && steps.gate.outputs.open_issue_number == ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -103,8 +103,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -120,7 +120,7 @@ jobs:
 
       - name: Report drift as issue
         if: failure() && (steps.probe.outcome == 'failure' || steps.probe_public.outcome == 'failure')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const openIssues = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100 });

@@ -83,7 +83,7 @@ jobs:
           fi
 
       - name: 저장소 체크아웃
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -220,7 +220,7 @@ jobs:
 
       - name: Summary 파일 업로드
         if: steps.detect_summary.outputs.summary_found == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-content
           path: pr_body.md
@@ -236,7 +236,7 @@ jobs:
       summary_found: ${{ steps.generate.outputs.summary_found }}
     steps:
       - name: 저장소 체크아웃
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -337,7 +337,7 @@ jobs:
 
       - name: 폴백 Summary 파일 업로드
         if: steps.generate.outputs.summary_found == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-content
           path: pr_body.md
@@ -354,7 +354,7 @@ jobs:
        needs.fallback-summary.outputs.summary_found == 'true')
     steps:
       - name: 저장소 체크아웃
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -368,7 +368,7 @@ jobs:
           git pull origin $DEFAULT_BRANCH
 
       - name: Summary 파일 다운로드
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: pr-content
 
@@ -464,7 +464,7 @@ jobs:
        needs.fallback-summary.outputs.summary_found == 'true')
     steps:
       - name: 저장소 체크아웃
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets._GITHUB_PAT_TOKEN }}
           fetch-depth: 0
