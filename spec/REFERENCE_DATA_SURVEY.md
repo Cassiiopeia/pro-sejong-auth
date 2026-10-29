@@ -28,12 +28,66 @@ The SIS lecture-timetable screen (`sjpt.sejong.ac.kr/app/ext/SueOpenTimeQ.jsp`) 
 | `do.sejong.ac.kr` (두드림, non-curricular programs) | Program search "operating organization" dropdown: 17 top-level options are server-rendered; choosing one calls `POST /ko/process/eco/getSearchInstitution` (`iidx=<code>`, JSON `{"success":true,"lists":[{"value","display"}]}`). 16 college / office codes gave 99 child entries. 13 of 16 top-level codes equal `DEPT_L_CD`, 67 of 99 child codes equal `DEPT_CD`; the rest are offices, centers and project teams | Cross-check only: a program-operating-organization list, not the academic structure |
 | `happydorm.sejong.ac.kr` (dormitory) | Public JSON: weekly menu (`POST /food/indexFoodList.do`, `/food/getWeeklyMenu.do`) and notice list (`POST /bbs/getBbsList.do`). Responses are JSON with a `text/html` content type. Works with no cookie (checked) | **Yes**, see issue #59 |
 | `ipsi.sejong.ac.kr` (admissions) | No data JSON found. Notice boards are server-rendered HTML, admission guides and results are PDF or XLS attachments | HTML and PDF only (not used) |
-| `library.sejong.ac.kr` | "Learning info by department" (`/webcontent/info/8`): HTML table of college and department. Its "University departments" menu links to `academics.do`. Book search and holdings are HTML; a few JSON calls exist (shelf position `/search/ajax/bookPosition`, adjacent call numbers, cover image). Seat status and study-room reservation need a login | HTML, partial JSON (issue #60) |
+| `library.sejong.ac.kr` | "Learning info by department" (`/webcontent/info/8`): HTML table of college and department. Its "University departments" menu links to `academics.do`. Book search and holdings are HTML; a few JSON calls exist (shelf position `/search/ajax/bookPosition`, adjacent call numbers, cover image). Seat status and study-room reservation need a login | HTML, partial JSON; shelf position needs an item number from HTML/XML, see Follow-up findings (#60) |
 | `udream` (career) | ASP.NET page inside a frame. Support-center list and job filters; a "college" column in a table. No organization list | No |
 | `safety`, `abeek` | First screens only: counters, popups and tokens (safety); menu items without department data requests (abeek) | No |
 | `ecampus` (Moodle) | Nothing relevant | No |
-| `graduate`, `gsi`, `mba`, `pub`, `tourgrad`, `edu`, `arts` (graduate schools, one CMS) | Public JSON on all seven: academic calendar (`GET /_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year&month&siteId`, `items` is a JSON string; two sites checked) and faculty lists (`GET /professor/getProfessorList.do?menuCd&siteId&univerType`, with personal fields; `menuCd` comes from the page HTML). Course lists and department codes for the graduate schools come from the same SIS timetable API (category codes `30`, `31`, `33`, `34`, `3J`, `3K`: general graduate school returned 1,132 lecture rows for 2026/2). `gsi` has a curriculum HTML table, other schools publish course lists as PDF | Calendar: issue #61. Faculty: review in #62. Lectures and codes: #36, #43 |
+| `graduate`, `gsi`, `mba`, `pub`, `tourgrad`, `edu`, `arts` (graduate schools, one CMS) | Public JSON on all seven: academic calendar (`GET /_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year&month&siteId`, `items` is a JSON string; two sites checked) and faculty lists (`GET /professor/getProfessorList.do?menuCd&siteId&univerType`, with personal fields; `menuCd` comes from the page HTML). Course lists and department codes for the graduate schools come from the same SIS timetable API (category codes `30`, `31`, `33`, `34`, `3J`, `3K`: general graduate school returned 1,132 lecture rows for 2026/2). `gsi` has a curriculum HTML table, other schools publish course lists as PDF | Calendar: issue #61. Faculty: not adopted for now, see Follow-up findings (#62). Lectures and codes: #36, #43 |
 | `sos` (one-stop service) | Menus "organization chart" and "department intro" exist; **not opened** | Unknown |
+
+## Follow-up findings (2026-10-30)
+
+Read-only checks with the library transport (about 1 request per second) and one browser session. Items marked "from the issue" were recorded in the issue earlier and were not re-run here.
+
+### Syllabus / course overview (#44): not adopted (no JSON)
+
+- The timetable screen has two link columns, `교과목개요` and `수업계획서`.
+- Clicking `교과목개요` does not call a data endpoint of the SIS. It opens a report viewer: `GET /cmn/sys/ozReport.do` on the SIS, then `POST oz.sejong.ac.kr/oz80/...` (an OZ Report server that renders the page as SVG). The text is drawn by the report engine, not returned as fields.
+- `수업계획서`: the click could not be completed in the automated session (timeout), so it is **not verified**. It is probably the same report engine, but that is unconfirmed.
+- The WebSquare screen definition (`/sch/ext/SueOpenTimeQ.xml`) cannot be fetched directly (404), so no other request name could be read from it. Hidden request names were not guessed.
+- Conclusion: no login-free JSON found. A rendered report is not a base source; hold unless the school adds a JSON source.
+
+### Library shelf position and cover (#60): not adopted (input only from HTML and XML)
+
+- `GET /search/ajax/bookPosition?accession_no=<number>&code_div=<x>` works without login and returns JSON (`CALL_NO`, `LOCATION_NAME`, `POSITION_NAME`, `SUB_LOCATION`, `BOOKSHELF`, `TITLE`, `AUTHOR`, `PUBLISHER`, `IMG_PATH`). Three different `code_div` values (`CAT`, `1`, `0002`) gave identical output, so it does not change the result for the one item checked. `IMG_PATH` (the floor-plan image) was `null` for that item.
+- `accession_no` is not obtainable from JSON. Search results are HTML. Per-item holdings come from `POST /search/prevLoc/<ctrl>` (body `loc=<code>`), which is **XML**, and `<ctrl>` and `loc` come from the HTML result page.
+- `POST /openapi/thumbnail` (`isbn`, `sysdiv`, `ctrl`) returns JSON `smallUrl`, `largeUrl`, but the addresses point to a third-party shopping image host, not to a school resource.
+- Conclusion: a clean API would need HTML search parsing plus XML parsing. Not adopted. `callNoBrowsing` and `recommender` were not re-run.
+
+### Department curriculum (#67): hold (menu number only in HTML)
+
+- Re-checked: the department page defines its site menu number in an inline script (`"menuCd":"<number>"`) and in menu links (`id="menu-<number>"`). There is no JSON that maps a department to its menu number.
+- From the issue (not re-run): the curriculum JSON (`getCurriculumListKor.do`) is served per department site, and `deptCd` in it equals the intro page `deptNo`; whether it equals the SIS `DEPT_CD` was not compared.
+- Conclusion: needs HTML to find `menuCd`. Hold. A low-level call where the caller supplies `menuCd` is possible later but gives little value without the mapping.
+
+### Graduate school faculty lists (#62): not adopted for now
+
+- From the issue (not re-run): `GET /professor/getProfessorList.do?menuCd&siteId&univerType` returns about 29 fields per person (name, contact, career, research field) and needs a per-department `menuCd` that exists only in page HTML.
+- Two independent blockers: (1) personal data on every row, so the library would redistribute staff names and contacts as its default output; (2) `menuCd` only in HTML.
+- Safe-subset option (no names, contacts: only department, research field, degree) does not work, because rows without the name cannot be told apart and the department mapping is HTML anyway.
+- Recommendation: do not implement. Decision rests with the maintainer.
+
+### Personal academic records (#46): feasibility conclusion
+
+- Feasible technically: the SIS screens for grades, scholarship history, awards and discipline, and student base info are JSON calls with a login session plus the screen's `addParam` run parameters (a malformed request ends the session).
+- Risk is the problem, not feasibility: grades, GPA, scholarship amounts and account fields, high school, entrance exam scores, address, phone. A wrong parameter can end the user's session; repeated errors may lock the account.
+- If the maintainer decides to go: opt-in per call only (never in the default login result), own record only, read-only screens only, sensitive fields dropped by an allow-list (not a deny-list), nothing logged, and the calling app owns the privacy duty. Start with the least sensitive screen and verify session safety first.
+- Nothing was implemented or called for this issue.
+
+### Coverage summary (#47)
+
+| Group | Covered by the library | Not covered, reason |
+|---|---|---|
+| Organization, terms, departments, lectures | SIS timetable JSON (#36, #43) | syllabus text is a rendered report (#44) |
+| Calendar, campus map, cafeteria, extracurricular events | JSON sources (#45, #65, #66, #69) | none |
+| Dormitory menu and notices | JSON (#59) | none |
+| Graduate school calendar | JSON (#61) | none |
+| Library | none | search is HTML, holdings XML (#60) |
+| Faculty, department curriculum | none | personal data and HTML-only menu number (#62, #67) |
+| Notices (university, admissions, rnd, safety, volunteer, career), program lists, classic books | none | HTML only |
+| Seats, study rooms, personal records | none | login required (#46 for personal records) |
+
+Still unchecked after this pass: `sos` organization chart and department intro, government standard data mapping, and non-student accounts (see below). They are listed as separate issues.
 
 ## Not checked
 
