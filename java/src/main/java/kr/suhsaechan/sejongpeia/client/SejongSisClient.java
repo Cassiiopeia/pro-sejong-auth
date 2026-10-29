@@ -23,7 +23,8 @@ public class SejongSisClient {
 
   // 포털 로그인 후 SSO 대상: 학사정보시스템 SSO 진입점
   static final String SJPT_RETURN_URL = "sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do?p=";
-  static final String SJPT_SSO_URL = "https://sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do?p=";
+  // 스킴 붙인 SSO 주소 (SJPT_RETURN_URL 에서 파생)
+  static final String SJPT_SSO_URL = "https://" + SJPT_RETURN_URL;
   static final String SJPT_INIT_USER_INFO_URL = "https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do";
   static final String SJPT_ORIGIN = "https://sjpt.sejong.ac.kr";
 

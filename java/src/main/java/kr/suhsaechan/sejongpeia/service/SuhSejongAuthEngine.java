@@ -18,10 +18,8 @@ import kr.suhsaechan.sejongpeia.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 세종대학교 인증 서비스
- * - 포털 로그인 및 학생 정보 조회 기능 제공
- * - DHC(대양휴머니티칼리지) 및 SIS(학사정보시스템) 데이터 소스 지원
- * - 로그에는 학번만 남김 (이름·연락처는 사용 서비스 로그에 남지 않게)
+ * 세종대학교 인증 엔진: 통합 인증, DHC(대양휴머니티칼리지) 인증, SIS(학사정보시스템) 인증
+ * 로그에는 학번만 남김 (이름·연락처 제외)
  */
 @Slf4j
 public class SuhSejongAuthEngine {
@@ -126,9 +124,7 @@ public class SuhSejongAuthEngine {
   }
 
   /**
-   * 대양휴머니티칼리지(DHC) 인증 수행
-   * - classic.sejong.ac.kr에서 정보 조회
-   * - 고전독서 인증 정보 보장
+   * DHC 인증: classic.sejong.ac.kr 조회 > 학생 정보 + 고전독서
    *
    * @param studentId 학번
    * @param password 비밀번호
@@ -140,9 +136,7 @@ public class SuhSejongAuthEngine {
   }
 
   /**
-   * 학사정보시스템(SIS) 인증 수행
-   * - sjpt.sejong.ac.kr에서 정보 조회
-   * - 연락처 정보 보장
+   * SIS 인증: sjpt.sejong.ac.kr 조회 > 학생 정보 + 연락처
    *
    * @param studentId 학번
    * @param password 비밀번호
@@ -154,8 +148,7 @@ public class SuhSejongAuthEngine {
   }
 
   /**
-   * DHC 인증 수행 (원본 HTML 포함)
-   * - 디버깅 용도로 원본 HTML도 함께 반환
+   * DHC 인증 (디버깅용 원본 HTML 포함)
    *
    * @param studentId 학번
    * @param password 비밀번호
@@ -167,8 +160,7 @@ public class SuhSejongAuthEngine {
   }
 
   /**
-   * SIS 인증 수행 (원본 JSON 포함)
-   * - 디버깅 용도로 원본 JSON도 함께 반환
+   * SIS 인증 (디버깅용 원본 JSON 포함)
    *
    * @param studentId 학번
    * @param password 비밀번호
@@ -247,7 +239,7 @@ public class SuhSejongAuthEngine {
   }
 
   /**
-   * 입력값 검증
+   * 학번·비밀번호 빈 값 검증
    *
    * @param studentId 학번
    * @param password 비밀번호
