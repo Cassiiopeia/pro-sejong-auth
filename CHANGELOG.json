@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T17:47:14Z",
-    "currentVersion": "1.2.43",
+    "lastUpdated": "2026-10-29T18:21:15Z",
+    "currentVersion": "1.2.45",
     "projectType": "spring",
-    "totalReleases": 19,
+    "totalReleases": 20,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,39 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.45",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 97,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **새 기능**\n  * 학과 코드와 과목 번호로 교육과정(권장 학년·학기, 이수 구분, 학점)과 교과목 개요를 받는 조회 추가 (Python, Node, Java)\n\n* **개선**\n  * 공개 JSON 요청에 Accept 헤더를 항상 보내도록 Node 요청 보강\n\n* **문서**\n  * 교육과정·교과목 개요, 정부 표준데이터, 조직도 출처 조사 결과 정리",
+      "parsed_changes": {
+        "새_기능": {
+          "title": "새 기능",
+          "items": [
+            "학과 코드와 과목 번호로 교육과정(권장 학년·학기, 이수 구분, 학점)과 교과목 개요를 받는 조회 추가 (Python, Node, Java)"
+          ]
+        },
+        "개선": {
+          "title": "개선",
+          "items": [
+            "공개 JSON 요청에 Accept 헤더를 항상 보내도록 Node 요청 보강"
+          ]
+        },
+        "문서": {
+          "title": "문서",
+          "items": [
+            "교육과정·교과목 개요, 정부 표준데이터, 조직도 출처 조사 결과 정리"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.43",
       "project_type": "spring",
