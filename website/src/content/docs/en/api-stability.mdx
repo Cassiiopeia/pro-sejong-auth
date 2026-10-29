@@ -27,11 +27,11 @@ Breaking changes can happen even within `1.x`. Pin the exact version.
 
 | Language | Public API | Internal (do not use directly) |
 |---|---|---|
-| Python | The names in `__all__` of the `sejongpeia` package: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, the result and model classes, `SejongAuthError`, `ErrorCode` | helpers in `sejongpeia.transport`, `sejongpeia.parsers`, `sejongpeia.client`; names and arguments starting with an underscore (`_session_factory`, `_clock`) |
+| Python | The names in `__all__` of the `sejongpeia` package: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, the result and model classes, `SejongAuthError`, `ErrorCode` | the modules and helpers in `sejongpeia.common.*`, `sejongpeia.auth.*`, `sejongpeia.public_data.*` (only the names imported with `from sejongpeia import ...` are public); names and arguments starting with an underscore (`_session_factory`, `_clock`) |
 | Node | The functions, classes and types the package entry point (`pro-sejongpeia`) exports. The `exports` field of `package.json` opens only this one entry point | everything the entry point does not export; options starting with an underscore (`_sessionFactory`, `_nowMilliseconds`) |
-| Java | The public methods of `service.SuhSejongAuthEngine`, `model.*`, `exception.*`, `publicdata.SejongPublicData` and `publicdata.model.*`, `util.SejongTlsSupport`, the property prefix `sejongpeia.*` | `util.CommonUtil`, the caller, mapper and fetcher classes in `publicdata` |
+| Java | The public methods of `auth.service.SuhSejongAuthEngine`, `auth.model.*`, `common.exception.*`, `publicdata.SejongPublicData` and `publicdata.model.*`, `common.util.SejongTlsSupport`, `common.config.SejongAuthProperties`, the property prefix `sejongpeia.*` | `common.util.CommonUtil`, the caller, mapper and fetcher classes in `publicdata` |
 
-Java's `client.*` and `parser.*` are public because using the library without Spring means building and wiring them yourself. Their **constructor shapes can still change** (semi-public). With Spring Boot auto-configuration you are not affected.
+Java's `auth.client.*` and `auth.parser.*` are public because using the library without Spring means building and wiring them yourself. Their **constructor shapes can still change** (semi-public). With Spring Boot auto-configuration you are not affected.
 
 Even inside the public API, the following is **outside the guarantee**.
 
@@ -47,6 +47,8 @@ Even inside the public API, the following is **outside the guarantee**.
 - The number does **not** follow the [SemVer](https://semver.org/) promise (patch is compatible, only major breaks). Behavior-changing changes can ship in an automatic patch release.
 - Being at `1` does not mean a stability declaration.
 - How breaking changes are announced: every release gets a one-line summary on [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases) and in [CHANGELOG.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/CHANGELOG.md), and a changed name or signature is stated in that line.
+
+Renames and signature changes (method or field names, package paths, configuration keys) can land at once, with no compatibility alias. Expect that kind of change to be possible again.
 
 ### What we still do
 
@@ -66,7 +68,7 @@ These must be the same in every language, and tests fail when they drift.
 | The 10 error codes (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, ...) and their meaning | [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md), contract tests |
 | Authentication result fields and meaning (only the spelling differs) | RESULT_SCHEMA, expected-value tests on the sanitized sample responses in `spec/fixtures/` |
 | The 15 public-data methods, their result fields and value rules (missing value is an empty string, failure isolation, cache) | [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), one shared expected-result file (`expected_public_data.json`) compared in all three languages |
-| Authentication and public data do not depend on each other | dependency-rule tests (Python, Node, Java each) |
+| Sources (authentication, public data) import only the common layer and never each other | dependency-rule tests (Python, Node, Java each) |
 | Results against the real portal | a daily live login check in all three languages, field-by-field hash comparison (`scripts/verify-live.sh`) |
 
 **What differs by language** is intentional.

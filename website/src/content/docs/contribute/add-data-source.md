@@ -3,7 +3,7 @@ title: 새 정보 출처 추가하기
 description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는 7단계 절차와 코드 위치, 의존 규칙, 안전 규칙을 설명합니다.
 ---
 
-학교가 공개로 주는 새 정보(개설강좌, 식단 같은 공개 데이터)를 추가하는 방법입니다. 소스는 서로 독립적이고, 공통 계층(`transport`, `errors`)만 함께 씁니다. 그래서 내 소스만 만들면 다른 소스를 건드릴 필요가 없습니다.
+학교가 공개로 주는 새 정보(개설강좌, 식단 같은 공개 데이터)를 추가하는 방법입니다. 소스는 서로 독립적이고, 공통 계층(`common`: 에러, HTTP 전송, 버전)만 함께 씁니다. 인증(`auth`)도 공개 데이터와 같은 하나의 소스입니다. 그래서 내 소스만 만들면 다른 소스를 건드릴 필요가 없습니다.
 
 ## 절차
 
@@ -21,17 +21,17 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 
 | 언어 | 메서드와 요청 | 결과 모델 | 테스트 |
 |---|---|---|---|
-| Python | `python/src/sejongpeia/public_data.py` | `public_data_models.py` | `python/tests/test_public_data.py` |
-| Node | `node/src/publicData.ts` | `publicDataModels.ts` | `node/test/publicData.test.mjs` |
+| Python | `python/src/sejongpeia/public_data/client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData/client.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
 | Java | `publicdata/SejongPublicData.java`, 변환은 `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
 
 - 메서드 이름은 Python `snake_case`, Node와 Java `camelCase`입니다. 쓰지 않은 학교 필드는 `extra`에 담습니다.
-- 로그인이 필요한 소스는 이 절차의 대상이 아닙니다. 인증 코드(`client`, `parsers`)와 얽히므로 이슈에서 먼저 방향을 맞춰 주세요.
+- 로그인이 필요한 소스는 이 절차의 대상이 아닙니다. 소스끼리는 서로 임포트할 수 없어서 로그인 세션을 어떻게 나눌지 설계가 필요하니, 이슈에서 먼저 방향을 맞춰 주세요.
 - 공개 메서드나 결과 필드를 더하거나 바꾸면 [API 안정성](../../api-stability/) 문서의 「공개 API」 목록과 [통합 예시](../../guides/student-verification/)가 여전히 맞는지 확인하세요.
 
 ## 의존 규칙
 
-인증 코드와 공개 데이터는 서로 임포트하지 않습니다. 테스트가 이 규칙을 지킵니다.
+세 계층으로 나뉩니다. 공통(`common`)은 어떤 소스도 임포트하지 않고, 소스(`auth`, `public_data`)는 공통만 임포트하며 서로 임포트하지 않습니다. 최상위 진입점(`__init__.py`, `index.ts`, Spring `config`)은 조립만 하므로 모든 계층을 임포트할 수 있습니다. 테스트가 이 규칙을 지킵니다.
 
 | 언어 | 규칙 테스트 |
 |---|---|
@@ -39,7 +39,16 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 | Node | `node/test/dependencyRules.test.mjs` |
 | Java | `DependencyRulesTest` |
 
-규칙에 걸리면 공유가 필요한 부분을 `transport`나 `errors`로 옮기세요.
+규칙에 걸리면 공유가 필요한 부분을 `common`으로 옮기세요.
+
+**폴더 구조** (세 언어 같은 모양)
+
+| 계층 | Python `python/src/sejongpeia/` | Node `node/src/` | Java `java/src/main/java/kr/suhsaechan/sejongpeia/` |
+|---|---|---|---|
+| 공통 | `common/` (`errors`, `transport`, `version`) | `common/` (`errors`, `transport`, `version`) | `common/` (`exception`, `util`, `http`, `config`) |
+| 인증 | `auth/` (`client`, `parsers`, `portal_main_parser`, `models`) | `auth/` (`client`, `parsers`, `portalMainParser`, `models`) | `auth/` (`client`, `parser`, `model`, `service`) |
+| 공개 데이터 | `public_data/` (`client`, `models`) | `publicData/` (`client`, `models`) | `publicdata/` (`model`) |
+| 조립 | `__init__.py` | `index.ts` | `config/` (Spring 자동 설정, TLS 초기화) |
 
 ## spec/에 무엇을 두는가
 

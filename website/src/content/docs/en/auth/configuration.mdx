@@ -57,6 +57,16 @@ On by default. There is an option to turn it off, but treat it as a debugging to
 Spring Boot is an optional dependency, so a plain Java project does not pull it in. Wire the objects yourself.
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
+
 SejongTlsSupport.ensureLegacyCipherEnabled();   // first thing in main(), before any other HTTPS call
 SejongAuthProperties properties = new SejongAuthProperties();
 SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),

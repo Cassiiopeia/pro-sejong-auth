@@ -17,6 +17,14 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 <Tabs syncKey="language">
   <TabItem label="Java">
     ```java
+    import java.util.List;
+    import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+    import kr.suhsaechan.sejongpeia.publicdata.model.Department;
+    import kr.suhsaechan.sejongpeia.publicdata.model.Lecture;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RequestParam;
+    import org.springframework.web.bind.annotation.RestController;
+
     @RestController
     class LectureSearchController {
 

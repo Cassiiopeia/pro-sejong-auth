@@ -57,6 +57,16 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 Spring Boot는 선택 의존성이라 일반 Java 프로젝트는 받지 않습니다. 직접 객체를 엮어 쓰세요.
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
+
 SejongTlsSupport.ensureLegacyCipherEnabled();   // main() 맨 앞, 다른 HTTPS 호출보다 먼저
 SejongAuthProperties properties = new SejongAuthProperties();
 SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),

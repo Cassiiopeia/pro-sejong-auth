@@ -14,6 +14,12 @@ The message labels in the code (`조식`, `중식`, `석식`, `번 식당`) are 
 <Tabs syncKey="language">
   <TabItem label="Java">
     ```java
+    import java.time.LocalDate;
+    import java.util.List;
+    import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+    import kr.suhsaechan.sejongpeia.publicdata.model.CafeteriaMenuItem;
+    import kr.suhsaechan.sejongpeia.publicdata.model.DormitoryMenuDay;
+
     class CampusInfoBot {
 
       static String dormitoryMenuMessage(SejongPublicData publicData) {

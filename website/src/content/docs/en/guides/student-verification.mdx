@@ -20,6 +20,12 @@ The user-facing messages are in Korean in the original examples; replace them wi
 <Tabs syncKey="language">
   <TabItem label="Java">
     ```java
+    import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+    import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+    import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
+    import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
+    import org.springframework.stereotype.Service;
+
     @Service
     class StudentVerificationService {
 

@@ -15,7 +15,7 @@ description: Repository folders, development commands, live-portal tests, the ru
 | `scripts/` | Scripts for live portal checks, shape checks, fixture generation and docs checks |
 | `docs/` | Integration examples, API stability, login flow documents and images |
 
-All three languages share one version number. `version.yml` holds it and the release workflow updates it.
+All three languages share one version number. `version.yml` holds it and the release workflow updates it. The folder layout inside each language (`common`, `auth`, `public_data`) is in the table on [Add a new data source](../add-data-source/).
 
 ## Development setup
 

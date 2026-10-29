@@ -3,7 +3,7 @@ title: Add a new data source
 description: The 7-step procedure for adding new public school data to all three languages, with code locations, dependency rules and safety rules.
 ---
 
-How to add new data the school serves publicly (course lists, menus, other public data). Sources are independent and share only the common layer (`transport`, `errors`), so you can build yours without touching the others.
+How to add new data the school serves publicly (course lists, menus, other public data). Sources are independent and share only the common layer (`common`: errors, HTTP transport, version). Authentication (`auth`) is one source just like public data, so you can build yours without touching the others.
 
 ## Procedure
 
@@ -21,17 +21,17 @@ For a public-data source. One method maps to three files.
 
 | Language | Method and request | Result model | Test |
 |---|---|---|---|
-| Python | `python/src/sejongpeia/public_data.py` | `public_data_models.py` | `python/tests/test_public_data.py` |
-| Node | `node/src/publicData.ts` | `publicDataModels.ts` | `node/test/publicData.test.mjs` |
+| Python | `python/src/sejongpeia/public_data/client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData/client.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
 | Java | `publicdata/SejongPublicData.java`, mapping in `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
 
 - Method names are `snake_case` in Python and `camelCase` in Node and Java. School fields you do not map go into `extra`.
-- Login-required sources are not covered by this procedure. They are entangled with the authentication code (`client`, `parsers`), so agree on the direction in an issue first.
+- Login-required sources are not covered by this procedure. Sources cannot import each other, so how a login session would be shared needs a design; agree on the direction in an issue first.
 - When you add or change a public method or result field, check that the "Public API" list in [API stability](../../api-stability/) and the [integration examples](../../guides/student-verification/) are still correct.
 
 ## Dependency rule
 
-Authentication code and public data do not import each other. Tests enforce it.
+The rule has three layers. Common (`common`) imports no source, and each source (`auth`, `public_data`) imports only common and never another source. The top-level entry points (`__init__.py`, `index.ts`, Spring `config`) only assemble, so they may import every layer. Tests enforce it.
 
 | Language | Rule test |
 |---|---|
@@ -39,7 +39,16 @@ Authentication code and public data do not import each other. Tests enforce it.
 | Node | `node/test/dependencyRules.test.mjs` |
 | Java | `DependencyRulesTest` |
 
-If a rule fails, move what needs sharing into `transport` or `errors`.
+If a rule fails, move what needs sharing into `common`.
+
+**Folder layout** (same shape in all three languages)
+
+| Layer | Python `python/src/sejongpeia/` | Node `node/src/` | Java `java/src/main/java/kr/suhsaechan/sejongpeia/` |
+|---|---|---|---|
+| Common | `common/` (`errors`, `transport`, `version`) | `common/` (`errors`, `transport`, `version`) | `common/` (`exception`, `util`, `http`, `config`) |
+| Authentication | `auth/` (`client`, `parsers`, `portal_main_parser`, `models`) | `auth/` (`client`, `parsers`, `portalMainParser`, `models`) | `auth/` (`client`, `parser`, `model`, `service`) |
+| Public data | `public_data/` (`client`, `models`) | `publicData/` (`client`, `models`) | `publicdata/` (`model`) |
+| Assembly | `__init__.py` | `index.ts` | `config/` (Spring auto-configuration, TLS setup) |
 
 ## What goes in spec/
 

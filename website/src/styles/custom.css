@@ -617,3 +617,10 @@ body {
   font-size: 0.82rem;
   color: var(--landing-muted);
 }
+
+/* 다크 모드: 붉은 교표가 어두운 배경에 묻히지 않도록 흰 원 위에 올림 */
+:root[data-theme='dark'] .site-title img {
+  padding: 2px;
+  border-radius: 50%;
+  background: #fff;
+}

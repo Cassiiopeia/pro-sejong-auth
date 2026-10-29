@@ -27,11 +27,11 @@ import { Aside } from '@astrojs/starlight/components';
 
 | 언어 | 공개 API | 내부 (직접 쓰지 마세요) |
 |---|---|---|
-| Python | `sejongpeia` 패키지의 `__all__`에 있는 이름: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, 결과·모델 클래스, `SejongAuthError`, `ErrorCode` | `sejongpeia.transport`, `sejongpeia.parsers`, `sejongpeia.client` 안의 도우미, 밑줄로 시작하는 이름과 인자 (`_session_factory`, `_clock`) |
+| Python | `sejongpeia` 패키지의 `__all__`에 있는 이름: `authenticate`, `authenticate_dhc`, `authenticate_sis`, `fetch_sis_business_periods`, `SejongAuthClient`, `SejongPublicData`, 결과·모델 클래스, `SejongAuthError`, `ErrorCode` | `sejongpeia.common.*`, `sejongpeia.auth.*`, `sejongpeia.public_data.*` 안의 모듈과 도우미 (`from sejongpeia import ...`로 가져오는 이름만 공개), 밑줄로 시작하는 이름과 인자 (`_session_factory`, `_clock`) |
 | Node | 패키지 진입점(`pro-sejongpeia`)이 내보내는 함수, 클래스, 타입. `package.json`의 `exports`가 이 진입점 하나만 열어 둡니다 | 진입점에서 내보내지 않는 모든 것, 밑줄로 시작하는 옵션 (`_sessionFactory`, `_nowMilliseconds`) |
-| Java | `service.SuhSejongAuthEngine`의 공개 메서드, `model.*`, `exception.*`, `publicdata.SejongPublicData`와 `publicdata.model.*`, `util.SejongTlsSupport`, 설정 접두사 `sejongpeia.*` | `util.CommonUtil`, `publicdata`의 호출기·매퍼·페처 클래스 |
+| Java | `auth.service.SuhSejongAuthEngine`의 공개 메서드, `auth.model.*`, `common.exception.*`, `publicdata.SejongPublicData`와 `publicdata.model.*`, `common.util.SejongTlsSupport`, `common.config.SejongAuthProperties`, 설정 접두사 `sejongpeia.*` | `common.util.CommonUtil`, `publicdata`의 호출기·매퍼·페처 클래스 |
 
-Java의 `client.*`, `parser.*`는 Spring 없이 쓸 때 직접 만들어 엮어야 해서 공개되어 있습니다. 그래도 **생성자 모양은 바뀔 수 있는 반공개**입니다. Spring Boot 자동 설정을 쓰면 영향이 없습니다.
+Java의 `auth.client.*`, `auth.parser.*`는 Spring 없이 쓸 때 직접 만들어 엮어야 해서 공개되어 있습니다. 그래도 **생성자 모양은 바뀔 수 있는 반공개**입니다. Spring Boot 자동 설정을 쓰면 영향이 없습니다.
 
 공개 API라도 아래는 **보장 범위 밖**입니다.
 
@@ -47,6 +47,8 @@ Java의 `client.*`, `parser.*`는 Spring 없이 쓸 때 직접 만들어 엮어�
 - 이 번호는 [유의적 버전(SemVer)](https://semver.org/lang/ko/)의 약속(patch는 호환, major만 파괴)을 따르지 **않습니다.** 자동으로 올라가는 patch 릴리스에도 동작이 바뀌는 변경이 들어갈 수 있습니다.
 - 지금 번호가 `1`이라서 안정 선언을 했다는 뜻도 아닙니다.
 - 깨지는 변경은 이렇게 알립니다. 모든 릴리스는 [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases)와 [CHANGELOG.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/CHANGELOG.md)에 한 줄 요약이 남고, 이름이나 시그니처가 바뀌면 그 줄에 적습니다.
+
+이름·시그니처 변경(메서드나 필드 이름, 패키지 경로, 설정 키)은 호환용 별칭 없이 한꺼번에 바뀔 수 있습니다. 그런 변경이 앞으로도 생길 수 있다는 뜻입니다.
 
 ### 그래도 하는 일
 
@@ -66,7 +68,7 @@ Java의 `client.*`, `parser.*`는 Spring 없이 쓸 때 직접 만들어 엮어�
 | 에러 코드 10개 (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED` 등)와 의미 | [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md), contract 테스트 |
 | 인증 결과 필드와 의미 (표기만 다름) | RESULT_SCHEMA, 개인정보를 제거한 응답 샘플(`spec/fixtures/`)에 대한 기대값 테스트 |
 | 공개 데이터 메서드 15종과 결과 필드, 값 규칙 (없는 값은 빈 문자열, 실패 격리, 캐시) | [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), 같은 기대 결과 파일(`expected_public_data.json`)과 세 언어 비교 |
-| 인증과 공개 데이터가 서로 의존하지 않음 | 의존 규칙 테스트 (Python, Node, Java 각각) |
+| 소스(인증, 공개 데이터)는 공통 계층만 임포트하고 서로 임포트하지 않음 | 의존 규칙 테스트 (Python, Node, Java 각각) |
 | 실제 포털에서의 결과 | 매일 세 언어로 실제 로그인하는 점검, 필드별 해시 비교(`scripts/verify-live.sh`) |
 
 **언어마다 다른 것**은 의도된 차이입니다.

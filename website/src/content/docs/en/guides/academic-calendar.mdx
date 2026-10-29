@@ -12,6 +12,11 @@ Shows the undergraduate academic events within the next 30 days, ordered by star
 <Tabs syncKey="language">
   <TabItem label="Java">
     ```java
+    import java.time.LocalDate;
+    import java.util.List;
+    import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+    import kr.suhsaechan.sejongpeia.publicdata.model.CalendarEvent;
+
     class AcademicCalendarWidget {
 
       static List<CalendarEvent> upcomingAcademicEvents(SejongPublicData publicData, int daysAhead) {
