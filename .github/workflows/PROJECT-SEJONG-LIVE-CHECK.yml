@@ -99,7 +99,7 @@ jobs:
 
   # 계정 없이 도는 형태 점검: 로그인이 없으므로 계정 잠금 위험이 없고, 로그인 점검의 실패 이슈와 무관하게 매일 실행
   reference-data-check:
-    if: github.repository == 'Cassiiopeia/pro-sejong-auth'
+    if: github.repository == 'Cassiiopeia/pro-sejongpeia'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
