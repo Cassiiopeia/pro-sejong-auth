@@ -78,7 +78,7 @@ jobs:
       id: build
       run: |
         set +e
-        ./gradlew build -x test 2>&1 | tee build_output.txt
+        ./gradlew build javadoc -x test 2>&1 | tee build_output.txt
         echo "build_exit_code=$?" >> $GITHUB_OUTPUT
         set -e
       continue-on-error: true
