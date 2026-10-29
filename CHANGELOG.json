@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-24T11:39:54Z",
-    "currentVersion": "1.2.21",
+    "lastUpdated": "2026-10-29T15:39:20Z",
+    "currentVersion": "1.2.22",
     "projectType": "spring",
-    "totalReleases": 15,
+    "totalReleases": 16,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,36 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.22",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 40,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **문서**\n  * 한국어 문서를 기본으로 표시하고 영어는 별도 문서로 제공\n  * PyPI·npm 패키지 소개를 한국어 본문으로 변경\n  * 보안 정책을 한국어 우선으로 정리\n  * 문서 언어 추가 규칙을 기여 안내에 명시\n\n* **기타**\n  * 깨진 문서 링크와 언어 전환 링크 누락을 자동 점검",
+      "parsed_changes": {
+        "문서": {
+          "title": "문서",
+          "items": [
+            "한국어 문서를 기본으로 표시하고 영어는 별도 문서로 제공",
+            "PyPI·npm 패키지 소개를 한국어 본문으로 변경",
+            "보안 정책을 한국어 우선으로 정리",
+            "문서 언어 추가 규칙을 기여 안내에 명시"
+          ]
+        },
+        "기타": {
+          "title": "기타",
+          "items": [
+            "깨진 문서 링크와 언어 전환 링크 누락을 자동 점검"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.21",
       "project_type": "spring",
