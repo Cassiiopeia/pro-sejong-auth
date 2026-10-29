@@ -313,7 +313,7 @@ result.getMajor();   <span class="comment">// "컴퓨터공학과"</span></pre><
         <div class="card card-padded feature">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
           <h3 data-i18n="pd1Title">개설강좌와 학과 코드</h3>
-          <p data-i18n="pd1Body">학과, 과목명, 교수명으로 개설강좌를 찾고, 단과대·학과·학기 코드는 학교 값 그대로 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다.</p>
+          <p data-i18n="pd1Body">학과, 과목명, 교수명으로 개설강좌를 찾고(모두 비우면 그 학기 전체), 단과대·학과·학기 코드는 학교 값 그대로 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다.</p>
         </div>
         <div class="card card-padded feature">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
@@ -327,8 +327,8 @@ result.getMajor();   <span class="comment">// "컴퓨터공학과"</span></pre><
         </div>
         <div class="card card-padded feature">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
-          <h3 data-i18n="pd4Title">학식 메뉴</h3>
-          <p data-i18n="pd4Body">식당별 메뉴와 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.</p>
+          <h3 data-i18n="pd4Title">학식 식당과 메뉴</h3>
+          <p data-i18n="pd4Body">식당 목록(번호·이름·건물·위치)과 식당별 메뉴, 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.</p>
         </div>
         <div class="card card-padded feature">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
@@ -610,10 +610,10 @@ const MESSAGES = {
     hard5Title: 'HTML 표와 JSON 파싱', hard5Body: 'DHC의 HTML 표와 SIS의 JSON API 응답을 정리된 결과 객체로 돌려줍니다.',
     hard6Title: '세 언어 동일 동작', hard6Body: 'Java, Python, Node가 같은 결과를 내도록 공통 계약과 교차 검증으로 맞추고, 매일 실제 포털에 로그인해 점검합니다.',
     publicTitle: '로그인 없이 쓰는 학교 데이터', publicLead: '학번과 비밀번호 없이 학교가 공개로 내려주는 정보를 세 언어에서 같은 메서드, 같은 결과로 받습니다. 한 곳이 실패해도 나머지는 그대로 동작하고, 결과는 메모리에 캐시합니다.',
-    pd1Title: '개설강좌와 학과 코드', pd1Body: '학과, 과목명, 교수명으로 개설강좌를 찾고, 단과대·학과·학기 코드는 학교 값 그대로 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다.',
+    pd1Title: '개설강좌와 학과 코드', pd1Body: '학과, 과목명, 교수명으로 개설강좌를 찾고(모두 비우면 그 학기 전체), 단과대·학과·학기 코드는 학교 값 그대로 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다.',
     pd2Title: '학사일정', pd2Body: '기간을 주면 학부·대학원 학사일정을 날짜와 제목으로 돌려줍니다.',
     pd3Title: '기숙사 식단과 공지', pd3Body: '일주일 식단(조식·중식·석식)과 공지 목록을 받습니다. 작성자 필드는 결과에서 제외합니다.',
-    pd4Title: '학식 메뉴', pd4Body: '식당별 메뉴와 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.',
+    pd4Title: '학식 식당과 메뉴', pd4Body: '식당 목록(번호·이름·건물·위치)과 식당별 메뉴, 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.',
     pd5Title: '캠퍼스 장소', pd5Body: '건물과 편의시설의 이름, 위치(위도·경도), 안내 정보를 받습니다.',
     pd6Title: '비교과 프로그램 일정', pd6Body: '기간별 비교과 프로그램을 분류와 함께 받습니다. 응답이 느린 학교 서버에 맞춰 캐시하고 실패를 격리합니다.',
     pd7Title: '학사 업무 기간 (로그인)', pd7Body: '수강신청, 성적 조회처럼 학사 업무별 기간을 받습니다. 학사정보시스템이 요구하는 실행 값 조합과 호출 순서는 라이브러리가 맞추고, 세션 값은 결과와 로그에 남기지 않습니다.',
@@ -676,10 +676,10 @@ const MESSAGES = {
     hard5Title: 'HTML tables and JSON parsing', hard5Body: 'Turns the DHC HTML tables and the SIS JSON API responses into typed result objects.',
     hard6Title: 'Same behavior in three languages', hard6Body: 'A shared contract and cross-language checks keep Java, Python and Node identical, and a daily workflow signs in to the live portal to verify.',
     publicTitle: 'School data without login', publicLead: 'Get what the school serves publicly, without a student ID or password, with the same methods and results in three languages. One source failing never blocks another, and results are cached in memory.',
-    pd1Title: 'Course lists and department codes', pd1Body: 'Search courses by department, course name or instructor, and get college, department and term codes as the school serves them. The library handles the request the school only accepts with every filter key present.',
+    pd1Title: 'Course lists and department codes', pd1Body: 'Search courses by department, course name or instructor (leave all empty for the whole term), and get college, department and term codes as the school serves them. The library handles the request the school only accepts with every filter key present.',
     pd2Title: 'Academic calendar', pd2Body: 'Give a date range and get the undergraduate or graduate calendar with dates and titles.',
     pd3Title: 'Dormitory menu and notices', pd3Body: 'Get the weekly menu (breakfast, lunch, dinner) and the notice list. Author fields are left out of the result.',
-    pd4Title: 'Cafeteria menus', pd4Body: 'Get menus and prices per cafeteria, including fixed menus that have no date.',
+    pd4Title: 'Cafeterias and menus', pd4Body: 'Get the cafeteria list (number, name, building, location), plus menus and prices per cafeteria, including fixed menus that have no date.',
     pd5Title: 'Campus places', pd5Body: 'Get buildings and facilities with names, coordinates and info.',
     pd6Title: 'Extracurricular events', pd6Body: 'Get extracurricular programs for a period with their categories. Results are cached and failures isolated, since the school server can be slow.',
     pd7Title: 'Academic business periods (login)', pd7Body: 'Get the periods of academic tasks such as course registration and grade lookup. The library sets the run values and call order the student information system requires, and keeps session values out of results and logs.',
