@@ -60,6 +60,7 @@ def test_integrated_sis_failure_returns_dhc_with_null_contacts(dhc_html):
     assert result.name == "홍길동"
     assert result.major == "컴퓨터공학과"
     assert (result.email, result.phone_number, result.english_name, result.user_category) == (None, None, None, None)
+    assert (result.department_code, result.role_code, result.extra) == (None, None, None)
 
 
 def test_integrated_success_merges_dhc_and_sis(dhc_html, sis_json):

@@ -158,6 +158,9 @@ public class SejongSisClient {
         throw new SejongAuthException(SejongAuthErrorCode.DATA_FETCH_FAILED, stepName + " request failed : " + response.code());
       }
       String json = response.body().string();
+      if (json.isEmpty()) {
+        throw new SejongAuthException(SejongAuthErrorCode.DATA_FETCH_FAILED, stepName + " : empty response body");
+      }
       try {
         sisParser.ensureLoggedIn(json);
       } catch (SejongAuthException e) {
