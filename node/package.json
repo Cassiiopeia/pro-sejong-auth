@@ -1,14 +1,17 @@
 {
   "name": "pro-sejongpeia",
   "version": "1.2.30",
-  "description": "Sejong University login API for Node.js: verify students with portal SSO (세종대 로그인 API)",
+  "description": "Sejong University login API and school data for Node.js: verify students with portal SSO, plus course lists, calendar, cafeteria and dormitory menus without login (세종대 로그인 API, 개설강좌, 학식)",
   "keywords": [
     "sejong",
     "sejong-university",
     "세종대",
     "authentication",
     "sso",
-    "student-verification"
+    "student-verification",
+    "course-list",
+    "cafeteria-menu",
+    "academic-calendar"
   ],
   "homepage": "https://cassiiopeia.github.io/pro-sejongpeia/",
   "repository": {

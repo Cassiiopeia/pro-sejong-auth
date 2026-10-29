@@ -6,7 +6,7 @@ plugins {
 }
 
 // group, version: 루트 build.gradle (세 언어 공통 버전, projectops 가 갱신)
-description = 'Sejong University portal authentication for Spring Boot'
+description = 'Sejong University portal authentication and public school data for Spring Boot'
 
 java {
 	toolchain {
@@ -90,7 +90,7 @@ mavenPublishing {
 	coordinates(project.group.toString(), project.name, project.version.toString())
 	pom {
 		name = 'sejongpeia'
-		description = 'Sejong University login API for Java and Spring Boot (세종대 로그인 API)'
+		description = 'Sejong University login API and school data for Java and Spring Boot: portal SSO verification, plus course lists, calendar, cafeteria and dormitory menus without login (세종대 로그인 API, 개설강좌, 학식)'
 		url = 'https://github.com/Cassiiopeia/pro-sejongpeia'
 		inceptionYear = '2025'
 		licenses {
