@@ -357,9 +357,9 @@ try {
 
 | 클래스 | 역할 | 위치 |
 |--------|------|------|
-| `SejongSisClient` | HTTP 요청 처리 | `client/SejongSisClient.java` |
-| `SejongSisParser` | JSON 파싱 | `parser/SejongSisParser.java` |
-| `SejongSisAuthResult` | SIS 인증 결과 모델 | `model/SejongSisAuthResult.java` |
+| `SejongSisClient` | HTTP 요청 처리 | `auth/client/SejongSisClient.java` |
+| `SejongSisParser` | JSON 파싱 | `auth/parser/SejongSisParser.java` |
+| `SejongSisAuthResult` | SIS 인증 결과 모델 | `auth/model/SejongSisAuthResult.java` |
 
 ### 주요 URL 상수
 

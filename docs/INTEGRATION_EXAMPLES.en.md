@@ -85,6 +85,12 @@ export async function verifySejongStudent(studentId, password) {
 **Java / Spring Boot**
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
+import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
+import org.springframework.stereotype.Service;
+
 @Service
 class StudentVerificationService {
 
@@ -232,6 +238,14 @@ createServer(async (request, response) => {
 **Java / Spring Boot**
 
 ```java
+import java.util.List;
+import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+import kr.suhsaechan.sejongpeia.publicdata.model.Department;
+import kr.suhsaechan.sejongpeia.publicdata.model.Lecture;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 @RestController
 class LectureSearchController {
 
@@ -328,6 +342,11 @@ for (const event of await upcomingAcademicEvents()) {
 **Java**
 
 ```java
+import java.time.LocalDate;
+import java.util.List;
+import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+import kr.suhsaechan.sejongpeia.publicdata.model.CalendarEvent;
+
 class AcademicCalendarWidget {
 
   static List<CalendarEvent> upcomingAcademicEvents(SejongPublicData publicData, int daysAhead) {
@@ -444,6 +463,12 @@ console.log(await latestDormitoryNoticeMessage());
 **Java**
 
 ```java
+import java.time.LocalDate;
+import java.util.List;
+import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+import kr.suhsaechan.sejongpeia.publicdata.model.CafeteriaMenuItem;
+import kr.suhsaechan.sejongpeia.publicdata.model.DormitoryMenuDay;
+
 class CampusInfoBot {
 
   static String dormitoryMenuMessage(SejongPublicData publicData) {

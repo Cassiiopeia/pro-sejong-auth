@@ -309,12 +309,12 @@ if (table == null || table.select("tr").isEmpty()) {
 
 | Class | Role | Location |
 |--------|------|------|
-| `SejongPortalClient` | Handles HTTP requests | `client/SejongPortalClient.java` |
-| `SejongStudentInfoParser` | Parses student info HTML | `parser/SejongStudentInfoParser.java` |
-| `SejongClassicReadingParser` | Parses classic reading HTML | `parser/SejongClassicReadingParser.java` |
-| `SejongDhcAuthResult` | DHC auth result model | `model/SejongDhcAuthResult.java` |
-| `SejongStudentInfo` | Student info model | `model/SejongStudentInfo.java` |
-| `SejongClassicReading` | Classic reading info model | `model/SejongClassicReading.java` |
+| `SejongPortalClient` | Handles HTTP requests | `auth/client/SejongPortalClient.java` |
+| `SejongStudentInfoParser` | Parses student info HTML | `auth/parser/SejongStudentInfoParser.java` |
+| `SejongClassicReadingParser` | Parses classic reading HTML | `auth/parser/SejongClassicReadingParser.java` |
+| `SejongDhcAuthResult` | DHC auth result model | `auth/model/SejongDhcAuthResult.java` |
+| `SejongStudentInfo` | Student info model | `auth/model/SejongStudentInfo.java` |
+| `SejongClassicReading` | Classic reading info model | `auth/model/SejongClassicReading.java` |
 
 ### Configuration Properties
 

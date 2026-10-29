@@ -75,7 +75,7 @@ Live tests log in to the real Sejong portal, so they only run when you provide a
 
 ## Adding a new information source
 
-How to add new data the school serves (course lists, menus, other public data). Sources are independent and share only the common layer (`transport`, `errors`), so you can build yours without touching the others.
+How to add new data the school serves (course lists, menus, other public data). Sources are independent and share only the common layer (`common`: errors, HTTP transport, version). Authentication (`auth`) is one source just like public data, so you can build yours without touching the others.
 
 1. **Propose it in an issue** (use the `새 정보 출처 제안` template): where it is served, whether login is needed, the request form (JSON or HTML), the fields, and whether it contains personal data. Information that exists only as HTML is not used as a primary source.
 2. **Write the contract first**: add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used.
@@ -85,18 +85,27 @@ How to add new data the school serves (course lists, menus, other public data). 
 6. **Add a shape check** (add a row to `SOURCES` in `scripts/probe-public-data.py`, runs without an account).
 7. Go through the exposure list in `When you add a feature` below.
 
-Tests enforce the dependency rule: authentication code and public data do not import each other (`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). If a rule fails, move what needs sharing into `transport` or `errors`.
+Tests enforce the dependency rule, which has three layers: common (`common`) imports no source, and each source (`auth`, `public_data`) imports only common and never another source (`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). If a rule fails, move what needs sharing into `common`. The top-level entry points (`__init__.py`, `index.ts`, Spring `config`) only assemble, so they may import every layer.
+
+**Folder layout** (same shape in all three languages)
+
+| Layer | Python `python/src/sejongpeia/` | Node `node/src/` | Java `java/src/main/java/kr/suhsaechan/sejongpeia/` |
+|---|---|---|---|
+| Common | `common/` (`errors`, `transport`, `version`) | `common/` (`errors`, `transport`, `version`) | `common/` (`exception`, `util`, `http`, `config`) |
+| Authentication | `auth/` (`client`, `parsers`, `portal_main_parser`, `models`) | `auth/` (`client`, `parsers`, `portalMainParser`, `models`) | `auth/` (`client`, `parser`, `model`, `service`) |
+| Public data | `public_data/` (`client`, `models`) | `publicData/` (`client`, `models`) | `publicdata/` (`model`) |
+| Assembly | `__init__.py` | `index.ts` | `config/` (Spring auto-configuration, TLS setup) |
 
 **Where the code goes** (for a public-data source; one method maps to three files)
 
 | Language | Method and request | Result model | Test |
 |---|---|---|---|
-| Python | `python/src/sejongpeia/public_data.py` | `public_data_models.py` | `python/tests/test_public_data.py` |
-| Node | `node/src/publicData.ts` | `publicDataModels.ts` | `node/test/publicData.test.mjs` |
+| Python | `python/src/sejongpeia/public_data/client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData/client.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
 | Java | `publicdata/SejongPublicData.java`, mapping in `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
 
 - Method names are `snake_case` in Python and `camelCase` in Node and Java. School fields you do not map go into `extra`.
-- Login-required sources are not covered by this procedure. They are entangled with the authentication code (`client`, `parsers`), so agree on the direction in an issue first.
+- Login-required sources are not covered by this procedure. Sources cannot import each other, so how a login session would be shared needs a design; agree on the direction in an issue first.
 - When you add or change a public method or result field, check that the "Public API" list in the [API stability policy](docs/API_STABILITY.en.md) and the [integration examples](docs/INTEGRATION_EXAMPLES.en.md) are still correct.
 
 ## When you add a feature

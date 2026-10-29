@@ -116,6 +116,9 @@ dependencies {
 Spring Boot 자동 설정이 `SuhSejongAuthEngine` 빈을 등록합니다.
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
@@ -136,6 +139,16 @@ public class AuthController {
 Spring Boot는 선택 의존성이라 일반 Java 프로젝트는 받지 않습니다.
 
 ```java
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
+
 SejongTlsSupport.ensureLegacyCipherEnabled();   // main() 맨 앞, 다른 HTTPS 호출보다 먼저 (TLS 안내 참고)
 SejongAuthProperties properties = new SejongAuthProperties();
 SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),
