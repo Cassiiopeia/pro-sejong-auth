@@ -126,7 +126,7 @@ Things to watch:
 
 - **Never resend a wrong password repeatedly.** The portal locks the account. The library stops at the first failure, but if anyone can type a student ID into your form, **limit failures per student ID** (see the [account lock note in the README](../README.en.md#error-codes)).
 - `status` and `major` are the portal's own strings. The `재학` comparison above is an example; keep it as a constant in one place since the wording can change.
-- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter (result fields in the [feature table](../README.en.md#operations)).
+- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter (result fields in the [feature table](../README.en.md#features)).
 - Call it from a server only. Calling from a browser or app exposes the password to third-party code.
 
 ## 2. Department and lecture search page
