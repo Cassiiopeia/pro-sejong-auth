@@ -31,6 +31,10 @@ assignees: [Cassiiopeia]
 ---
 - 기능 구현에 필요한 작업 항목을 작성합니다.
 - 예: API 설계, 프론트엔드 화면 구성 등.
+- 노출 체크 (사용자에게 보이는 모든 곳, 병합 전에 확인)
+  - [ ] README 한국어·영어, `python/README.md`, `node/README.md`
+  - [ ] `spec/` 계약 문서와 `spec/contract.json`
+  - [ ] 소개 사이트(`gh-pages`), 패키지 설명과 키워드, 릴리즈 노트 한 줄
 -->
 
 🙋‍♂️ 담당자

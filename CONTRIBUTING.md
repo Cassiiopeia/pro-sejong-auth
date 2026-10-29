@@ -71,6 +71,18 @@ cd node && npm ci && npm test                     # Node 18+
 - `README.md`의 `## 최신 버전 :` 줄은 릴리스 워크플로우가 갱신하므로 직접 고치지 않습니다.
 - 확인: `python3 scripts/check-docs.py` (깨진 상대 링크, 언어 전환 링크 누락). PR에서도 `PROJECT-SEJONG-DOCS-CHECK`가 실행됩니다.
 
+## 새 기능을 추가했다면
+
+기능은 만들었다고 끝이 아닙니다. 사용하는 사람이 보는 모든 곳에 드러나야 합니다. PR을 올리기 전에 확인하세요 (PR 템플릿에도 같은 체크리스트가 있습니다).
+
+- README 한국어·영어: 기능 소개와 사용 예시, 필드가 늘었다면 `결과 필드` 표
+- `python/README.md`, `node/README.md`: PyPI, npm 패키지 페이지
+- `spec/`: 계약 문서, `spec/contract.json`, 합성 fixture
+- 소개 사이트(`gh-pages` 브랜치의 `index.html`, `sitemap.xml`): 기능 소개, 필드 표, 데모. 릴리즈 뒤에 반영하므로 해야 할 일을 이슈에 남겨 둡니다
+- 패키지 설명과 키워드: `python/pyproject.toml`, `node/package.json`, `java/build.gradle`
+- 릴리즈 노트에 들어갈 한 줄 요약 (커밋 메시지)
+- 홍보 문구는 실제로 지원하는 기능만 씁니다
+
 ## PR
 
 - 브랜치는 `main` 기준으로 만듭니다.
