@@ -19,27 +19,29 @@ The SIS lecture-timetable screen (`sjpt.sejong.ac.kr/app/ext/SueOpenTimeQ.jsp`) 
 | Site | What was seen | Useful? |
 |---|---|---|
 | `sjpt` (SIS) timetable `/app/ext/SueOpenTimeQ.jsp` | Three JSON endpoints fill the category, term and department dropdowns. Works with no cookie. Reading only the top frame's text looked blank on the first attempts: the screen is inside an iframe (a screenshot shows it). Not a login requirement | **Yes: primary source** |
-| `sjpt` (SIS) after login | Student menu tree has only personal screens (certificates, status change, grades, scholarship, awards) and a service tab (language institute, dormitory, student labor). No list of departments. `initUserInfo.do` carries the user's own department code (`dm_UserInfoSch.DEPT_CD`, `dm_UserInfoGam.DEPT_NO`, equal and present in the timetable list) | Own code only |
+| `sjpt` (SIS) timetable lecture list | `POST /sch/sch/ext/SueOpenTimeQ/doList.do` returns `dl_main` with 33 fields per lecture (course number, section, name, course type, credits, time, room, instructor, ...). Works with no cookie (one call checked). The screen requires at least one of department, course name, instructor | **Yes**, see issue #43 |
+| `sjpt` (SIS) after login | Student menu tree has only personal screens (certificates, status change, grades, scholarship, awards) and a service tab (language institute, dormitory, student labor). No list of departments. The academic calendar (`SudBaseScheSelfServQ/doList.do`) works only inside a login session and needs the screen's `addParam` run parameters (a malformed request makes the server end the session). `SchStudentBaseInfo/doStudent.do` returns about 100 student-record fields, some of them sensitive. `initUserInfo.do` carries the user's own department code (`dm_UserInfoSch.DEPT_CD`, `dm_UserInfoGam.DEPT_NO`, equal and present in the timetable list) | Own code only |
 | `sjpt` (SIS) `doGatheringOnload.do` | Category code table with only the logged-in user's own row | No |
 | `www.sejong.ac.kr` | Main page calls only a chatbot widget. "All departments" (`/kor/college/academics.do`) and the undergraduate / graduate intro pages are fully server-rendered HTML: names and links, no codes, no data requests | Names only (HTML, last resort) |
 | `portal.sejong.ac.kr` | Login, main page (`parent_unit_name` source, #34) | Already used |
 | `classic.sejong.ac.kr` (DHC) | Reading-status HTML tables | Already used |
 | `do.sejong.ac.kr` (두드림, non-curricular programs) | Program search "operating organization" dropdown: 17 top-level options are server-rendered; choosing one calls `POST /ko/process/eco/getSearchInstitution` (`iidx=<code>`, JSON `{"success":true,"lists":[{"value","display"}]}`). 16 college / office codes gave 99 child entries. 13 of 16 top-level codes equal `DEPT_L_CD`, 67 of 99 child codes equal `DEPT_CD`; the rest are offices, centers and project teams | Cross-check only: a program-operating-organization list, not the academic structure |
-| `library.sejong.ac.kr` | "Learning info by department" (`/webcontent/info/8`): HTML table of college and department. Its "University departments" menu links to `academics.do` | HTML only |
+| `happydorm.sejong.ac.kr` (dormitory) | Public JSON: weekly menu (`POST /food/indexFoodList.do`, `/food/getWeeklyMenu.do`) and notice list (`POST /bbs/getBbsList.do`). Responses are JSON with a `text/html` content type. Works with no cookie (checked) | **Yes**, see issue #59 |
+| `ipsi.sejong.ac.kr` (admissions) | No data JSON found. Notice boards are server-rendered HTML, admission guides and results are PDF or XLS attachments | HTML and PDF only (not used) |
+| `library.sejong.ac.kr` | "Learning info by department" (`/webcontent/info/8`): HTML table of college and department. Its "University departments" menu links to `academics.do`. Book search and holdings are HTML; a few JSON calls exist (shelf position `/search/ajax/bookPosition`, adjacent call numbers, cover image). Seat status and study-room reservation need a login | HTML, partial JSON (issue #60) |
 | `udream` (career) | ASP.NET page inside a frame. Support-center list and job filters; a "college" column in a table. No organization list | No |
 | `safety`, `abeek` | First screens only: counters, popups and tokens (safety); menu items without department data requests (abeek) | No |
 | `ecampus` (Moodle) | Nothing relevant | No |
-| `graduate` (general graduate school) | Viewed early on; no department code source was found (details were not recorded, so a second look is cheap insurance) | No |
+| `graduate`, `gsi`, `mba`, `pub`, `tourgrad`, `edu`, `arts` (graduate schools, one CMS) | Public JSON on all seven: academic calendar (`GET /_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year&month&siteId`, `items` is a JSON string; two sites checked) and faculty lists (`GET /professor/getProfessorList.do?menuCd&siteId&univerType`, with personal fields; `menuCd` comes from the page HTML). Course lists and department codes for the graduate schools come from the same SIS timetable API (category codes `30`, `31`, `33`, `34`, `3J`, `3K`: general graduate school returned 1,132 lecture rows for 2026/2). `gsi` has a curriculum HTML table, other schools publish course lists as PDF | Calendar: issue #61. Faculty: review in #62. Lectures and codes: #36, #43 |
 | `sos` (one-stop service) | Menus "organization chart" and "department intro" exist; **not opened** | Unknown |
 
 ## Not checked
 
 State plainly so nobody assumes coverage that does not exist:
 
-- Graduate-school sites `gsi`, `mba`, `pub`, `tourgrad`, `edu`, `arts`.
 - `sos` organization chart and department intro pages.
 - Individual department homepages (domain pattern not identified).
-- `en`, `cn`, `iacf`, `rnd`, `sjgw`, `mail`, `volunteer`, `pr`, `ipsi`, `convention`, `gallery`, `happydorm`.
+- `sjgw`, `mail` (login only). `en`, `cn`, `iacf`, `rnd`, `volunteer`, `pr`, `convention`, `gallery` were skimmed: no data JSON worth using (HTML lists, or JSON with personal fields).
 - A Blackboard site that was mentioned: the only LMS found was `ecampus` (Moodle); no Blackboard address was identified.
 - Government open data ("standard data of national universities", University Alimi): not checked, mapping to school codes unknown.
 - Non-student accounts (graduate students, staff, other enrollment statuses) in the SIS: only one undergraduate account was used.
