@@ -24,6 +24,12 @@ from .models import (  # noqa: E402
     SejongDhcAuthResult,
     SejongSisAuthResult,
 )
+from .public_data import SejongPublicData  # noqa: E402
+from .public_data_models import (  # noqa: E402
+    CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, Department, DormitoryMenuDay,
+    DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
+    SelectiveDomain, Term,
+)
 
 _default_client = SejongAuthClient()
 
@@ -48,5 +54,8 @@ __all__ = [
     "SejongAuthError", "ErrorCode",
     "SejongAuthResult", "SejongDhcAuthResult", "SejongSisAuthResult", "SejongClassicReading",
     "ClassicCertification", "ClassicExamRecord", "ClassicSubjectRecord", "ClassicContestRecord",
+    "SejongPublicData", "OrganizationCategory", "Term", "Department", "CourseType", "SelectiveDomain", "Lecture",
+    "CalendarEvent", "DormitoryMenuDay", "DormitoryNotice", "DormitoryNotices", "CafeteriaMenuItem",
+    "CampusPlace", "ExtracurricularEvent",
     "__version__",
 ]
