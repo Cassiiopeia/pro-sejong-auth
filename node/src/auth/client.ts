@@ -63,7 +63,10 @@ function sisSchoolCodesOf(userInfo: SejongSisUserInfo, includeExtra: boolean) {
   return { ...codeByField, extra: includeExtra ? { ...userInfo.extra } : null };
 }
 
-/** 세종대 포털 인증 */
+/**
+ * 세종대 포털 인증 클라이언트: 통합·DHC·SIS 인증, SIS 학사 업무 기간 조회
+ * 입력 검증 > 포털 로그인(재시도) > SSO > 데이터 조회 > 파싱 (흐름: spec/PORTAL_FLOW.md), 서버에서만 호출
+ */
 export class SejongAuthClient {
   readonly timeoutSeconds: number;
   readonly maxRetry: number;
@@ -77,7 +80,14 @@ export class SejongAuthClient {
     this.sessionFactory = _sessionFactory ?? (() => new NodeHttpsSession(this.timeoutSeconds, this.sslVerification, USER_AGENT));
   }
 
-  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 null, includeRaw 면 받은 원문, includeExtra 면 SIS 나머지 필드 extra) */
+  /**
+   * 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속
+   * 실패: SejongAuthError(code: ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지), DHC 단계 실패는 호출 전체 실패
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+   * @param options RawOption: includeRaw 면 받은 원문 포함 (디버깅용), includeExtra 면 SIS 나머지 필드를 extra 로 포함 (둘 다 기본 false)
+   * @returns SejongAuthResult (SIS 연락처·포털 메인 단계가 실패해도 호출은 성공하고 그 필드만 null)
+   */
   async authenticate(studentId: string, password: string, { includeRaw = false, includeExtra = false }: RawOption = {}): Promise<SejongAuthResult> {
     validateCredentials(studentId, password);
     const session = this.sessionFactory();
@@ -112,13 +122,27 @@ export class SejongAuthClient {
     };
   }
 
-  /** DHC 인증: 학생 정보 + 고전독서 (includeRaw 면 원본 HTML 포함) */
+  /**
+   * DHC 인증: 학생 정보 + 고전독서
+   * 실패: SejongAuthError(code: ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지)
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+   * @param options RawOption: includeRaw 면 원본 HTML 포함 (디버깅용)
+   * @returns SejongDhcAuthResult
+   */
   async authenticateDhc(studentId: string, password: string, { includeRaw = false }: RawOption = {}): Promise<SejongDhcAuthResult> {
     validateCredentials(studentId, password);
     return this.fetchDhc(studentId, password, includeRaw);
   }
 
-  /** SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (grade·status 빈 문자열, includeRaw 면 원본 JSON, includeExtra 면 나머지 필드 extra) */
+  /**
+   * SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (grade·status 는 빈 문자열)
+   * 실패: SejongAuthError(code: ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지)
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+   * @param options RawOption: includeRaw 면 받은 원문 포함 (디버깅용), includeExtra 면 SIS 나머지 필드를 extra 로 포함 (둘 다 기본 false)
+   * @returns SejongSisAuthResult
+   */
   async authenticateSis(studentId: string, password: string, { includeRaw = false, includeExtra = false }: RawOption = {}): Promise<SejongSisAuthResult> {
     validateCredentials(studentId, password);
     const jsonText = await this.fetchSisJson(studentId, password);
@@ -129,7 +153,14 @@ export class SejongAuthClient {
     };
   }
 
-  /** SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (month 비우면 연간 전체, 요청 실패 시 재시도 없이 중단) */
+  /**
+   * SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록
+   * 실패: SejongAuthError(code: ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지), 요청 실패는 재시도 없이 중단
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+   * @param query { year, month }: year 연도 4자리 (숫자도 가능), month 1~12, 비우면 연간 전체 (그 밖은 INVALID_INPUT)
+   * @returns SisBusinessPeriod 목록 (업무별 허용 기간)
+   */
   async fetchSisBusinessPeriods(
     studentId: string, password: string, { year, month = '' }: { year: number | string; month?: number | string },
   ): Promise<SisBusinessPeriod[]> {

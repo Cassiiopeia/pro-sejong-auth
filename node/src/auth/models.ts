@@ -135,6 +135,7 @@ export interface SejongSisAuthResult extends Omit<SejongSisUserInfo, 'extra'> {
 }
 
 export interface RawOption {
+  /** 받은 원문(DHC HTML, SIS JSON) 포함 (디버깅용, 기본 false) */
   includeRaw?: boolean;
   /** SIS 나머지 학교 제공 필드를 extra 로 포함 (기본 false) */
   includeExtra?: boolean;
