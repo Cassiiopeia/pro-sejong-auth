@@ -352,6 +352,7 @@ courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0
 
 - [통합 예시](docs/INTEGRATION_EXAMPLES.md): 학생 인증(동아리 가입), 학과·강의 검색, 학사일정 위젯, 기숙사·학식 봇을 Java, Python, Node로. 공개 데이터 예시는 실제 학교 서버로 실행해 확인했습니다.
 - [API 안정성 정책](docs/API_STABILITY.md): 공개 API와 내부 구현의 경계, 버전 규칙. **하위 호환은 보장하지 않으니 버전을 고정해서 쓰세요.**
+- [코딩 에이전트와 함께 쓰기](https://cassiiopeia.github.io/pro-sejongpeia/guides/agents/): Claude Code, Cursor, Codex 같은 에이전트에게 줄 [llms.txt](https://cassiiopeia.github.io/pro-sejongpeia/llms.txt), [api.json](https://cassiiopeia.github.io/pro-sejongpeia/api.json)과 프롬프트 예시. 이 저장소에 기여하는 에이전트는 [AGENTS.md](AGENTS.md)를 읽습니다.
 
 ## FAQ
 

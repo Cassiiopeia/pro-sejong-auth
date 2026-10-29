@@ -63,10 +63,12 @@ public class SuhSejongAuthEngine {
   /**
    * 세종대학교 통합 인증: 포털 로그인 1회 > DHC(학생 정보·고전독서) > 같은 세션으로 SIS(연락처), 포털 메인(상위 소속)
    *
-   * @param studentId 학번
-   * @param password 비밀번호
+   * 실패: 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지), SIS 연락처·포털 메인 단계가 실패해도 호출은 성공하고 그 필드만 null
+   *
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
    * @return 통합 인증 결과 (학생정보 + 고전독서 + 연락처)
-   * @throws SejongAuthException 인증 실패 시
+   * @throws SejongAuthException 인증 실패 시 (DHC 단계 실패 포함)
    */
   public SejongAuthResult authenticate(String studentId, String password) {
     return authenticateIntegrated(studentId, password, false, false);
@@ -74,6 +76,11 @@ public class SuhSejongAuthEngine {
 
   /**
    * 통합 인증 (받은 원문 포함): authenticate 와 같고 DHC 원본 HTML, SIS 원본 JSON 을 결과에 담음 (추가 요청 없음)
+   *
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지)
+   * @return 통합 인증 결과 (원문 포함)
+   * @throws SejongAuthException 인증 실패 시
    */
   public SejongAuthResult authenticateWithRaw(String studentId, String password) {
     return authenticateIntegrated(studentId, password, true, false);
@@ -81,6 +88,13 @@ public class SuhSejongAuthEngine {
 
   /**
    * 통합 인증 (선택 옵션): 원문(DHC HTML, SIS JSON)과 SIS 나머지 필드(extra)를 골라서 포함, 둘 다 추가 요청 없음
+   *
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지)
+   * @param shouldIncludeRaw true 면 받은 원문 포함 (디버깅용)
+   * @param shouldIncludeExtra true 면 SIS 나머지 필드를 extra 로 포함
+   * @return 통합 인증 결과
+   * @throws SejongAuthException 인증 실패 시
    */
   public SejongAuthResult authenticate(String studentId, String password, boolean shouldIncludeRaw, boolean shouldIncludeExtra) {
     return authenticateIntegrated(studentId, password, shouldIncludeRaw, shouldIncludeExtra);
@@ -161,8 +175,11 @@ public class SuhSejongAuthEngine {
   /**
    * SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (month 비우면 연간 전체, 요청 실패 시 재시도 없이 중단)
    *
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지)
    * @param year 연도 4자리 (예: 2026)
    * @param month 1~12 또는 빈 문자열
+   * @return 업무별 허용 기간 목록
    * @throws SejongAuthException 입력 오류(INVALID_INPUT)·인증 실패·세션 종료·조회 실패
    */
   public List<SisBusinessPeriod> fetchSisBusinessPeriods(String studentId, String password, String year, String month) {
@@ -227,6 +244,13 @@ public class SuhSejongAuthEngine {
 
   /**
    * 학사정보시스템(SIS) 인증 수행 (선택 옵션): 원본 JSON 과 나머지 학교 제공 필드(extra)를 골라서 포함
+   *
+   * @param studentId 학번 (빈 값이면 INVALID_INPUT)
+   * @param password 포털 비밀번호 (저장·로그 금지)
+   * @param shouldIncludeRaw true 면 원본 JSON 포함 (디버깅용)
+   * @param shouldIncludeExtra true 면 나머지 필드를 extra 로 포함
+   * @return SIS 인증 결과
+   * @throws SejongAuthException 인증 실패 시
    */
   public SejongSisAuthResult authenticateWithSIS(String studentId, String password, boolean shouldIncludeRaw,
       boolean shouldIncludeExtra) {

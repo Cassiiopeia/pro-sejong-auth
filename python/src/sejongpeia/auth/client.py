@@ -72,10 +72,18 @@ def _sis_code_values_of(user_info, include_extra: bool) -> dict:
 
 
 class SejongAuthClient:
-    """세종대 포털 인증 (설정: 제한 시간 초, 로그인 재시도 횟수, 인증서 검증)"""
+    """세종대 포털 인증 클라이언트: 통합·DHC·SIS 인증, SIS 학사 업무 기간 조회
+    입력 검증 > 포털 로그인(재시도) > SSO > 데이터 조회 > 파싱 (흐름: spec/PORTAL_FLOW.md), 서버에서만 호출
+    """
 
     def __init__(self, timeout_seconds: float = 10, max_retry: int = 3, ssl_verification: bool = True,
                  _session_factory: Optional[Callable[[], object]] = None):
+        """인증 클라이언트 설정
+        인자 timeout_seconds: 요청 제한 시간 (기본 10)
+        인자 max_retry: 포털 로그인 재시도 횟수 (기본 3, 틀린 비밀번호는 재시도 안 함)
+        인자 ssl_verification: 인증서 검증 (기본 True)
+        (밑줄로 시작하는 인자는 테스트용)
+        """
         self.timeout_seconds = timeout_seconds
         self.max_retry = max_retry
         self.ssl_verification = ssl_verification
@@ -83,7 +91,14 @@ class SejongAuthClient:
 
     def authenticate(self, student_id: str, password: str, include_raw: bool = False,
                      include_extra: bool = False) -> SejongAuthResult:
-        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 None, include_raw=True 면 받은 원문, include_extra=True 면 SIS 나머지 필드 extra)"""
+        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속
+        인자 student_id: 학번 (빈 값이면 INVALID_INPUT)
+        인자 password: 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+        인자 include_raw: True 면 받은 원문(DHC HTML, SIS JSON) 포함 (디버깅용)
+        인자 include_extra: True 면 SIS 나머지 필드를 extra 로 포함
+        반환: SejongAuthResult (SIS 연락처·포털 메인 단계가 실패해도 호출은 성공하고 그 필드만 None)
+        실패: SejongAuthError(code=ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지), DHC 단계 실패는 호출 전체 실패
+        """
         self._validate_credentials(student_id, password)
         session = self._session_factory()
         self._login(session, student_id, password, CLASSIC_RETURN_URL)
@@ -110,13 +125,26 @@ class SejongAuthClient:
         )
 
     def authenticate_dhc(self, student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:
-        """DHC 인증: 학생 정보 + 고전독서 (include_raw=True 면 원본 HTML 포함)"""
+        """DHC 인증: 학생 정보 + 고전독서
+        인자 student_id: 학번 (빈 값이면 INVALID_INPUT)
+        인자 password: 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+        인자 include_raw: True 면 원본 HTML 포함 (디버깅용)
+        반환: SejongDhcAuthResult
+        실패: SejongAuthError(code=ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지)
+        """
         self._validate_credentials(student_id, password)
         return self._fetch_dhc(student_id, password, should_include_raw_html=include_raw)
 
     def authenticate_sis(self, student_id: str, password: str, include_raw: bool = False,
                          include_extra: bool = False) -> SejongSisAuthResult:
-        """SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (학년·상태 빈 문자열, include_raw=True 면 원본 JSON, include_extra=True 면 나머지 필드 extra)"""
+        """SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (grade·status 는 빈 문자열)
+        인자 student_id: 학번 (빈 값이면 INVALID_INPUT)
+        인자 password: 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+        인자 include_raw: True 면 원본 JSON 포함 (디버깅용)
+        인자 include_extra: True 면 나머지 필드를 extra 로 포함
+        반환: SejongSisAuthResult
+        실패: SejongAuthError(code=ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지)
+        """
         self._validate_credentials(student_id, password)
         json_text = self._fetch_sis_json(student_id, password)
         user_info = parse_sis_user_info(json_text)
@@ -129,7 +157,14 @@ class SejongAuthClient:
 
     def fetch_sis_business_periods(self, student_id: str, password: str, year: Union[int, str],
                                    month: Union[int, str] = "") -> List[SisBusinessPeriod]:
-        """SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (month 비우면 연간 전체, 요청 실패 시 재시도 없이 중단)"""
+        """SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록
+        인자 student_id: 학번 (빈 값이면 INVALID_INPUT)
+        인자 password: 포털 비밀번호 (저장·로그 금지, 빈 값이면 INVALID_INPUT)
+        인자 year: 연도 4자리 (숫자도 가능, 아니면 INVALID_INPUT)
+        인자 month: 월 1~12, 비우면 연간 전체 (그 밖은 INVALID_INPUT)
+        반환: SisBusinessPeriod 목록 (업무별 허용 기간)
+        실패: SejongAuthError(code=ErrorCode), 틀린 비밀번호는 재시도 없이 즉시 실패 (계정 잠금 방지), 요청 실패는 재시도 없이 중단
+        """
         self._validate_credentials(student_id, password)
         year_text, month_text = self._validate_business_period_filter(year, month)
         session = self._session_factory()

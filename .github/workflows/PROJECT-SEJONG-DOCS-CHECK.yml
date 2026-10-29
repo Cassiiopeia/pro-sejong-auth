@@ -1,12 +1,29 @@
 # 문서 점검 (마크다운 변경 시): 깨진 상대 링크, 언어별 문서 쌍의 전환 링크 누락
+# 공개 메서드 목록(spec/api-index.json)이 세 언어 구현·spec/PUBLIC_DATA.md 와 어긋나지 않는지도 점검
 name: PROJECT-SEJONG-DOCS-CHECK
 
 on:
   push:
     branches: ["main", "deploy"]
-    paths: ["**.md", "scripts/check-docs.py", ".github/workflows/PROJECT-SEJONG-DOCS-CHECK.yml"]
+    paths:
+      - "**.md"
+      - "scripts/check-docs.py"
+      - "scripts/check-api-index.py"
+      - "spec/api-index.json"
+      - "python/src/**"
+      - "node/src/**"
+      - "java/src/main/**"
+      - ".github/workflows/PROJECT-SEJONG-DOCS-CHECK.yml"
   pull_request:
-    paths: ["**.md", "scripts/check-docs.py", ".github/workflows/PROJECT-SEJONG-DOCS-CHECK.yml"]
+    paths:
+      - "**.md"
+      - "scripts/check-docs.py"
+      - "scripts/check-api-index.py"
+      - "spec/api-index.json"
+      - "python/src/**"
+      - "node/src/**"
+      - "java/src/main/**"
+      - ".github/workflows/PROJECT-SEJONG-DOCS-CHECK.yml"
 
 permissions:
   contents: read
@@ -21,3 +38,5 @@ jobs:
           python-version: "3.12"
       - name: Check docs
         run: python scripts/check-docs.py
+      - name: Check API index (spec/api-index.json vs Python, Node, Java, PUBLIC_DATA.md)
+        run: python scripts/check-api-index.py

@@ -65,14 +65,66 @@ export interface SejongPublicDataOptions {
   _nowMilliseconds?: () => number;
 }
 
-export interface DepartmentsQuery { categoryCode: string; year: string; semesterCode: string }
-export interface LecturesQuery extends DepartmentsQuery { departmentCode?: string; courseName?: string; instructorName?: string }
-export interface CurriculumCoursesQuery { departmentCode: string; courseNumber: string }
-export interface CalendarQuery { start: string; end: string; categoryCode?: string }
-export interface GraduateCalendarQuery { siteId: string; year: number | string; month: number | string }
-export interface DormitoryNoticesQuery { page?: number; rows?: number; keyword?: string; location?: string }
-export interface CafeteriaPlacesQuery { maxPlaceId?: number }
-export interface ExtracurricularEventsQuery { start: string; end: string; category?: string }
+export interface DepartmentsQuery {
+  /** 기관 구분 코드 */
+  categoryCode: string;
+  /** 연도 4자리 (예: 2026) */
+  year: string;
+  /** 학기 코드 (10 1학기, 11 하계, 20 2학기, 21 동계) */
+  semesterCode: string;
+}
+export interface LecturesQuery extends DepartmentsQuery {
+  /** 학과 코드 (departments 결과의 code), 비우면 전체 */
+  departmentCode?: string;
+  /** 과목명 검색어 (앞뒤 공백 제거) */
+  courseName?: string;
+  /** 교수명 검색어 (앞뒤 공백 제거) */
+  instructorName?: string;
+}
+export interface CurriculumCoursesQuery {
+  /** 학과 코드 (departments 결과의 code) */
+  departmentCode: string;
+  /** 학수번호 (lectures 결과의 courseNumber) */
+  courseNumber: string;
+}
+export interface CalendarQuery {
+  /** 시작일 yyyy-MM-dd */
+  start: string;
+  /** 종료일 yyyy-MM-dd */
+  end: string;
+  /** 일정 분류 (기본 0001 학부, 0002~0007 대학원 계열) */
+  categoryCode?: string;
+}
+export interface GraduateCalendarQuery {
+  /** 대학원 사이트 이름 (graduate, gsi, mba, pub, tourgrad, edu, arts 등) */
+  siteId: string;
+  /** 연도 */
+  year: number | string;
+  /** 월 1~12 */
+  month: number | string;
+}
+export interface DormitoryNoticesQuery {
+  /** 쪽 번호 (1부터, 기본 1) */
+  page?: number;
+  /** 쪽당 건수 (기본 10) */
+  rows?: number;
+  /** 제목 검색어 */
+  keyword?: string;
+  /** 기숙사 위치 코드 (기본 SJ) */
+  location?: string;
+}
+export interface CafeteriaPlacesQuery {
+  /** 조회할 식당 번호 상한 (1~50, 기본 10) */
+  maxPlaceId?: number;
+}
+export interface ExtracurricularEventsQuery {
+  /** 시작일 yyyy-MM-dd */
+  start: string;
+  /** 종료일 yyyy-MM-dd */
+  end: string;
+  /** 비교과 분류 (학교 값 그대로), 비우면 전체 */
+  category?: string;
+}
 
 // isFailure: 캐시 없이 실패해 빈 값을 잠시 기억하는 항목
 interface CacheEntry { value: unknown; storedAtMilliseconds: number; isFailure: boolean }
@@ -131,7 +183,12 @@ const toCalendarEvent = (row: SchoolRow): CalendarEvent => ({
   extra: extraOf(row, CALENDAR_EVENT_USED_KEYS),
 });
 
-/** 세종대 공개 데이터 15종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
+/**
+ * 공개 데이터 클라이언트(로그인 없음): 학사 코드, 강의, 학과 교육과정, 학사일정, 기숙사, 학식, 캠퍼스, 비교과 15개 메서드
+ * 요청 > JSON 검증 > 모델 변환 > 메모리 캐시, 같은 인자의 동시 호출은 요청 1건 공유
+ * 값 규칙: 학교 원문 문자열, 없으면 빈 문자열 (null 없음), 쓰지 않은 학교 필드는 extra
+ * 실패 격리: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 값, 잘못된 입력만 INVALID_INPUT 예외 (spec/PUBLIC_DATA.md)
+ */
 export class SejongPublicData {
   readonly timeoutSeconds: number;
   readonly cacheTtlSeconds: number;
@@ -157,7 +214,12 @@ export class SejongPublicData {
     this.nowMilliseconds = _nowMilliseconds ?? Date.now;
   }
 
-  /** 기관 구분 (학부, 대학원 등) */
+  /**
+   * 기관 구분 목록 (학부 20, 대학원 30 등)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @returns OrganizationCategory 목록
+   */
   organizationCategories(): Promise<OrganizationCategory[]> {
     return this.fetchSisDataset('organizationCategories', 'doOnload.do', {}, 'dl_code_orgn', (row) => ({
       code: toText(row['COM_CD']), name: toText(row['CD_NM']), nameEn: toText(row.CD_NM_ENG),
@@ -165,7 +227,13 @@ export class SejongPublicData {
     }));
   }
 
-  /** 학기 목록 */
+  /**
+   * 기관 구분의 학기 목록: 기관 구분 코드 > Term 목록
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param categoryCode 기관 구분 코드 (organizationCategories 결과의 code, 예: 20 학부)
+   * @returns Term 목록
+   */
   terms(categoryCode: string): Promise<Term[]> {
     return this.fetchSisDataset('terms', 'doYearsmtlist.do', { ORGN_CLSF_CD: categoryCode }, 'dl_code_yearSmt', (row) => ({
       year: toText(row['YEAR']), semesterCode: toText(row['SMT_CD']), code: toText(row['YEAR_SMT_CD']),
@@ -173,7 +241,13 @@ export class SejongPublicData {
     }), [categoryCode]);
   }
 
-  /** 학과 목록 */
+  /**
+   * 학기의 학과 목록: 기관 구분·연도·학기 코드 > Department 목록
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query DepartmentsQuery (categoryCode, year, semesterCode)
+   * @returns Department 목록
+   */
   departments({ categoryCode, year, semesterCode }: DepartmentsQuery): Promise<Department[]> {
     const usedKeys = ['DEPT_CD', 'DEPT_LEVEL_CD', 'DEPT_L_CD', 'DEPT_L_PRINT', 'DEPT_M_CD', 'DEPT_M_PRINT', 'DEPT_S_CD', 'DEPT_S_PRINT', 'DEPT_NM_ENG'];
     return this.fetchSisDataset('departments', 'doLesndeptgroup.do', termSearchFields(categoryCode, year, semesterCode), 'dl_code_dept', (row) => ({
@@ -185,7 +259,12 @@ export class SejongPublicData {
     }), [categoryCode, year, semesterCode]);
   }
 
-  /** 이수 구분 (공필, 전필 등) */
+  /**
+   * 이수 구분 목록 (공필, 전필 등)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @returns CourseType 목록
+   */
   courseTypes(): Promise<CourseType[]> {
     return this.fetchSisDataset('courseTypes', 'doOnload.do', {}, 'dl_code_curiType', (row) => ({
       code: toText(row['CURI_TYPE_CD']), name: toText(row['CURI_TYPE_CD_NM']), categoryCode: toText(row.ORGN_CLSF_CD),
@@ -193,7 +272,12 @@ export class SejongPublicData {
     }));
   }
 
-  /** 선택 교양 영역 */
+  /**
+   * 선택 교양 영역 목록
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @returns SelectiveDomain 목록
+   */
   selectiveDomains(): Promise<SelectiveDomain[]> {
     return this.fetchSisDataset('selectiveDomains', 'doOnload.do', {}, 'dl_code_sltDomain', (row) => ({
       code: toText(row['COM_CD']), name: toText(row['CD_NM']), nameEn: toText(row.CD_NM_ENG),
@@ -201,7 +285,13 @@ export class SejongPublicData {
     }));
   }
 
-  /** 개설 강좌 (학과 코드, 과목명, 교수명은 선택, 모두 비우면 그 학기 전체: 학부 약 2,800행·2.4MB) */
+  /**
+   * 개설 강좌 검색: 학과 코드·과목명·교수명은 선택, 모두 비우면 그 학기 전체 (학부 약 2,800행·2.4MB)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query LecturesQuery (categoryCode, year, semesterCode 필수, departmentCode, courseName, instructorName 선택)
+   * @returns Lecture 목록
+   */
   lectures(query: LecturesQuery): Promise<Lecture[]> {
     const { categoryCode, year, semesterCode, departmentCode = '', courseName = '', instructorName = '' } = query;
     const usedKeys = ['CURI_NO', 'CLASS', 'CURI_NM', 'CURI_TYPE_CD', 'CURI_TYPE_CD_NM', 'SLT_DOMAIN_CD', 'SLT_DOMAIN_CD_NM', 'CDT', 'TM_NUM', 'TOT_TM_NUM',
@@ -219,7 +309,14 @@ export class SejongPublicData {
     }), [categoryCode, year, semesterCode, departmentCode, courseName, instructorName]);
   }
 
-  /** 학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요), 그 학과 교육과정에 없으면 빈 목록. 학과 코드·과목 번호 필수 */
+  /**
+   * 학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query CurriculumCoursesQuery (departmentCode, courseNumber 모두 필수)
+   * @returns CurriculumCourse 목록 (그 학과 교육과정에 없는 과목은 빈 목록, 정상)
+   * @throws SejongAuthError INVALID_INPUT: 학과 코드나 학수번호가 빔 (요청 전에 바로 던짐)
+   */
   curriculumCourses({ departmentCode, courseNumber }: CurriculumCoursesQuery): Promise<CurriculumCourse[]> {
     if (!String(departmentCode ?? '').trim() || !String(courseNumber ?? '').trim()) {
       throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Department code and course number are required.');
@@ -235,7 +332,13 @@ export class SejongPublicData {
       })));
   }
 
-  /** 학사 일정 */
+  /**
+   * 학부·대학원 홈페이지 학사일정: 기간·분류 > CalendarEvent 목록
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query CalendarQuery (start, end 는 yyyy-MM-dd, categoryCode 기본 0001 학부, 0002~0007 대학원 계열)
+   * @returns CalendarEvent 목록
+   */
   calendar({ start, end, categoryCode = DEFAULT_CALENDAR_CATEGORY_CODE }: CalendarQuery): Promise<CalendarEvent[]> {
     const query = new URLSearchParams({ mode: 'getCalendarData', start, end, collDiv: categoryCode });
     const url = `${HOMEPAGE_BASE_URL}academics/academic-calendar.do?${query}`;
@@ -243,7 +346,14 @@ export class SejongPublicData {
       rowsOf(body, 'data').map(toCalendarEvent));
   }
 
-  /** 대학원 사이트 학사일정 (siteId: graduate, gsi, mba, pub, tourgrad, edu, arts 등, 형태가 틀리면 INVALID_INPUT) */
+  /**
+   * 대학원 사이트별 한 달 학사일정 (날짜는 MM.dd 형태)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query GraduateCalendarQuery (siteId: graduate, gsi, mba, pub, tourgrad, edu, arts 등 소문자·숫자·하이픈, year, month 1~12)
+   * @returns CalendarEvent 목록 (빈 달은 빈 목록, 정상)
+   * @throws SejongAuthError INVALID_INPUT: siteId 형태가 틀림 (요청 전에 바로 던짐)
+   */
   graduateCalendar({ siteId, year, month }: GraduateCalendarQuery): Promise<CalendarEvent[]> {
     if (!GRADUATE_SITE_ID_PATTERN.test(String(siteId ?? ''))) {
       throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Graduate site id must be lowercase letters, digits and hyphens.');
@@ -258,7 +368,13 @@ export class SejongPublicData {
     });
   }
 
-  /** 기숙사 주간 식단 (7일) */
+  /**
+   * 기숙사 일주일 식단 (7일: 조식·중식·석식·대체)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param location 기숙사 위치 코드 (기본 SJ, 다른 값은 확인하지 않음)
+   * @returns DormitoryMenuDay 목록 (7개)
+   */
   dormitoryMenu(location = DEFAULT_DORMITORY_LOCATION): Promise<DormitoryMenuDay[]> {
     const form = new URLSearchParams({ locgbn: location });
     return this.fetchCached('dormitoryMenu', [location], () => [], () => this.requestJson('POST', `${DORMITORY_BASE_URL}food/indexFoodList.do`, form), (body) => {
@@ -274,7 +390,13 @@ export class SejongPublicData {
     });
   }
 
-  /** 기숙사 공지 (작성자 정보는 반환하지 않음) */
+  /**
+   * 기숙사 공지: 고정 공지와 일반 공지, 전체 건수 (작성자 정보는 반환하지 않음)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query DormitoryNoticesQuery (page 기본 1, rows 기본 10, keyword 제목 검색어, location 기본 SJ), 모두 선택
+   * @returns DormitoryNotices (실패하면 total 0과 빈 목록, 결과 없음도 total 0)
+   */
   dormitoryNotices({ page = 1, rows = 10, keyword = '', location = DEFAULT_DORMITORY_LOCATION }: DormitoryNoticesQuery = {}): Promise<DormitoryNotices> {
     const form = new URLSearchParams({ cPage: String(page), rows: String(rows), bbs_locgbn: location, bbs_id: 'notice', sType: 'subject', sWord: keyword });
     const toNotice = (row: SchoolRow): DormitoryNotice => ({
@@ -292,7 +414,13 @@ export class SejongPublicData {
       });
   }
 
-  /** 학생식당 메뉴 */
+  /**
+   * 학생식당 한 곳의 메뉴
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param placeId 학교의 식당 번호 (cafeteriaPlaces 결과의 placeId), 빈 목록이 번호 오류의 증거는 아님
+   * @returns CafeteriaMenuItem 목록
+   */
   cafeteriaMenu(placeId: string | number): Promise<CafeteriaMenuItem[]> {
     const url = `${HOMEPAGE_BASE_URL}unilife/cafeteria-info.do?${new URLSearchParams({ mode: 'getMenuList', placeId: String(placeId) })}`;
     return this.fetchCached('cafeteriaMenu', [String(placeId)], () => [], () => this.requestJson('GET', url), (body) =>
@@ -304,8 +432,12 @@ export class SejongPublicData {
   }
 
   /**
-   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~maxPlaceId(기본 10, 최대 50)의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
-   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음), 범위 밖 값은 INVALID_INPUT
+   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~maxPlaceId의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: maxPlaceId 별 cacheTtlSeconds, 요청은 번호만큼 차례로 (기본 10건, 최대 50건)
+   * @param query CafeteriaPlacesQuery (maxPlaceId 조회할 번호 상한, 1~50, 기본 10)
+   * @returns CafeteriaPlace 목록 (번호 순서, 하나라도 실패하면 목록 전체를 실패로 보고 일부만 캐시하지 않음)
+   * @throws SejongAuthError INVALID_INPUT: maxPlaceId 가 1~50 밖이거나 정수가 아님 (요청 전에 바로 던짐)
    */
   cafeteriaPlaces({ maxPlaceId = CAFETERIA_DEFAULT_MAX_PLACE_ID }: CafeteriaPlacesQuery = {}): Promise<CafeteriaPlace[]> {
     if (!Number.isInteger(maxPlaceId) || maxPlaceId < 1 || maxPlaceId > CAFETERIA_LIMIT_MAX_PLACE_ID) {
@@ -337,7 +469,13 @@ export class SejongPublicData {
     });
   }
 
-  /** 캠퍼스 시설 */
+  /**
+   * 캠퍼스 지도의 장소 (이름, 위치 위도·경도, 안내)
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param placeType 장소 종류 (학교 값 그대로), 비우면 전체
+   * @returns CampusPlace 목록
+   */
   campusPlaces(placeType = ''): Promise<CampusPlace[]> {
     const url = `${HOMEPAGE_BASE_URL}intro/campus-map.do?${new URLSearchParams({ mode: 'getPlaceUserList', placeType })}`;
     const usedKeys = ['id', 'placeName', 'placeNameEn', 'placeType', 'welfareCategory', 'latitude', 'longitude', 'placeInfo', 'telNum', 'description'];
@@ -351,7 +489,13 @@ export class SejongPublicData {
       }));
   }
 
-  /** 비교과 프로그램 일정 */
+  /**
+   * 비교과 프로그램 일정: 기간·분류 > ExtracurricularEvent 목록
+   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
+   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
+   * @param query ExtracurricularEventsQuery (start, end 는 yyyy-MM-dd, category 학교 값 그대로, 비우면 전체)
+   * @returns ExtracurricularEvent 목록
+   */
   extracurricularEvents({ start, end, category = '' }: ExtracurricularEventsQuery): Promise<ExtracurricularEvent[]> {
     const yearOf = (date: string) => date.slice(0, 4);
     const form = new URLSearchParams({ cid: 'eco', category, start, end, start_year: yearOf(start), end_year: yearOf(end) });
