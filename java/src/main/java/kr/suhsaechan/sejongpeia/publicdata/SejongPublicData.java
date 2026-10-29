@@ -17,7 +17,7 @@ import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
 /**
  * 로그인 없는 학교 공개 데이터 조회 14종: 학사 코드, 강의, 학과 교육과정, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
- * 메서드당 요청 1건 > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 lectures 입력 검증뿐)
+ * 메서드당 요청 1건 > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 잘못된 입력뿐: curriculumCourses, graduateCalendar)
  */
 public class SejongPublicData {
 
@@ -97,18 +97,15 @@ public class SejongPublicData {
     return sisDataset("doOnload.do", new LinkedHashMap<>(), "dl_code_sltDomain", PublicDataMapper::toSelectiveDomain);
   }
 
-  /** 강의 검색: 학과 코드, 과목명, 교수명 중 하나 이상 필수 (없으면 INVALID_INPUT) */
+  /** 강의 검색: 학과 코드, 과목명, 교수명은 선택, 모두 비우면 그 학기 전체 (학부 약 2,800행·2.4MB) */
   public List<Lecture> lectures(String categoryCode, String year, String semesterCode,
       String departmentCode, String courseName, String instructorName) {
-    if (isBlank(departmentCode) && isBlank(courseName) && isBlank(instructorName)) {
-      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT,
-          "At least one of department code, course name, instructor name is required");
-    }
     Map<String, String> search = termSearch(categoryCode, year, semesterCode);
     LECTURE_EMPTY_FILTER_KEYS.forEach(key -> search.put(key, ""));
-    search.put("DEPT_CD", nullToEmpty(departmentCode));
-    search.put("CURI_NM", nullToEmpty(courseName));
-    search.put("EMP_NM", nullToEmpty(instructorName));
+    // 공백만 있는 값도 학교는 검색어로 받아 결과가 줄어들므로 빈 값으로 정리
+    search.put("DEPT_CD", nullToEmpty(departmentCode).trim());
+    search.put("CURI_NM", nullToEmpty(courseName).trim());
+    search.put("EMP_NM", nullToEmpty(instructorName).trim());
     search.put("LANG_CHK", "KOR");
     return sisDataset("doList.do", search, "dl_main", PublicDataMapper::toLecture);
   }

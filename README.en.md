@@ -221,7 +221,7 @@ Public school data in the same shape, no student ID or password needed. The thre
 | Data | Methods (Python names; Node and Java use camelCase) |
 |---|---|
 | College and department codes (by category and term) | `organization_categories`, `terms`, `departments` |
-| Lectures (search by department, course name, instructor) | `lectures`, `course_types`, `selective_domains` |
+| Lectures (search by department, course name, instructor; all empty lists the whole term) | `lectures`, `course_types`, `selective_domains` |
 | Department curriculum course (suggested year and semester, credits, course overview) | `curriculum_courses` |
 | Academic calendar | `calendar` |
 | Graduate school calendar (per site) | `graduate_calendar` |
@@ -254,10 +254,10 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 ```
 
 - **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change. School fields that are not mapped land in `extra`.
-- **One source failing never breaks the rest.** On failure you get the last cached value or an empty list, not an exception (only `lectures` with no search condition raises).
+- **One source failing never breaks the rest.** On failure you get the last cached value or an empty list, not an exception (only invalid input raises).
 - Results are cached in memory for 24 hours and identical requests are sent once. Please be gentle with the school's servers.
 - Cafeteria numbers for `cafeteria_menu` are the school's own (checked 2026-10-30: ids 1, 3, 4, 5 and 6 have menus; the result's `place_name` tells which cafeteria). Details in [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
-- The lecture search handles the awkward parts for you, such as the school requiring every filter key in the request.
+- The lecture search handles the awkward parts for you, such as the school requiring every filter key in the request. With department, course name and instructor all empty it returns the whole term in one call (about 2,800 undergraduate rows and 2.4 MB for 2026/2, so prefer one department at a time when you can).
 
 ## Result fields
 

@@ -223,7 +223,7 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 | 정보 | 메서드 (Python / Node·Java는 camelCase) |
 |---|---|
 | 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
-| 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `course_types`, `selective_domains` |
+| 개설강좌 (학과·과목명·교수명으로 검색, 모두 비우면 그 학기 전체) | `lectures`, `course_types`, `selective_domains` |
 | 학과 교육과정의 과목 (권장 학년·학기, 학점, 교과목 개요) | `curriculum_courses` |
 | 학사일정 | `calendar` |
 | 대학원 학사일정 (사이트별) | `graduate_calendar` |
@@ -256,10 +256,10 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 ```
 
 - **학교 값을 그대로** 돌려줍니다. 코드표나 이름 매핑을 라이브러리에 박아 두지 않아서 학과가 바뀌어도 코드를 고칠 필요가 없습니다. 쓰지 않은 학교 필드는 `extra`에 담깁니다.
-- **한 곳이 실패해도 나머지는 그대로**입니다. 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (검색 조건이 하나도 없는 `lectures`만 예외).
+- **한 곳이 실패해도 나머지는 그대로**입니다. 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (잘못된 입력값만 예외).
 - 결과를 메모리에 24시간 캐시하고, 같은 요청은 한 번만 보냅니다. 학교 서버에 부담을 주지 않도록 쓰세요.
 - 학식 `cafeteria_menu`의 식당 번호는 학교 값 그대로입니다 (2026-10-30 확인: 1, 3, 4, 5, 6번에 메뉴가 있고, 어느 식당인지는 결과의 `place_name`으로 알 수 있습니다). 자세한 내용은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
-- 개설강좌 조회는 학교가 모든 필터 키를 요구하는 등 직접 맞추기 까다로운 부분을 라이브러리가 처리합니다.
+- 개설강좌 조회는 학교가 모든 필터 키를 요구하는 등 직접 맞추기 까다로운 부분을 라이브러리가 처리합니다. 학과·과목명·교수명을 모두 비우면 그 학기 전체를 한 번에 받습니다 (학부 2026/2학기 약 2,800행, 응답 2.4MB이므로 가능하면 학과 단위로 조회하세요).
 
 ## 결과 필드
 

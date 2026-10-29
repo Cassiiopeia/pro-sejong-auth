@@ -41,7 +41,7 @@ except SejongAuthError as error:
 | 정보 | 메서드 |
 |---|---|
 | 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
-| 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `course_types`, `selective_domains` |
+| 개설강좌 (학과·과목명·교수명으로 검색, 모두 비우면 그 학기 전체) | `lectures`, `course_types`, `selective_domains` |
 | 학과 교육과정의 과목 (권장 학년·학기, 학점, 교과목 개요) | `curriculum_courses` |
 | 학사일정 | `calendar` |
 | 대학원 학사일정 (사이트별) | `graduate_calendar` |
@@ -60,7 +60,7 @@ courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0
 ```
 
 - **학교 값을 그대로** 돌려주고, 쓰지 않은 학교 필드는 `extra`에 담깁니다. 코드표를 박아 두지 않아 학과가 바뀌어도 코드를 고칠 필요가 없습니다.
-- **한 곳이 실패해도 나머지는 그대로**: 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (검색 조건이 하나도 없는 `lectures`만 예외). 결과는 메모리에 24시간 캐시합니다.
+- **한 곳이 실패해도 나머지는 그대로**: 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (잘못된 입력값만 예외). 결과는 메모리에 24시간 캐시합니다.
 - 계약과 필드 대응: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
 
 로그인 결과에는 고전독서 학기 3개(`completed_semesters`, `certified_semesters`, `certification_status`), 사용자 구분(`user_category`), 학과의 상위 소속 이름(`parent_unit_name`)도 포함됩니다.

@@ -280,13 +280,10 @@ class SejongPublicData:
 
     def lectures(self, category_code: str, year: str, semester_code: str, department_code: str = "",
                  course_name: str = "", instructor_name: str = "") -> List[Lecture]:
-        """강의 검색: 학과 코드·과목명·교수명 중 하나 이상 필수 (없으면 INVALID_INPUT)"""
-        if not any(str(value or "").strip() for value in (department_code, course_name, instructor_name)):
-            raise SejongAuthError(ErrorCode.INVALID_INPUT,
-                                  "At least one of department code, course name, instructor name is required")
+        """강의 검색: 학과 코드·과목명·교수명은 선택, 모두 비우면 그 학기 전체 (학부 약 2,800행·2.4MB, spec/PUBLIC_DATA.md)"""
         search = {**LECTURE_EMPTY_FILTERS, "ORGN_CLSF_CD": category_code, "YEAR": year, "SMT_CD": semester_code,
-                  "YEAR_SMT": f"{year}/{semester_code}", "DEPT_CD": department_code, "CURI_NM": course_name,
-                  "EMP_NM": instructor_name, "LANG_CHK": "KOR"}
+                  "YEAR_SMT": f"{year}/{semester_code}", "DEPT_CD": str(department_code or "").strip(),
+                  "CURI_NM": str(course_name or "").strip(), "EMP_NM": str(instructor_name or "").strip(), "LANG_CHK": "KOR"}
         return self._sis_dataset("doList.do", search, "dl_main", _to_lecture)
 
     def curriculum_courses(self, department_code: str, course_number: str) -> List[CurriculumCourse]:

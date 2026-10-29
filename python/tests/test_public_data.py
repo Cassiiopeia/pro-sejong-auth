@@ -200,12 +200,14 @@ def test_form_requests():
 
 
 # ---- 입력 검증
-def test_lectures_requires_at_least_one_filter():
+def test_lectures_without_any_filter_lists_whole_semester_with_one_request():
+    # 학교 서버는 검색 값이 모두 비어도 그 학기 전체를 돌려줌 (2026-10-30 확인)
     client, session = create_client(ALL_SOURCES)
-    with pytest.raises(SejongAuthError) as error_info:
-        client.lectures("20", "2099", "20", department_code=" ", course_name="", instructor_name="")
-    assert error_info.value.code == ErrorCode.INVALID_INPUT
-    assert session.requests == []
+    lectures = client.lectures("20", "2099", "20", course_name="  ")  # 공백만 있는 값은 빈 값으로 취급
+    assert len(lectures) > 0
+    assert len(session.requests) == 1
+    search = json.loads(session.requests[0]["data"])["dm_search"]
+    assert [search[key] for key in ("DEPT_CD", "CURI_NM", "EMP_NM")] == ["", "", ""]
 
 
 # ---- 캐시

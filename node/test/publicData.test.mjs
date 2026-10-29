@@ -254,11 +254,14 @@ test('cache keeps at most cacheMaxEntries and evicts the oldest', async () => {
   assert.equal(requests.length, 4);
 });
 
-test('lectures without any filter raises INVALID_INPUT and sends no request', () => {
+test('lectures without any filter lists the whole semester with one request', async () => {
+  // 학교 서버는 검색 값이 모두 비어도 그 학기 전체를 돌려줌 (2026-10-30 확인)
   const { publicData, requests } = createPublicData();
-  assert.throws(() => publicData.lectures({ ...TERM, departmentCode: ' ', courseName: '' }),
-    (error) => error instanceof SejongAuthError && error.code === ErrorCode.INVALID_INPUT);
-  assert.equal(requests.length, 0);
+  const lectures = await publicData.lectures({ ...TERM, courseName: '  ' }); // 공백만 있는 값은 빈 값으로 취급
+  assert.ok(lectures.length > 0);
+  assert.equal(requests.length, 1);
+  const search = JSON.parse(requests[0].body).dm_search;
+  assert.deepEqual([search.DEPT_CD, search.CURI_NM, search.EMP_NM], ['', '', '']);
 });
 
 test('concurrent calls with the same arguments share one request', async () => {
