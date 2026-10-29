@@ -173,10 +173,10 @@ export function parseClassicReading(html: string): SejongClassicReading {
 }
 
 type JsonObject = Record<string, unknown>;
-const isObject = (value: unknown): value is JsonObject => typeof value === 'object' && value !== null && !Array.isArray(value);
+const isObject = (candidate: unknown): candidate is JsonObject => typeof candidate === 'object' && candidate !== null && !Array.isArray(candidate);
 const textOf = (node: unknown, fieldName: string) => {
-  const value = isObject(node) ? node[fieldName] : undefined;
-  return value === undefined || value === null ? '' : String(value);
+  const fieldValue = isObject(node) ? node[fieldName] : undefined;
+  return fieldValue === undefined || fieldValue === null ? '' : String(fieldValue);
 };
 
 // 포털 로그인 판정값: login_action.jsp 응답의 var result = '...' (포털 화면 분기와 같은 대응)

@@ -157,9 +157,6 @@ public class SejongSisParser {
   }
 
   /**
-   * JsonNode에서 텍스트 값 추출
-   */
-  /**
    * JSON 문자열 > 루트 노드 (형식 오류는 PARSE_ERROR)
    */
   private JsonNode readRoot(String json) {
@@ -170,6 +167,9 @@ public class SejongSisParser {
     }
   }
 
+  /**
+   * JsonNode 필드 > 텍스트 (노드·필드 없음 또는 null은 빈 문자열)
+   */
   private String getTextValue(JsonNode node, String fieldName) {
     if (node == null || node.isMissingNode()) {
       return "";
