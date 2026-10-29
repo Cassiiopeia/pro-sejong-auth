@@ -8,6 +8,8 @@ Please do not report security vulnerabilities in public issues. Use the private 
 
 Ask questions and share ideas in Discussions rather than issues; [SUPPORT.en.md](SUPPORT.en.md) explains what goes where. Participants follow the [Code of Conduct](CODE_OF_CONDUCT.en.md). Look for the `good first issue` label if you are new, `help wanted` for issues that need a hand, and `data-source` for proposals of new school data sources.
 
+If you work with a coding agent (Claude Code, Cursor, Codex and so on), have it read [AGENTS.md](AGENTS.md) first. It collects the layout, dependency rule, test commands and what not to do.
+
 ## Start with an issue
 
 - Bugs: include the error code (`SejongAuthException.getErrorCode()`) and the method you called. Never post student IDs, passwords or other personal data.
@@ -78,7 +80,7 @@ Live tests log in to the real Sejong portal, so they only run when you provide a
 How to add new data the school serves (course lists, menus, other public data). Sources are independent and share only the common layer (`common`: errors, HTTP transport, version). Authentication (`auth`) is one source just like public data, so you can build yours without touching the others.
 
 1. **Propose it in an issue** (use the `새 정보 출처 제안` template): where it is served, whether login is needed, the request form (JSON or HTML), the fields, and whether it contains personal data. Information that exists only as HTML is not used as a primary source.
-2. **Write the contract first**: add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used.
+2. **Write the contract first**: add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used. Add the same method to the agent-facing method list `spec/api-index.json` too (parameters, return model, Java signatures). `python3 scripts/check-api-index.py` fails if it drifts from the three implementations.
 3. **Create synthetic fixtures and expected results**: add them to `FIXTURES` and `map_all()` in `scripts/generate-public-data-fixtures.py` and run it. Never copy a real response, and never put in values that identify a person, such as a staff name.
 4. **Implement Java, Python and Node in the same PR.** Reuse the common helpers of `SejongPublicData` for requests, cache and failure isolation, and follow the contract's value rules (empty string when missing, `extra`).
 5. **Write only the tests you need**: one test that the fixture result equals the expected result is enough. Do not add tests that call the school's servers.

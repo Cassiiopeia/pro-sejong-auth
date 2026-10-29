@@ -8,6 +8,8 @@
 
 질문과 제안은 이슈 대신 Discussions에, 어디에 무엇을 올릴지는 [SUPPORT.md](SUPPORT.md)를 봐 주세요. 참여자는 [행동 강령](CODE_OF_CONDUCT.md)을 따릅니다. 처음이라면 `good first issue`, 도움이 필요한 이슈는 `help wanted`, 새 학교 정보 출처 제안은 `data-source` 라벨을 찾아보세요.
 
+코딩 에이전트(Claude Code, Cursor, Codex 등)로 작업한다면 에이전트가 [AGENTS.md](AGENTS.md)를 먼저 읽게 하세요. 구조, 의존 규칙, 테스트 명령, 하지 말아야 할 것이 짧게 모여 있습니다.
+
 ## 이슈 먼저
 
 - 버그: 에러 코드(`SejongAuthException.getErrorCode()`)와 사용한 메서드를 적어 주세요. 학번·비밀번호·개인정보는 절대 올리지 마세요.
@@ -78,7 +80,7 @@ cd node && npm ci && npm test                     # Node 18+
 학교가 주는 새 정보(개설강좌, 식단 같은 공개 데이터)를 추가하는 방법입니다. 소스는 서로 독립적이고, 공통 계층(`common`: 에러, HTTP 전송, 버전)만 함께 씁니다. 인증(`auth`)도 공개 데이터와 같은 하나의 소스입니다. 그래서 내 소스만 만들면 다른 소스를 건드릴 필요가 없습니다.
 
 1. **이슈로 제안**합니다 (`새 정보 출처 제안` 이슈 템플릿을 쓰세요). 출처 위치, 로그인 필요 여부, 요청 형태(JSON 또는 HTML), 필드, 개인정보 포함 여부를 적어 주세요. JSON이 아니고 HTML만 있는 정보는 기본 원본으로 삼지 않습니다.
-2. **계약을 먼저** 씁니다: `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다.
+2. **계약을 먼저** 씁니다: `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다. 에이전트용 메서드 목록 `spec/api-index.json`에도 같은 메서드를 추가합니다 (인자, 반환 모델, Java 시그니처). 세 언어 구현과 어긋나면 `python3 scripts/check-api-index.py`가 실패합니다.
 3. **합성 fixture와 기대 결과**를 만듭니다: `scripts/generate-public-data-fixtures.py`의 `FIXTURES`와 `map_all()`에 추가하고 실행합니다. 실제 응답을 복사하지 않고, 교직원 이름 같은 개인 식별 값은 넣지 않습니다.
 4. **Java, Python, Node를 한 PR에서** 구현합니다. 요청, 캐시, 실패 격리는 `SejongPublicData`의 공통 헬퍼를 그대로 씁니다. 값 규칙(없으면 빈 문자열, `extra`)은 계약을 따릅니다.
 5. **테스트는 필요한 만큼만**: fixture 결과가 기대 결과와 같은지 하나면 충분합니다. 학교 서버를 부르는 테스트는 넣지 않습니다.
