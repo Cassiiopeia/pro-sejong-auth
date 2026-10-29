@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>세종대 로그인 API · 세종대학교 포털 인증 Java 라이브러리 | pro-sejongpeia</title>
-<meta name="description" content="세종대 로그인 API: 학번·비밀번호로 세종대학교 포털(SSO) 인증과 학과·학년·고전독서·연락처 조회를 3줄로 처리하는 Java·Spring Boot 오픈소스 라이브러리. 페이지에서 바로 체험. Sejong University login API for Java.">
-<meta name="keywords" content="세종대 로그인 API, 세종대학교 포털 인증, 세종대 학번 인증, 세종대 SSO, 세종대 재학생 인증, Sejong University login API, Sejong portal, Spring Boot">
+<title>세종대학교 통합 라이브러리 · 세종대 로그인 API와 학교 데이터 | pro-sejongpeia</title>
+<meta name="description" content="세종대학교 통합 라이브러리: 학번·비밀번호로 포털(SSO) 인증과 학과·학년·고전독서·연락처를 조회하고, 로그인 없이 학과 코드·개설강좌·학사일정 같은 학교 공개 데이터를 받는 Java·Python·Node.js 오픈소스. 세종대 로그인 API. Sejong University integrated library: portal login and public school data.">
+<meta name="keywords" content="세종대학교 통합 라이브러리, 세종대 로그인 API, 세종대학교 포털 인증, 세종대 학번 인증, 세종대 SSO, 세종대 재학생 인증, Sejong University integrated library, Sejong University login API, Sejong portal, Sejong school data, Spring Boot, Python, Node.js">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="author" content="Suh Saechan">
 <link rel="canonical" href="https://cassiiopeia.github.io/pro-sejongpeia/">
@@ -17,8 +17,8 @@
 <meta name="theme-color" content="#C20F2F">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="pro-sejongpeia">
-<meta property="og:title" content="세종대 로그인 API · Pro Sejongpeia: 세종대 개발자들의 작은 유토피아">
-<meta property="og:description" content="세종대학교 포털 인증을 3줄로. 학번 인증, 학과·학년·고전독서·연락처 조회. Java·Spring Boot. 바로 체험해 보세요.">
+<meta property="og:title" content="세종대학교 통합 라이브러리 · Pro Sejongpeia: 세종대 개발자들의 작은 유토피아">
+<meta property="og:description" content="포털 로그인(학번 인증)과 로그인 없이 쓰는 학교 공개 데이터를 한 곳에서. Java · Python · Node.js. 바로 체험해 보세요.">
 <meta property="og:url" content="https://cassiiopeia.github.io/pro-sejongpeia/">
 <meta property="og:image" content="https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/og.png">
 <meta property="og:image:width" content="1200">
@@ -26,12 +26,12 @@
 <meta property="og:locale" content="ko_KR">
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="세종대 로그인 API · pro-sejongpeia">
-<meta name="twitter:description" content="세종대학교 포털 인증을 3줄로 처리하는 Java·Spring Boot 라이브러리">
+<meta name="twitter:title" content="세종대학교 통합 라이브러리 · pro-sejongpeia">
+<meta name="twitter:description" content="포털 로그인과 학교 공개 데이터를 Java·Python·Node.js로 한 번에">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/og.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pro-sejongpeia", "alternateName": ["세종대 로그인 API", "Sejong University Login API", "sejongpeia"], "description": "세종대학교 포털 로그인(SSO)을 3줄로 처리하는 Java·Spring Boot 라이브러리. Sejong University login API for Java and Spring Boot.", "url": "https://cassiiopeia.github.io/pro-sejongpeia/", "codeRepository": "https://github.com/Cassiiopeia/pro-sejongpeia", "programmingLanguage": "Java", "runtimePlatform": "Java 17, Spring Boot 3", "keywords": "세종대 로그인 API, 세종대학교 포털 인증, 세종대 학번 인증, 세종대 SSO, Sejong University login, Sejong portal authentication, Spring Boot", "license": "https://opensource.org/licenses/MIT", "image": "https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/og.png", "author": {"@type": "Person", "name": "Suh Saechan", "url": "https://github.com/Cassiiopeia"}}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "세종대 로그인 API가 있나요?", "acceptedAnswer": {"@type": "Answer", "text": "네. pro-sejongpeia는 세종대학교 포털 로그인(SSO)을 대신 처리하는 Java·Spring Boot 라이브러리입니다. 학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 조회합니다."}}, {"@type": "Question", "name": "비밀번호를 저장하나요?", "acceptedAnswer": {"@type": "Answer", "text": "라이브러리는 비밀번호를 저장하지 않고 포털 로그인 요청에만 씁니다. 소개 페이지의 데모 서버도 결과만 돌려주고 입력값을 저장하지 않습니다."}}, {"@type": "Question", "name": "세종대학교 공식 라이브러리인가요?", "acceptedAnswer": {"@type": "Answer", "text": "아닙니다. 세종대 학생이 만든 개인 오픈소스이며 학교와 제휴 관계가 없습니다."}}, {"@type": "Question", "name": "요구 사항은?", "acceptedAnswer": {"@type": "Answer", "text": "Java 17 이상, Spring Boot 3.x. Maven과 Gradle 모두 지원합니다."}}]}]</script>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pro-sejongpeia", "alternateName": ["세종대 로그인 API", "Sejong University Login API", "sejongpeia"], "description": "세종대학교 통합 라이브러리: 포털 로그인(SSO)과 로그인 없이 쓰는 학교 공개 데이터를 Java·Python·Node.js로 제공. Sejong University integrated library: portal login and public school data.", "url": "https://cassiiopeia.github.io/pro-sejongpeia/", "codeRepository": "https://github.com/Cassiiopeia/pro-sejongpeia", "programmingLanguage": ["Java", "Python", "TypeScript"], "runtimePlatform": "Java 17, Spring Boot 3", "keywords": "세종대학교 통합 라이브러리, 세종대 로그인 API, 세종대학교 포털 인증, 세종대 학번 인증, 세종대 SSO, Sejong University login, Sejong portal authentication, Spring Boot", "license": "https://opensource.org/licenses/MIT", "image": "https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/og.png", "author": {"@type": "Person", "name": "Suh Saechan", "url": "https://github.com/Cassiiopeia"}}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "세종대 로그인 API가 있나요?", "acceptedAnswer": {"@type": "Answer", "text": "네. pro-sejongpeia는 세종대학교 포털 로그인(SSO)을 대신 처리하고 로그인 없이 쓰는 학교 공개 데이터도 제공하는 Java·Python·Node.js 통합 라이브러리입니다. 학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 조회합니다."}}, {"@type": "Question", "name": "비밀번호를 저장하나요?", "acceptedAnswer": {"@type": "Answer", "text": "라이브러리는 비밀번호를 저장하지 않고 포털 로그인 요청에만 씁니다. 소개 페이지의 데모 서버도 결과만 돌려주고 입력값을 저장하지 않습니다."}}, {"@type": "Question", "name": "세종대학교 공식 라이브러리인가요?", "acceptedAnswer": {"@type": "Answer", "text": "아닙니다. 세종대 학생이 만든 개인 오픈소스이며 학교와 제휴 관계가 없습니다."}}, {"@type": "Question", "name": "요구 사항은?", "acceptedAnswer": {"@type": "Answer", "text": "Java 17 이상, Spring Boot 3.x. Maven과 Gradle 모두 지원합니다."}}]}]</script>
 <style>
 /* 디자인 토큰: 세종 레드·네이비 기반, 라이트·다크 */
 :root{
@@ -215,9 +215,9 @@ footer a{color:var(--text-muted)}
   <section class="hero">
     <div class="container hero-grid">
       <div>
-        <span class="eyebrow" data-i18n="heroEyebrow">세종대 로그인 API · Java · Spring Boot</span>
-        <h1 data-i18n-html="heroTitle">세종대학교 포털 인증,<br><em>3줄이면 끝</em></h1>
-        <p class="hero-lead" data-i18n="heroLead">학번과 비밀번호만으로 세종대 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. SSO 리다이렉트, 쿠키, HTML 파싱은 라이브러리가 처리합니다.</p>
+        <span class="eyebrow" data-i18n="heroEyebrow">세종대학교 통합 라이브러리 · Java · Python · Node.js</span>
+        <h1 data-i18n-html="heroTitle">세종대 로그인과 학교 데이터,<br><em>한 곳에서</em></h1>
+        <p class="hero-lead" data-i18n="heroLead">학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 가져오고, 로그인 없이도 학과 코드, 개설강좌, 학사일정 같은 공개 데이터를 받습니다. SSO, 쿠키, HTML 파싱은 라이브러리가 처리합니다.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="#demo" data-i18n="heroTry">지금 바로 체험하기</a>
           <a class="button" href="#quick-start" data-i18n="heroStart">설치 방법 보기</a>
@@ -506,7 +506,7 @@ console.log(result.name, result.major);</pre></div>
   <section class="block" id="faq">
     <div class="container">
       <h2 class="section-title">FAQ</h2>
-      <details class="faq" open><summary data-i18n="faq0Q">세종대 로그인 API가 있나요?</summary><p data-i18n="faq0A">네. pro-sejongpeia는 세종대학교 포털 로그인(SSO)을 대신 처리하는 Java·Spring Boot 라이브러리입니다. 학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 조회합니다.</p></details>
+      <details class="faq" open><summary data-i18n="faq0Q">세종대 로그인 API가 있나요?</summary><p data-i18n="faq0A">네. pro-sejongpeia는 세종대학교 포털 로그인(SSO)을 대신 처리하고 로그인 없이 쓰는 학교 공개 데이터도 제공하는 Java·Python·Node.js 통합 라이브러리입니다. 학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 조회합니다.</p></details>
       <details class="faq"><summary data-i18n="faq1Q">비밀번호를 저장하나요?</summary><p data-i18n="faq1A">라이브러리는 비밀번호를 저장하지 않고 포털 로그인 요청에만 씁니다. 이 페이지의 데모 서버도 결과만 돌려주고 입력값을 저장하지 않습니다. 실제 서비스에서는 비밀번호를 로그·DB에 남기지 않도록 주의하세요.</p></details>
       <details class="faq"><summary data-i18n="faq2Q">세종대학교 공식 라이브러리인가요?</summary><p data-i18n="faq2A">아닙니다. 세종대 학생이 만든 개인 오픈소스이며 학교와 무관합니다. 포털 구조가 바뀌면 동작이 멈출 수 있고, 그때는 이슈로 알려 주세요.</p></details>
       <details class="faq"><summary data-i18n="faq3Q">요구 사항은?</summary><p data-i18n="faq3A">Java 17 이상, Spring Boot 3.x. HTTP는 OkHttp, HTML 파싱은 jsoup을 씁니다.</p></details>
@@ -537,9 +537,9 @@ const ERROR_CODES = ['AUTHENTICATION_FAILED', 'INVALID_INPUT', 'CONNECTION_FAILE
 const MESSAGES = {
   ko: {
     navDemo: '체험하기', navQuickStart: '빠른 시작', navUsage: '사용법', navReference: 'API', navFaq: 'FAQ',
-    heroEyebrow: '세종대 로그인 API · Java · Spring Boot', pageTitle: '세종대 로그인 API · 세종대학교 포털 인증 Java 라이브러리 | pro-sejongpeia',
-    heroTitle: '세종대학교 포털 인증,<br><em>3줄이면 끝</em>',
-    heroLead: '학번과 비밀번호만으로 세종대 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. SSO 리다이렉트, 쿠키, HTML 파싱은 라이브러리가 처리합니다.',
+    heroEyebrow: '세종대학교 통합 라이브러리 · Java · Python · Node.js', pageTitle: '세종대학교 통합 라이브러리 · 세종대 로그인 API와 학교 데이터 | pro-sejongpeia',
+    heroTitle: '세종대 로그인과 학교 데이터,<br><em>한 곳에서</em>',
+    heroLead: '학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 가져오고, 로그인 없이도 학과 코드, 개설강좌, 학사일정 같은 공개 데이터를 받습니다. SSO, 쿠키, HTML 파싱은 라이브러리가 처리합니다.',
     heroTry: '지금 바로 체험하기', heroStart: '설치 방법 보기', copy: '복사', copied: '복사됨',
     featuresTitle: '무엇을 해 주나요', featuresLead: '세종대 학생 인증이 필요한 서비스(동아리, 학생 커뮤니티, 학내 이벤트)를 위한 라이브러리입니다.',
     feature1Title: '포털 SSO 자동 처리', feature1Body: '세종 포털 로그인, SSO 리다이렉트, 세션 쿠키를 알아서 처리하고 비밀번호가 틀리면 바로 알려 줍니다.',
@@ -583,7 +583,7 @@ const MESSAGES = {
     error_CONNECTION_FAILED: '세종대 포털에 연결할 수 없음', error_CONNECTION_TIMEOUT: '포털 응답 시간 초과', error_DATA_FETCH_FAILED: '학생 정보 조회 실패',
     error_PARSE_ERROR: '포털 응답 구조 변경 등으로 파싱 실패', error_SESSION_ERROR: '포털 세션 처리 오류', error_SSL_CONFIGURATION_ERROR: 'SSL 설정 오류',
     error_ACCOUNT_LOCKED: '비밀번호를 여러 번 틀려 포털 계정이 잠김. 포털 비밀번호 찾기(https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp)에서 재설정', error_ACCOUNT_UNAVAILABLE: '포털 계정으로 로그인할 수 없음 (사용 기간 종료 또는 관리자 차단)', error_TOO_MANY_ATTEMPTS: '같은 학번 3번 연속 실패로 30분 동안 데모 시도 차단 (포털 계정 잠금 방지)',
-    faq0Q: '세종대 로그인 API가 있나요?', faq0A: '네. pro-sejongpeia는 세종대학교 포털 로그인(SSO)을 대신 처리하는 Java·Spring Boot 라이브러리입니다. 학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 조회합니다.',
+    faq0Q: '세종대 로그인 API가 있나요?', faq0A: '네. pro-sejongpeia는 세종대학교 포털 로그인(SSO)을 대신 처리하고 로그인 없이 쓰는 학교 공개 데이터도 제공하는 Java·Python·Node.js 통합 라이브러리입니다. 학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 조회합니다.',
     faq1Q: '비밀번호를 저장하나요?', faq1A: '라이브러리는 비밀번호를 저장하지 않고 포털 로그인 요청에만 씁니다. 이 페이지의 데모 서버도 결과만 돌려주고 입력값을 저장하지 않습니다. 실제 서비스에서는 비밀번호를 로그·DB에 남기지 않도록 주의하세요.',
     faq2Q: '세종대학교 공식 라이브러리인가요?', faq2A: '아닙니다. 세종대 학생이 만든 개인 오픈소스이며 학교와 무관합니다. 포털 구조가 바뀌면 동작이 멈출 수 있고, 그때는 이슈로 알려 주세요.',
     faq3Q: '요구 사항은?', faq3A: 'Java 17 이상, Spring Boot 3.x. HTTP는 OkHttp, HTML 파싱은 jsoup을 씁니다.',
@@ -592,9 +592,9 @@ const MESSAGES = {
   },
   en: {
     navDemo: 'Try it', navQuickStart: 'Quick start', navUsage: 'Usage', navReference: 'API', navFaq: 'FAQ',
-    heroEyebrow: 'Sejong University login API · Java · Spring Boot', pageTitle: 'Sejong University Login API for Java and Spring Boot | pro-sejongpeia',
-    heroTitle: 'Sejong University login,<br><em>in three lines</em>',
-    heroLead: 'Verify a Sejong University student with just a student ID and password, and get their major, year, classic-reading certification and contact info. The library handles SSO redirects, cookies and HTML parsing.',
+    heroEyebrow: 'Sejong University integrated library · Java · Python · Node.js', pageTitle: 'Sejong University Integrated Library: Login API and School Data | pro-sejongpeia',
+    heroTitle: 'Sejong University login and school data,<br><em>in one place</em>',
+    heroLead: 'Verify a student with a student ID and password and get their major, year, classic-reading certification and contact info. Without logging in, get public data such as department codes, courses and the academic calendar. The library handles SSO, cookies and HTML parsing.',
     heroTry: 'Try it live', heroStart: 'Installation', copy: 'Copy', copied: 'Copied',
     featuresTitle: 'What it does', featuresLead: 'Built for services that need to verify Sejong students: clubs, student communities, campus events.',
     feature1Title: 'Portal SSO handled', feature1Body: 'Logs in to the Sejong portal, follows SSO redirects and keeps session cookies. A wrong password fails fast.',
