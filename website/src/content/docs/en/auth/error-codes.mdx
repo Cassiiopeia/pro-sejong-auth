@@ -1,0 +1,102 @@
+---
+title: Error codes
+description: Meaning and typical cause of the 10 error codes an authentication call throws, account lock guidance, and error handling examples in three languages.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Every language throws one error type that carries a `code`. The message is in English and may change, so always branch on the **code**.
+
+| Language | Error type | Where to read the code |
+|---|---|---|
+| Java | `SejongAuthException` | `getErrorCode()` (`SejongAuthErrorCode`) |
+| Python | `SejongAuthError` | `error.code` (`ErrorCode`) |
+| Node.js | `SejongAuthError` | `error.code` (`ErrorCode`) |
+
+## Code table
+
+| Code | Meaning | Typical cause |
+|---|---|---|
+| `INVALID_INPUT` | Student ID or password is blank | Rejected before any network call. Also a malformed year or month for business periods |
+| `AUTHENTICATION_FAILED` | Wrong student ID or password | Portal verdict `erridpwd`/`Error`. As a fallback, DHC 401 or the SIS logout error |
+| `ACCOUNT_LOCKED` | The portal locked the account after repeated wrong passwords | Portal verdict `pwdNeedChg` |
+| `ACCOUNT_UNAVAILABLE` | The portal account cannot sign in | Use period ended (`invalidDt`) or blocked by the administrator (`invalid`) |
+| `CONNECTION_FAILED` | Cannot reach the portal | Network error, or login retries exhausted |
+| `CONNECTION_TIMEOUT` | Portal timed out | The last login attempt timed out |
+| `SESSION_ERROR` | Portal session handling error | An SSO step answered non-2xx, or an unknown login verdict value |
+| `DATA_FETCH_FAILED` | Failed to fetch student info | A data page answered non-200 or empty |
+| `PARSE_ERROR` | Response structure not as expected | The portal changed a page or JSON structure |
+| `SSL_CONFIGURATION_ERROR` | TLS setup failed | A TLS configuration error while creating the client |
+
+Java keeps `INVALID_CREDENTIALS`, marked `@Deprecated`. It is never thrown any more and exists only so old code still compiles; Python and Node.js do not have it.
+
+## Account lock
+
+The Sejong portal locks an account after repeated wrong passwords (about 5 according to the portal's own notice).
+
+- A lock is released only by resetting the password at the [portal password page](https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp). Waiting does not release it and the library cannot release it for you.
+- The library never retries a rejected login: it stops at the first failure without further requests.
+- If anyone can type a student ID into your service, **limit the failure count per student ID**. Otherwise someone can repeat failures on purpose with another student's ID and lock that student's portal account.
+
+How the verdict is read is in [Login verdict and account lock protection](../../understand/login-verdict/). The exact lock count, and whether a successful login resets it, are not verified.
+
+## Handling examples
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    try {
+        SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);
+    } catch (SejongAuthException exception) {
+        switch (exception.getErrorCode()) {
+            case AUTHENTICATION_FAILED -> { /* wrong ID or password: raise the per-ID failure count */ }
+            case ACCOUNT_LOCKED -> { /* point to the portal password reset */ }
+            case ACCOUNT_UNAVAILABLE -> { /* use period ended or blocked */ }
+            case CONNECTION_FAILED, CONNECTION_TIMEOUT -> { /* portal outage: ask to retry later */ }
+            default -> { /* parse or session error: log the code only */ }
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import authenticate, SejongAuthError, ErrorCode
+
+    try:
+        result = authenticate(student_id, password)
+    except SejongAuthError as error:
+        if error.code == ErrorCode.AUTHENTICATION_FAILED:
+            ...  # wrong ID or password: raise the per-ID failure count
+        elif error.code == ErrorCode.ACCOUNT_LOCKED:
+            ...  # point to the portal password reset
+        elif error.code in (ErrorCode.CONNECTION_FAILED, ErrorCode.CONNECTION_TIMEOUT):
+            ...  # portal outage: ask to retry later
+        else:
+            ...  # parse or session error: log the code only
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
+
+    try {
+      const result = await authenticate(studentId, password);
+    } catch (error) {
+      if (!(error instanceof SejongAuthError)) throw error;
+      if (error.code === ErrorCode.AUTHENTICATION_FAILED) {
+        // wrong ID or password: raise the per-ID failure count
+      } else if (error.code === ErrorCode.ACCOUNT_LOCKED) {
+        // point to the portal password reset
+      } else if (error.code === ErrorCode.CONNECTION_FAILED || error.code === ErrorCode.CONNECTION_TIMEOUT) {
+        // portal outage: ask to retry later
+      } else {
+        // parse or session error: log the code only
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+Public data (departments, courses, calendar and so on) does not throw these errors when the school server fails. It returns the last cached value or an empty list. The only exception is invalid input. See [Failure isolation and cache](../../understand/failure-isolation-cache/).
+</Aside>

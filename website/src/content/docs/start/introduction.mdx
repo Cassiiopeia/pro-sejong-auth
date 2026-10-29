@@ -1,0 +1,68 @@
+---
+title: 소개
+description: pro-sejongpeia는 세종대학교 포털 로그인과 로그인 없이 쓰는 학교 데이터를 Java, Python, Node.js에서 같은 모양으로 쓰게 해 주는 오픈소스 라이브러리입니다.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+pro-sejongpeia는 **세종대학교 통합 라이브러리**입니다. 학번과 비밀번호로 재학생인지 확인하는 **포털 로그인**과, 로그인 없이 학교가 공개로 내려주는 **학교 데이터**(학과 코드, 개설강좌, 학사일정, 기숙사 식단, 학식 등)를 Java, Python, Node.js 어느 쪽에서든 같은 기능, 같은 결과 필드, 같은 에러 코드로 씁니다.
+
+포털 로그인, SSO 리다이렉트, 세션 쿠키, 오래된 TLS 방식, HTML·JSON 파싱은 라이브러리가 처리합니다.
+
+## 누가 쓰나요
+
+- 동아리, 학생회, 학내 커뮤니티의 **세종대 학생 인증**
+- 학과·학년 조건이 있는 학내 이벤트 참여 확인
+- 학과·강의 검색 페이지, 학사일정 위젯
+- 기숙사 식단과 학식을 알려 주는 봇
+
+## 무엇을 쓸 수 있나요
+
+<CardGrid>
+  <Card title="학생 인증 (로그인 필요)" icon="approve-check">
+    이름, 학과, 학년, 학적 상태, 고전독서 인증 현황, 연락처를 가져옵니다. 호출 한 번에 포털 로그인 한 번입니다. [인증 레퍼런스](../../auth/methods/)
+  </Card>
+  <Card title="학교 데이터 (로그인 불필요)" icon="open-book">
+    학과·학기 코드, 개설강좌, 교육과정, 학사일정(학부·대학원), 기숙사, 학식, 캠퍼스 장소, 비교과 프로그램. [공통 규칙](../../data/overview/)
+  </Card>
+  <Card title="세 언어 동일 동작" icon="laptop">
+    결과 필드와 에러 코드는 세 언어에서 같고, 이름 표기만 언어 관례를 따릅니다. 공통 값은 `spec/contract.json` 한 곳에 있습니다.
+  </Card>
+  <Card title="실패 격리" icon="warning">
+    공개 데이터는 한 곳이 실패해도 나머지에 영향이 없습니다. 실패하면 마지막 캐시 값이나 빈 목록을 돌려줍니다. [실패 격리와 캐시](../../understand/failure-isolation-cache/)
+  </Card>
+</CardGrid>
+
+## 데이터 출처
+
+| 출처 | 도메인 | 제공 정보 | 로그인 |
+|---|---|---|---|
+| DHC (대양휴머니티칼리지) | classic.sejong.ac.kr | 학생 정보 + 고전독서 인증 현황 | 필요 |
+| SIS (학사정보시스템) | sjpt.sejong.ac.kr | 학생 정보 + 이메일, 전화번호, 영문 이름, 학교 코드 | 필요 |
+| SIS 공개 조회 | sjpt.sejong.ac.kr | 소속 분류, 학기, 학과, 개설강좌 | 불필요 |
+| 학교 홈페이지 | www.sejong.ac.kr | 학사일정, 학식, 캠퍼스 장소, 교육과정 | 불필요 |
+| 대학원 사이트 | `<사이트>.sejong.ac.kr` | 대학원 학사일정 | 불필요 |
+| 기숙사 | happydorm.sejong.ac.kr | 기숙사 식단, 공지 | 불필요 |
+| 두드림 | do.sejong.ac.kr | 비교과 프로그램 일정 | 불필요 |
+
+## 알아 둘 점
+
+- **세종대학교의 공식 제품이 아닙니다.** 세종대 학생이 만든 개인 오픈소스이며 학교와 제휴 관계가 없습니다.
+- 학교가 문서로 공개한 API가 아니라 **학교 웹 화면이 쓰는 비공식 주소**를 따라갑니다. 학교가 바꾸면 동작이 멈출 수 있고, 매일 점검해서 깨지면 이슈로 고칩니다. 수정 시점에 대한 약속은 없습니다.
+- **하위 호환을 보장하지 않습니다.** 같은 `1.x` 안에서도 깨지는 변경이 생길 수 있으니 버전을 정확히 고정하세요. [API 안정성](../../api-stability/)
+- 학교 값은 **학교가 준 문자열 그대로**입니다. 코드표나 이름 매핑을 라이브러리가 들고 있지 않습니다.
+
+## 요구 사항
+
+| Java / Spring Boot | Python | Node.js |
+|---|---|---|
+| Java 17 이상, Spring Boot 3.x. 일반 Java도 가능 | Python 3.9 이상, 표준 라이브러리 외 의존성 없음 | Node 18 이상, 의존성 없음, TypeScript 타입 포함, ESM·CommonJS. 서버 전용 |
+
+Java의 HTTP는 OkHttp, HTML 파싱은 jsoup을 씁니다.
+
+## 다음으로
+
+<LinkCard title="빠른 시작" description="설치하고 첫 호출까지 몇 분이면 됩니다." href="../quickstart/" />
+<LinkCard title="학생 인증 붙이기" description="가입 폼에서 받은 학번과 비밀번호로 재학 여부를 확인합니다." href="../../guides/student-verification/" />
+<LinkCard title="학교 데이터 레퍼런스" description="메서드, 요청, 결과 필드, 캐시와 실패 동작." href="../../data/overview/" />
+<LinkCard title="브라우저에서 바로 체험" description="본인 포털 계정으로 실제 결과를 확인합니다." href="../../#demo" />

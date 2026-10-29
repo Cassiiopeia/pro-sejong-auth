@@ -1,0 +1,53 @@
+---
+title: SSO flow
+description: The request order, cookies and redirect handling of the integrated authentication that reads DHC, SIS and the portal main page with a single portal login.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+## Why it is hard
+
+Sejong services are split across domains (`portal`, `classic`, `sjpt`). The student ID and password go to the portal only; the rest are entered with the SSO cookie the portal sets. A browser does this on its own, but server code has to do it explicitly.
+
+- The SSO cookie (`ssotoken`) is set for all of `.sejong.ac.kr`, so you need a cookie jar that honors `Domain=.sejong.ac.kr`.
+- The SSO step answers with redirects such as `303`. Follow 301, 302, 303 and 307 automatically.
+- Create a new cookie jar per call, or sessions mix between users.
+
+## Request order of the integrated call
+
+There is one login, and the same cookie jar reads three places.
+
+<Steps>
+
+1. **Portal login.** Send the student ID and password as a form to the login address of `portal.sejong.ac.kr`. Read the verdict inside the returned 200 response and continue on success ([Login verdict](../login-verdict/)).
+
+2. **DHC (`classic.sejong.ac.kr`).** Open the SSO return address to create the session, fetch the classic reading status page and parse its HTML tables. Student info and classic reading come from here. A 401 is `AUTHENTICATION_FAILED`, any other bad answer is `DATA_FETCH_FAILED`, and an SSO step error is `SESSION_ERROR`.
+
+3. **SIS (`sjpt.sejong.ac.kr`).** Open the SSO address, call the user info API and parse the JSON. Email, phone number, English name and school codes come from here. A failure in this step does not fail the integrated call.
+
+4. **Portal main (`portal.sejong.ac.kr`).** Extract the name of the unit above the major from the main page. It is tried once, and on failure `parentUnitName` is null.
+
+</Steps>
+
+| Step | Host | Format | If it fails |
+|---|---|---|---|
+| 1 Login | `portal.sejong.ac.kr` | Form POST, verdict inside a 200 | The whole call fails |
+| 2 DHC | `classic.sejong.ac.kr` | HTML | The whole call fails |
+| 3 SIS | `sjpt.sejong.ac.kr` | JSON | Only the contact fields are null |
+| 4 Portal main | `portal.sejong.ac.kr` | HTML | Only `parentUnitName` is null |
+
+That one login can serve both DHC and SIS was verified on 2026-10-24 (SIS SSO works after a DHC login).
+
+## When you call DHC or SIS only
+
+- DHC authentication runs step 2 after the login. SIS authentication logs in with the SIS return address and runs step 3.
+- The business periods lookup logs in with the SIS return address; after the SIS user info it continues with the menu list, the open-the-screen and the list requests ([Academic business periods](../../auth/business-periods/)).
+
+<Aside type="tip" title="If you implement it yourself">
+Separate the cookie jar per call, follow redirects, and tell the response codes of each step apart when you turn them into errors. The detailed requests and headers are in [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md); per-screen descriptions are in the [DHC login flow](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/docs/DHC_LOGIN_FLOW.en.md) and the [SIS login flow](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/docs/SIS_LOGIN_FLOW.en.md).
+</Aside>
+
+## Next
+
+- [Login verdict and account lock protection](../login-verdict/)
+- [Failure isolation and cache](../failure-isolation-cache/)

@@ -1,0 +1,41 @@
+---
+// 랜딩 히어로: 한 줄 가치 제안, 부제, CTA 3개, 배지, 교표
+import { LANDING_COPY, PACKAGE_BADGES, REPOSITORY_URL, type LandingLocale } from '../i18n/landing';
+import { documentUrl } from '../i18n/links';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].hero;
+const sealUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/sejong-seal.png`;
+---
+
+<section class="landing-hero">
+  <div class="landing-hero__text">
+    <p class="landing-eyebrow">{copy.eyebrow}</p>
+    <h1 class="landing-hero__title" id="_top">
+      {copy.titleLine}<br /><em>{copy.titleEmphasis}</em>
+    </h1>
+    <p class="landing-hero__lead">{copy.lead}</p>
+    <div class="landing-hero__actions">
+      <a class="landing-button landing-button--primary" href="#demo">{copy.tryDemo}</a>
+      <a class="landing-button" href={documentUrl(locale, 'start/quickstart/')}>{copy.quickStart}</a>
+      <a class="landing-button" href={REPOSITORY_URL}>{copy.github}</a>
+    </div>
+    <ul class="landing-badges">
+      {
+        PACKAGE_BADGES.map((badge) => (
+          <li>
+            <a href={badge.linkUrl}>
+              <img src={badge.imageUrl} alt={badge.name} height="20" loading="lazy" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+  <div class="landing-hero__seal" aria-hidden="true">
+    <img src={sealUrl} alt="" width="220" height="220" />
+  </div>
+</section>

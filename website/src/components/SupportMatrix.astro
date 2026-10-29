@@ -1,0 +1,45 @@
+---
+// 지원 매트릭스: 행 = 기능, 열 = Java / Python / Node.js (세 언어 모두 동일하게 지원)
+import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].matrix;
+const languages = ['Java', 'Python', 'Node.js'];
+---
+
+<section class="landing-section" id="support">
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <div class="landing-table-wrap">
+    <table class="landing-matrix">
+      <thead>
+        <tr>
+          <th scope="col">{copy.featureHeader}</th>
+          {languages.map((language) => <th scope="col" class="landing-matrix__language">{language}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          copy.rows.map((row) => (
+            <tr>
+              <th scope="row">
+                {row.feature}
+                <span>{row.detail}</span>
+              </th>
+              {languages.map((language) => (
+                <td class="landing-matrix__check">
+                  <span aria-hidden="true">✓</span>
+                  <span class="landing-visually-hidden">{`${language}: ${copy.supported}`}</span>
+                </td>
+              ))}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="landing-note">{copy.note}</p>
+</section>

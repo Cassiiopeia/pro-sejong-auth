@@ -1,0 +1,91 @@
+---
+title: Result fields
+description: Fields and types of the integrated, DHC and SIS results, the classic reading sub-tables, SIS school codes, and the rules for null versus empty string.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Names are the Java and Node.js ones (`camelCase`). Python uses `snake_case` (`student_id`, `phone_number`). The source schema is [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md).
+
+## Integrated result
+
+| Field | Type | Source | Rule |
+|---|---|---|---|
+| `success` | boolean | | Always true when a result is returned |
+| `studentId` | string | DHC | Student ID |
+| `name` | string | DHC | Name |
+| `major` | string | DHC | Major |
+| `grade` | string | DHC | Year |
+| `status` | string | DHC | Enrollment status (enrolled, on leave, graduated; portal text as is) |
+| `classicReading` | object | DHC | See "Classic reading" below |
+| `email` | string or null | SIS | null if the SIS lookup fails |
+| `phoneNumber` | string or null | SIS | Same. Format `010-1234-5678` |
+| `englishName` | string or null | SIS | Same |
+| `userCategory` | string or null | SIS | User category, for example `학부생` |
+| `parentUnitName` | string or null | Portal main | null if the portal main call fails, empty string if there is no usable value |
+| `authenticatedAt` | date-time | | Authentication time (each language's local time type) |
+| 11 SIS school codes | string or null | SIS | See "SIS school codes" below. null if the SIS lookup fails |
+| `extra` | map or null | SIS | Only with the extra option, otherwise null |
+| `rawHtml` | string or null | DHC | Only with the raw option |
+| `rawJson` | string or null | SIS | Only with the raw option. null if SIS failed |
+
+<Aside type="caution" title="Do not decide anything from parentUnitName">
+It is auxiliary information: the name of the unit above the major (a college or a school), extracted from the portal screen text. It can be an empty string depending on the student type, and it is portal text whose wording changes with the academic year. Never branch on a list of values and never use it for the authentication verdict.
+</Aside>
+
+## DHC result
+
+`success`, `studentId`, `name`, `major`, `grade`, `status`, `classicReading`, `authenticatedAt`, `rawHtml` (only with the raw option)
+
+There are no contact fields.
+
+## SIS result
+
+`success`, `studentId`, `name`, `major`, `grade` (always an empty string), `status` (always an empty string), `email`, `phoneNumber`, `englishName`, `userCategory`, the SIS school codes, `extra` (only with the extra option), `authenticatedAt`, `rawJson` (only with the raw option)
+
+There are no classic reading fields.
+
+## Classic reading (`classicReading`)
+
+Three portal text values from the DHC "사용자 정보" table and five sub-lists.
+
+| Field | Type | Rule |
+|---|---|---|
+| `completedSemesters` | string | `이수 학기` as is (for example `8 학기`). Empty string if missing |
+| `certifiedSemesters` | string | `인증완료 학기` as is. Empty string if missing |
+| `certificationStatus` | string | `인증여부` as is. Free text that can carry a substitution reason. Empty string if missing |
+
+| List | Item fields |
+|---|---|
+| `certifications` (status per area) | `area`, `requiredCount`, `certifiedCount` |
+| `examRecords` (certification exams) | `semester`, `area`, `bookTitle`, `examDate`, `score`, `passStatus` |
+| `subjectSubstitutions` (substitution by course) | `semester`, `subjectName`, `area`, `bookTitle`, `completion` |
+| `contestRecords` (contest certification) | `semester`, `contestName`, `area`, `bookTitle` |
+| `curriculumRecords` (course-linked certification) | `semester`, `subjectName`, `area`, `bookTitle`, `completion` |
+
+Python names are `snake_case` (`completed_semesters`, `required_count`, `book_title`, ...). A list is empty when the table has no rows.
+
+## SIS school codes
+
+The school's strings as they are. The library carries no code tables or name mapping, and a missing value is an empty string. The SIS datasets are searched in the order `dm_UserInfoSch`, `dm_UserInfoGam`, `dm_UserInfo` and the first non-blank value wins. They are returned by default in the SIS and integrated results.
+
+| Field (Python) | SIS key | Note |
+|---|---|---|
+| `departmentCode` (`department_code`) | `DEPT_CD`, else `DEPT_NO` | The two are expected to be equal, but this was not verified for every enrollment state |
+| `organizationClassificationCode` | `ORGN_CLSF_CD` | |
+| `enrollmentStatusCode` | `STATUS_DIV_CD` | Raw code only. The meaning was not verified for every state |
+| `userClassificationCode` | `USER_CLSF_CD` | |
+| `userClassificationLargeCode` | `USER_CLSF_L_CD` | |
+| `userClassificationMiddleCode` | `USER_CLSF_M_CD` | |
+| `roleCode` / `roleName` | `RPSN_ROLE_CD` / `RPSN_ROLE_CD_NM` | |
+| `menuSystemId` / `menuSystemName` | `MENU_SYS_ID` / `MENU_SYS_NM` | |
+| `locale` | `INTG_LOCALE` | |
+
+`departmentCode` uses the same code system as the department code in [Department and term codes](../../data/codes/). That it is the same value was checked with one undergraduate account only; graduate students, double majors and others are not verified.
+
+## null versus empty string
+
+- A field of the authentication result is an empty string when the school has no value.
+- Fields that come from SIS or the portal main page are null only **when that lookup itself failed**. The integrated call still succeeds then.
+- The raw responses (`rawHtml`, `rawJson`) and `extra` are null unless the option is on.
+- All of these are school text, so they can change when the school changes its wording. See [API stability](../../api-stability/).

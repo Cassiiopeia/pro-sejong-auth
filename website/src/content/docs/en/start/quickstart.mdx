@@ -1,0 +1,173 @@
+---
+title: Quick start
+description: Install the library in Java, Python or Node.js and make your first student verification and school data calls.
+---
+
+import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. **Install it.** Pin the exact version. Find the latest number on [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases) or in the README badges ([API stability](../../api-stability/)).
+
+   <Tabs syncKey="language">
+     <TabItem label="Java">
+       Published to Maven Central, so no extra repository is needed. Java 17+, Spring Boot 3.x.
+
+       ```groovy
+       dependencies {
+           implementation "kr.suhsaechan:sejongpeia:<version>"
+       }
+       ```
+
+       ```xml
+       <dependency>
+           <groupId>kr.suhsaechan</groupId>
+           <artifactId>sejongpeia</artifactId>
+           <version><!-- the version you pin --></version>
+       </dependency>
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       Python 3.9+, no dependencies beyond the standard library.
+
+       ```bash
+       pip install pro-sejongpeia==<version>
+       ```
+     </TabItem>
+     <TabItem label="Node.js">
+       Node 18+, zero dependencies, TypeScript types included, ESM and CommonJS.
+
+       ```bash
+       npm install pro-sejongpeia@<version>
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Call student verification.** One integrated call with a student ID and password.
+
+   <Tabs syncKey="language">
+     <TabItem label="Java">
+       Spring Boot auto-configuration registers a `SuhSejongAuthEngine` bean.
+
+       ```java
+       @RestController
+       @RequiredArgsConstructor
+       public class AuthController {
+
+           private final SuhSejongAuthEngine sejongAuthEngine;
+
+           @PostMapping("/auth/sejong")
+           public SejongAuthResult authenticate(@RequestParam String studentId,
+                                                @RequestParam String password) {
+               return sejongAuthEngine.authenticate(studentId, password);
+           }
+       }
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       from sejongpeia import authenticate, SejongAuthError, ErrorCode
+
+       try:
+           result = authenticate("21011234", "password")
+           print(result.name, result.major, result.grade)
+       except SejongAuthError as error:
+           if error.code == ErrorCode.AUTHENTICATION_FAILED:
+               print("Wrong student ID or password")
+           elif error.code == ErrorCode.ACCOUNT_LOCKED:
+               print("The portal account is locked. Reset the password on the portal")
+       ```
+     </TabItem>
+     <TabItem label="Node.js">
+       ```js
+       import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
+
+       try {
+         const result = await authenticate('21011234', 'password');
+         console.log(result.name, result.major, result.grade);
+       } catch (error) {
+         if (error instanceof SejongAuthError && error.code === ErrorCode.AUTHENTICATION_FAILED) {
+           console.log('Wrong student ID or password');
+         } else if (error instanceof SejongAuthError && error.code === ErrorCode.ACCOUNT_LOCKED) {
+           console.log('The portal account is locked. Reset the password on the portal');
+         }
+       }
+       ```
+     </TabItem>
+   </Tabs>
+
+   Branch on the error **code**, never on the message. The code list is in [Error codes](../../auth/error-codes/).
+
+3. **Call school data that needs no login.** Get the department list, then the course listings of the first department (undergraduate, 2026 fall semester). `"20"` (undergraduate) and the semester value are the school's own values.
+
+   <Tabs syncKey="language">
+     <TabItem label="Java">
+       ```java
+       SejongPublicData publicData = new SejongPublicData();   // inject it as a bean in Spring
+       List<Department> departments = publicData.departments("20", "2026", "20");
+       List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       from sejongpeia import SejongPublicData
+
+       public_data = SejongPublicData()
+       departments = public_data.departments("20", "2026", "20")          # undergraduate, 2026 fall
+       lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+       # Course number of a lecture > grade, semester and overview in that department's curriculum (empty list if none)
+       courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
+       ```
+     </TabItem>
+     <TabItem label="Node.js">
+       ```js
+       import { SejongPublicData } from 'pro-sejongpeia';
+
+       const publicData = new SejongPublicData();
+       const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+       const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
+       ```
+     </TabItem>
+   </Tabs>
+
+   Create **one** `SejongPublicData` per process. The in-memory cache (24 hours by default) and request coalescing live inside the instance.
+
+</Steps>
+
+## Plain Java (without Spring)
+
+Spring Boot is an optional dependency, so a plain Java project does not pull it in. The JVM blocks the old TLS cipher the portal accepts, so call `SejongTlsSupport.ensureLegacyCipherEnabled()` **first in `main()`**, before any other HTTPS call.
+
+```java
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
+
+SejongTlsSupport.ensureLegacyCipherEnabled();   // first in main(), before any other HTTPS call
+SejongAuthProperties properties = new SejongAuthProperties();
+SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),
+    new SejongClassicReadingParser(), new SejongSisClient(properties), new SejongSisParser());
+SejongAuthResult result = engine.authenticate(studentId, password);
+```
+
+Called too late, authentication fails with `CONNECTION_FAILED` and a message that names the cause. The setting applies to the whole JVM. See [Legacy TLS](../../understand/legacy-tls/) for why. Spring Boot handles it at startup, and Python and Node change only the TLS settings of their own connections.
+
+<Aside type="caution" title="Call it from a server only">
+Calling from a browser or app exposes the password to third-party code. The Node package is server-only too. A wrong password sent repeatedly makes the portal lock the account, so if anyone can type a student ID into your form, limit failures per student ID. [Login verdict and account lock protection](../../understand/login-verdict/)
+</Aside>
+
+<Aside type="note" title="What an empty list means">
+When a school server fails, public data returns the last cached value or an empty list without throwing. An empty list can mean "no data" or "a problem on the school side", so show a hint such as "could not load" next to empty results.
+</Aside>
+
+## Next
+
+<LinkCard title="Add student verification" description="A club sign-up form example and what to watch for." href="../../guides/student-verification/" />
+<LinkCard title="Department and lecture search" description="A small server that returns departments and lectures as JSON." href="../../guides/department-lecture-search/" />
+<LinkCard title="Authentication configuration" description="Timeout, retries, certificate verification." href="../../auth/configuration/" />

@@ -1,0 +1,83 @@
+---
+title: Repository structure
+description: Repository folders, development commands, live-portal tests, the rule for portal changes, documentation languages and the feature exposure checklist.
+---
+
+## Folders
+
+| Folder | What |
+|---|---|
+| `java/` | Java / Spring Boot library (`kr.suhsaechan:sejongpeia`) |
+| `python/` | Python package (`pro-sejongpeia`, import `sejongpeia`) |
+| `node/` | Node.js package (`pro-sejongpeia`, TypeScript) |
+| `spec/` | Shared contract: portal flow, result schema, sanitized response samples used by every language's tests |
+| `website/` | This documentation site (Astro Starlight). Korean is the default, English is under `/en/` |
+| `scripts/` | Scripts for live portal checks, shape checks, fixture generation and docs checks |
+| `docs/` | Integration examples, API stability, login flow documents and images |
+
+All three languages share one version number. `version.yml` holds it and the release workflow updates it. The folder layout inside each language (`common`, `auth`, `public_data`) is in the table on [Add a new data source](../add-data-source/).
+
+## Development setup
+
+```bash
+./gradlew build                                   # Java (JDK 17+, Gradle Wrapper included)
+cd python && python -m pip install pytest && python -m pytest   # Python 3.9+
+cd node && npm ci && npm test                     # Node 18+
+```
+
+## Tests against the real portal
+
+Live tests log in to the real Sejong portal, so they only run when you provide an account.
+
+- Python and Node: set `SEJONG_TEST_STUDENT_ID` and `SEJONG_TEST_PASSWORD`, then run the tests as above.
+- Java: create `java/src/test/resources/application-dev.yml` (in `.gitignore`).
+
+  ```yaml
+  sejong:
+    auth:
+      test:
+        student-id: "your student ID"
+        password: "your password"
+  ```
+
+  The `실제인증_*` tests in `SuhSejongAuthEngineTest` are `@Disabled`. Remove it locally and restore it before committing.
+- All three at once, comparing results field by field (no personal data printed):
+
+  ```bash
+  SEJONG_TEST_STUDENT_ID=... SEJONG_TEST_PASSWORD=... scripts/verify-live.sh
+  ```
+
+- Correct password only (no wrong-password attempts): `scripts/live-check.sh`. The `PROJECT-SEJONG-LIVE-CHECK` workflow runs it daily and opens an issue when it fails. See [Daily live portal check](../../understand/daily-live-check/).
+
+:::caution
+Several wrong passwords in a row can lock the portal account. If a run fails, find the cause before running it again.
+:::
+
+## When the portal changes
+
+1. Update `spec/PORTAL_FLOW.md` and `spec/contract.json`, and `spec/fixtures/` if the response shape changed (with personal data removed). Each language's contract test fails until its constants match `spec/contract.json`.
+2. Fix Java, Python and Node in the **same PR**.
+3. Run each language's tests and `scripts/verify-live.sh`.
+
+## Documentation languages
+
+- The default document is Korean `X.md`; translations are `X.<language code>.md` (for example `README.en.md`). Add a new language the same way.
+- The language line at the top of each document links every language of that document.
+- When you change a Korean document, update its translations in the same PR. If you cannot, say so in the PR description.
+- The `## 최신 버전 :` line in `README.md` is updated by the release workflow; do not edit it by hand.
+- Check with `python3 scripts/check-docs.py` (broken relative links, missing language links). `PROJECT-SEJONG-DOCS-CHECK` also runs on pull requests.
+- Every page of this site (`website/`) has a Korean and an English version. Change both in the same PR.
+
+## Feature exposure checklist
+
+Building a feature is not the end: it has to show up everywhere people look. Check this list before opening the PR. The PR template has the same checklist.
+
+- README in Korean and English: the feature and a usage example, and the `Result fields` table if fields were added
+- `python/README.md`, `node/README.md`: the PyPI and npm package pages
+- `spec/`: the contract document, `spec/contract.json`, synthetic fixtures
+- The documentation site `website/`: feature intro, field table, the matching reference page (Korean and English)
+- Package descriptions and keywords: `python/pyproject.toml`, `node/package.json`, `java/build.gradle`
+- A one-line summary for the release notes (the commit message)
+- Only promote what is actually supported
+
+Next, read the [issue and PR](../issues-and-prs/) rules.

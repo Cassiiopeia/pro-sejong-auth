@@ -1,0 +1,68 @@
+---
+title: Introduction
+description: pro-sejongpeia is an open-source library that gives Java, Python and Node.js the same Sejong University portal login and login-free school data.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+pro-sejongpeia is an **integrated library for Sejong University**. It offers the **portal login** that verifies a student with a student ID and password, and the **school data** the university serves publicly without login (department codes, course listings, the academic calendar, dormitory menus, cafeterias and more). Java, Python and Node.js get the same features, the same result fields and the same error codes.
+
+The portal login, SSO redirects, session cookies, the old TLS setup and HTML and JSON parsing are handled by the library.
+
+## Who it is for
+
+- **Sejong student verification** for clubs, student councils and campus communities
+- Checking participation in campus events that depend on department or year
+- Department and lecture search pages, academic calendar widgets
+- Bots that post the dormitory menu and cafeteria menus
+
+## What you can use
+
+<CardGrid>
+  <Card title="Student verification (login required)" icon="approve-check">
+    Get name, major, year, enrollment status, classic-reading certification and contact details. One call is one portal login. [Authentication reference](../../auth/methods/)
+  </Card>
+  <Card title="School data (no login)" icon="open-book">
+    Department and term codes, course listings, curriculum, the academic calendar (undergraduate and graduate), dormitory, cafeterias, campus places, extracurricular programs. [Common rules](../../data/overview/)
+  </Card>
+  <Card title="Same behavior in three languages" icon="laptop">
+    Result fields and error codes are the same in all three languages; only the naming follows each language's convention. Shared values live in one place, `spec/contract.json`.
+  </Card>
+  <Card title="Failure isolation" icon="warning">
+    With public data, one source failing does not affect the others. A failure returns the last cached value or an empty list. [Failure isolation and cache](../../understand/failure-isolation-cache/)
+  </Card>
+</CardGrid>
+
+## Data sources
+
+| Source | Domain | What it provides | Login |
+|---|---|---|---|
+| DHC (Daeyang Humanity College) | classic.sejong.ac.kr | Student info + classic-reading certification | required |
+| SIS (student information system) | sjpt.sejong.ac.kr | Student info + email, phone, English name, school codes | required |
+| SIS public lookups | sjpt.sejong.ac.kr | Organization categories, terms, departments, course listings | not needed |
+| University website | www.sejong.ac.kr | Academic calendar, cafeterias, campus places, curriculum | not needed |
+| Graduate school sites | `<site>.sejong.ac.kr` | Graduate academic calendar | not needed |
+| Dormitory | happydorm.sejong.ac.kr | Dormitory menu, notices | not needed |
+| Do-Dream | do.sejong.ac.kr | Extracurricular program schedule | not needed |
+
+## Good to know
+
+- **This is not an official Sejong University product.** It is a personal open-source project by a Sejong student and is not affiliated with the university.
+- It follows **unofficial addresses used by the university's own web screens**, not a documented API. If the university changes them it can stop working; a daily check opens an issue when something breaks. There is no promise about how fast it gets fixed.
+- **Backward compatibility is not guaranteed.** Breaking changes can happen even within `1.x`, so pin the exact version. [API stability](../../api-stability/)
+- School values are **the strings the school sent, as they are**. The library carries no code tables or name mappings.
+
+## Requirements
+
+| Java / Spring Boot | Python | Node.js |
+|---|---|---|
+| Java 17+, Spring Boot 3.x. Plain Java works too | Python 3.9+, no dependencies beyond the standard library | Node 18+, no dependencies, TypeScript types included, ESM and CommonJS. Server only |
+
+Java uses OkHttp for HTTP and jsoup for HTML parsing.
+
+## Next
+
+<LinkCard title="Quick start" description="Install and make your first call in a few minutes." href="../quickstart/" />
+<LinkCard title="Add student verification" description="Verify enrollment with the student ID and password from a sign-up form." href="../../guides/student-verification/" />
+<LinkCard title="School data reference" description="Methods, requests, result fields, cache and failure behavior." href="../../data/overview/" />
+<LinkCard title="Try it in the browser" description="See the real result with your own portal account." href="../../#demo" />

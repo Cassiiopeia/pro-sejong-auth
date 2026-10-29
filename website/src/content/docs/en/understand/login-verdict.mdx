@@ -1,0 +1,56 @@
+---
+title: Login verdict and account lock protection
+description: How the portal reports the login result in a script value inside a 200 response, the error code for each verdict, and the retry rules that keep accounts from being locked.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Why it is hard
+
+The portal answers a failed login with **HTTP 200** too, so the status code cannot tell success from failure. The result is inside a script of the small HTML page that comes back.
+
+```text
+var result = '<value>'
+```
+
+On top of that, every wrong password raises the portal's failure count, and past a certain count the account is locked. Retrying failed logins out of habit locks the user's account.
+
+## Verdicts and error codes
+
+| `result` value | Meaning of the portal message | Library |
+|---|---|---|
+| `OK` | Success (redirects to the return address) | Continue |
+| `erridpwd`, `Error` | ID or password does not match | `AUTHENTICATION_FAILED`, stop with no further requests |
+| `pwdNeedChg` | Account locked after repeated wrong passwords | `ACCOUNT_LOCKED` |
+| `invalidDt`, `invalid` | Use period ended, or blocked by the administrator | `ACCOUNT_UNAVAILABLE` |
+| Any other value | Error while processing the login | `SESSION_ERROR` |
+| No `var result` | Treated as a changed portal page format | Continue; a 401 in a later step decides |
+
+`spec/contract.json` is the single source of this mapping, and the tests of all three languages check they use the same values.
+
+## The library's rules
+
+- A login the portal rejected (wrong password, lock, unavailable) is **never retried.** It stops at the first failure.
+- Retries are for **transport problems** only, such as non-2xx answers or timeouts ([Configuration](../../auth/configuration/)).
+- The integrated call logs in once, so the failure count rises at most once per call.
+- Blank input ends with `INVALID_INPUT` without sending any request.
+
+## What was not verified about the lock count
+
+Comments in the portal source say the lock happens after 5 failures, and the portal's own notice says about 5. But **the exact count, and whether a successful login resets it, are not verified.** Treat it conservatively.
+
+<Aside type="caution" title="Limit per student ID in your service">
+If anyone can type a student ID into your form, limit the failure count per student ID on your own server. The library can only stop retries inside one call; it cannot stop repeated requests. A locked account is released only when the user [resets the password on the portal](https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp).
+</Aside>
+
+## If you implement it yourself
+
+- Read the verdict in the response body, not the status code. Samples are `spec/fixtures/portal_login_ok.html` and `portal_login_erridpwd.html` in the repository.
+- Treat an unknown verdict as an error, not as success.
+- Do not resend a rejected login automatically.
+
+## Next
+
+- [Error codes](../../auth/error-codes/)
+- [SSO flow](../sso-flow/)
+- Source: Step 1 of [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md)

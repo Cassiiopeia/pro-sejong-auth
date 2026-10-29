@@ -1,0 +1,90 @@
+---
+title: Configuration
+description: Timeout, login retry and certificate verification settings in Java, Python and Node.js, plus the TLS caveat for using the Java library without Spring.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Everything is optional. If the defaults are fine, configure nothing.
+
+| Setting | Default | Java (`application.yml`) | Python | Node.js |
+|---|---|---|---|---|
+| Request timeout (seconds, connect and read) | 10 | `sejongpeia.timeout-seconds` | `timeout_seconds` | `timeoutSeconds` |
+| Portal login retries | 3 | `sejongpeia.max-retry` | `max_retry` | `maxRetry` |
+| Certificate verification | on (true) | `sejongpeia.ssl-verification` | `ssl_verification` | `sslVerification` |
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```yaml
+    sejongpeia:
+      timeout-seconds: 10     # request timeout (default 10)
+      max-retry: 3            # portal login retries (default 3)
+      ssl-verification: true  # portal certificate check (default true)
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import SejongAuthClient
+
+    # create your own client only when you need non-default settings
+    client = SejongAuthClient(timeout_seconds=10, max_retry=3, ssl_verification=True)
+    result = client.authenticate(student_id, password)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { SejongAuthClient } from 'pro-sejongpeia';
+
+    // create your own client only when you need non-default settings
+    const client = new SejongAuthClient({ timeoutSeconds: 10, maxRetry: 3, sslVerification: true });
+    const result = await client.authenticate(studentId, password);
+    ```
+  </TabItem>
+</Tabs>
+
+## Scope of retries
+
+- Retries apply to the **portal login request** only. It is tried again on a non-2xx answer or a timeout.
+- A timeout on the last attempt is `CONNECTION_TIMEOUT`; running out of attempts is `CONNECTION_FAILED`.
+- A login the portal rejected for a wrong password or a lock is never retried, to protect the account.
+
+## Certificate verification
+
+On by default. There is an option to turn it off, but treat it as a debugging tool: with it off, the connection that carries the login is not verified.
+
+## Java: without Spring
+
+Spring Boot is an optional dependency, so a plain Java project does not pull it in. Wire the objects yourself.
+
+```java
+import kr.suhsaechan.sejongpeia.auth.client.SejongPortalClient;
+import kr.suhsaechan.sejongpeia.auth.client.SejongSisClient;
+import kr.suhsaechan.sejongpeia.auth.model.SejongAuthResult;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongSisParser;
+import kr.suhsaechan.sejongpeia.auth.parser.SejongStudentInfoParser;
+import kr.suhsaechan.sejongpeia.auth.service.SuhSejongAuthEngine;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
+
+SejongTlsSupport.ensureLegacyCipherEnabled();   // first thing in main(), before any other HTTPS call
+SejongAuthProperties properties = new SejongAuthProperties();
+SuhSejongAuthEngine engine = new SuhSejongAuthEngine(new SejongPortalClient(properties), new SejongStudentInfoParser(),
+    new SejongClassicReadingParser(), new SejongSisClient(properties), new SejongSisParser());
+SejongAuthResult result = engine.authenticate(studentId, password);
+```
+
+<Aside type="caution" title="Java TLS caveat">
+The portal offers only a cipher (`TLS_RSA_WITH_AES_256_CBC_SHA`) that current JDKs disable. The library removes `TLS_RSA_*` from `jdk.tls.disabledAlgorithms`. That setting applies to the **whole JVM** and only works **before the JVM's first TLS connection**.
+
+- Spring Boot handles it automatically at startup.
+- Without Spring, call `SejongTlsSupport.ensureLegacyCipherEnabled()` first in `main()`. Calling it too late fails with `CONNECTION_FAILED` and a message that names the cause.
+- If a JVM-wide change is not acceptable, run authentication in a separate process.
+- Python and Node.js change the TLS settings of their own connections only.
+
+Background is in [Legacy TLS](../../understand/legacy-tls/).
+</Aside>
+
+## Public data client
+
+Settings of the public school data client (`SejongPublicData`) such as cache time, failure memory time and maximum cache entries are in [Common rules](../../data/overview/).

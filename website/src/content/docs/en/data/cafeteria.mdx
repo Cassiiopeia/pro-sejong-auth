@@ -1,0 +1,122 @@
+---
+title: Cafeterias
+description: The cafeteria_menu method returns a cafeteria's menu and prices, and cafeteria_places builds the cafeteria list, with its limits explained.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Get a cafeteria's menu and prices from the school's own cafeteria number (`cafeteria_menu`), and a list of cafeteria numbers, names, buildings and locations (`cafeteria_places`). **The school has no cafeteria list API**, so the list is built by the library: it calls the menu answer for numbers 1 to 10 one after the other and collects the places. That is the cause of the limits below, so please read them. Common rules are on [Common rules](../overview/).
+
+## Methods
+
+| Data | Java | Python | Node.js |
+|---|---|---|---|
+| Cafeteria menu | `cafeteriaMenu(String placeId)` | `cafeteria_menu(place_id)` | `cafeteriaMenu(placeId)` (string or number) |
+| Cafeteria list | `cafeteriaPlaces()` | `cafeteria_places()` | `cafeteriaPlaces()` |
+
+Return `CafeteriaMenuItem` list and `CafeteriaPlace` list.
+
+## Request notes
+
+### `cafeteria_menu`
+
+- `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<number>`, response array `items`. No login.
+- `place_id` is the school's cafeteria number. The library carries no table of them.
+
+### `cafeteria_places`
+
+- Calls the same address for `placeId` 1 to 10, **one request at a time** (never in parallel). It is the only method that can make up to 10 requests in one call.
+- Per number, the first row of the answer gives one place: `placeId`, `placeName`, `buildingName`, `location`. `extra` holds the row's other fields except the menu fields (`menuDate`, `day`, `mealTypeId`, `mealName`, `menuName`, `price`). A number with no rows adds nothing, the same `placeId` is listed once, and the result is in number order.
+- **One failed request fails the whole list** (last cached value or an empty list), so a partial list is never cached for a day.
+
+### Why it works this way (checked 2026-10-30)
+
+- The cafeteria page (`cafeteria-info.do`) only calls `mode=getMenuList&placeId=<n>`. The mapping from a card to numbers is in a fixed table in the page script (the card "계절밥상" uses number 1, "진관키친" 3, and the card "산들푸드" shows the stalls 4, 5 and 6 together). The card list itself is page HTML, which the library does not parse.
+- `mode=getPlaceList` and `mode=getCafeteriaList` answered 404.
+- The campus map list ([Campus places](../campus-places/)) also has a cafeteria category, but its ids are a different system and nothing links the two.
+- Calling numbers 0 to 12 once each: 1, 3, 4, 5 and 6 returned menus (`place_name`, `building_name` and `location` tell which cafeteria: 1 군자관 6th floor, 3 진관홀 B1, 4 to 6 학생회관 B1). The others returned an empty list.
+
+## Result fields
+
+Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing.
+
+### Menu (`CafeteriaMenuItem`, no `extra`)
+
+| Field | School key | Meaning |
+|---|---|---|
+| `place_id` | `placeId` | Cafeteria number |
+| `place_name` | `placeName` | Cafeteria name |
+| `building_name` | `buildingName` | Building |
+| `location` | `location` | Location (for example `6층`) |
+| `date` | `menuDate` | Menu date (empty for fixed-menu cafeterias) |
+| `day` | `day` | Weekday (empty for fixed-menu cafeterias) |
+| `meal_type_id` | `mealTypeId` | Meal type number (table below) |
+| `meal_name` | `mealName` | Meal name (school text) |
+| `menu_name` | `menuName` | Menu name |
+| `price` | `price` | Price (string, for example `5500`) |
+
+### Meal type (`meal_type_id`)
+
+Only the weekly-menu cafeteria (number 1) has dates and meal types (seen 2026-10-30).
+
+| `meal_type_id` | `meal_name` |
+|---|---|
+| `1` | 중식 (lunch) |
+| `2` | 석식 (dinner) |
+
+The school page draws 1 as lunch and 2 as dinner and ignores other values. The library does not translate the number; use the `meal_name` the school sends. Rows of the fixed-menu stalls (numbers 3 to 6) have no date, weekday or meal type, so those fields are empty strings.
+
+### Cafeteria (`CafeteriaPlace`)
+
+| Field | Meaning |
+|---|---|
+| `place_id`, `place_name` | Cafeteria number and name |
+| `building_name`, `location` | Building and location |
+| `extra` | The school's other fields, minus the menu fields |
+
+## Examples
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+List<CafeteriaPlace> places = publicData.cafeteriaPlaces();   // up to 10 requests, cached for a day
+List<CafeteriaMenuItem> menu = publicData.cafeteriaMenu("1");  // menu of cafeteria 1
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+places = public_data.cafeteria_places()  # up to 10 requests, cached for a day
+menu = public_data.cafeteria_menu("1")   # menu of cafeteria 1
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+const places = await publicData.cafeteriaPlaces(); // up to 10 requests, cached for a day
+const menu = await publicData.cafeteriaMenu('1');  // menu of cafeteria 1
+```
+
+</TabItem>
+</Tabs>
+
+Numbers can change, so ask `cafeteria_places()` instead of writing numbers into your code. The numbers the school script used on 2026-10-30 were 1 (weekly menu, lunch and dinner), and 3, 4, 5, 6 (fixed menus).
+
+## Cache and failure behavior
+
+- `cafeteria_menu`: cached for one day (86400 seconds by default) per number, one request. A failure returns the last cached value or an empty list.
+- `cafeteria_places`: cached for one day, up to 10 requests per refresh. If any one fails, the result is the last cached value or an empty list, and a partial list is never cached. A failure with no cache returns an empty list without a request for 60 seconds (default).
+- Neither method raises.
+- **An empty `cafeteria_menu` does not prove a number is invalid.** It is empty both when the number does not exist and when that day has no menu (a weekly menu not yet posted, or a holiday).
+
+## Known limits and what was not verified
+
+- A cafeteria whose menu is empty on that day (weekly menu not yet posted, holiday) is missing from the list until the next refresh (the cache lifetime, one day by default). The fixed-menu stalls (3 to 6) always have rows; the weekly one (1) does not always.
+- **A cafeteria numbered above 10 is not found.**
+- One card on the school page (`빅베어레스토랑`) has no menu number at all, so it can never appear in this list.
+- The library never guesses a name from a number.
+- The per-number results above are one measurement on 2026-10-30. This page did not check whether the school has changed the numbers since. Numbers can change.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

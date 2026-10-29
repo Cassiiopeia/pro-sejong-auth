@@ -1,0 +1,9 @@
+---
+// 랜딩(splash, hero 없음)은 히어로 컴포넌트가 h1 을 그리므로 기본 제목을 숨겨 h1 중복을 막음
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+
+const { entry } = Astro.locals.starlightRoute;
+const isLandingPage = entry.data.template === 'splash' && !entry.data.hero;
+---
+
+{isLandingPage ? <span data-landing-title hidden /> : <Default {...Astro.props}><slot /></Default>}

@@ -1,0 +1,159 @@
+---
+title: Dormitory and cafeteria bot
+description: Build today's dormitory menu, cafeteria menus and dormitory notices as message strings, with a bot example in Java, Python and Node.js.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Builds today's dormitory menu, cafeteria menus and dormitory notices as message strings. Attach it to whatever sends them: Slack, Discord, Kakao and so on. No login is needed.
+
+The message labels in the code (`조식`, `중식`, `석식`, `번 식당`) are Korean, matching the school's own data; replace them with your own wording.
+
+## Code
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    import java.time.LocalDate;
+    import java.util.List;
+    import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+    import kr.suhsaechan.sejongpeia.publicdata.model.CafeteriaMenuItem;
+    import kr.suhsaechan.sejongpeia.publicdata.model.DormitoryMenuDay;
+
+    class CampusInfoBot {
+
+      static String dormitoryMenuMessage(SejongPublicData publicData) {
+        String today = LocalDate.now().toString();
+        List<DormitoryMenuDay> menuDays = publicData.dormitoryMenu();
+        DormitoryMenuDay menuDay = menuDays.stream().filter(day -> today.equals(day.getDate())).findFirst()
+            .orElse(menuDays.isEmpty() ? null : menuDays.get(0));
+        if (menuDay == null) {
+          return "기숙사 식단을 불러오지 못했습니다";
+        }
+        return "[기숙사 " + menuDay.getDate() + "]\n조식: " + menuDay.getBreakfast()
+            + "\n중식: " + menuDay.getLunch() + "\n석식: " + menuDay.getDinner();
+      }
+
+      static String cafeteriaMessage(SejongPublicData publicData, String placeId) {
+        String today = LocalDate.now().toString();
+        List<CafeteriaMenuItem> items = publicData.cafeteriaMenu(placeId);
+        if (items.isEmpty()) {
+          return placeId + "번 식당: 메뉴 없음";
+        }
+        List<CafeteriaMenuItem> todaysItems = items.stream()
+            .filter(item -> item.getDate().isEmpty() || item.getDate().equals(today)).toList();
+        List<CafeteriaMenuItem> shownItems = todaysItems.isEmpty() ? items : todaysItems;
+        StringBuilder message = new StringBuilder("[" + shownItems.get(0).getPlaceName() + "]");
+        shownItems.stream().limit(5).forEach(item ->
+            message.append("\n").append(item.getMealName()).append(" ").append(item.getMenuName()).append(" ").append(item.getPrice()).append("원"));
+        return message.toString();
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from datetime import date
+
+    from sejongpeia import SejongPublicData
+
+    public_data = SejongPublicData()
+    CAFETERIA_PLACE_IDS = ["1", "3", "4", "5", "6"]  # the school's cafeteria numbers (checked 2026-10-30), may change
+
+
+    def dormitory_menu_message() -> str:
+        today = date.today().isoformat()
+        menu_days = public_data.dormitory_menu()
+        # If today is missing (before a weekend refresh, for example) show the first day the school gave
+        menu_day = next((day for day in menu_days if day.date == today), menu_days[0] if menu_days else None)
+        if menu_day is None:
+            return "기숙사 식단을 불러오지 못했습니다"
+        return f"[기숙사 {menu_day.date}]\n조식: {menu_day.breakfast}\n중식: {menu_day.lunch}\n석식: {menu_day.dinner}"
+
+
+    def cafeteria_message(place_id: str) -> str:
+        items = public_data.cafeteria_menu(place_id)
+        if not items:  # empty for a wrong number and for a day without a menu (cannot tell them apart)
+            return f"{place_id}번 식당: 메뉴 없음"
+        today = date.today().isoformat()
+        # Dated cafeterias return a week at once, so keep today only; undated ones (standing menus) stay as they are
+        todays_items = [item for item in items if item.date in ("", today)] or items
+        first = todays_items[0]
+        lines = [f"{item.meal_name} {item.menu_name} {item.price}원".strip() for item in todays_items[:5]]
+        return f"[{first.place_name} {first.building_name} {first.location}]\n" + "\n".join(lines)
+
+
+    def latest_dormitory_notice_message() -> str:
+        notices = public_data.dormitory_notices(rows=3)
+        return "\n".join(f"{notice.date} {notice.title}" for notice in notices.items) or "공지를 불러오지 못했습니다"
+
+
+    if __name__ == "__main__":
+        print(dormitory_menu_message())
+        for place_id in CAFETERIA_PLACE_IDS:
+            print(cafeteria_message(place_id))
+        print(latest_dormitory_notice_message())
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { SejongPublicData } from 'pro-sejongpeia';
+
+    const publicData = new SejongPublicData();
+    const CAFETERIA_PLACE_IDS = ['1', '3', '4', '5', '6']; // the school's cafeteria numbers (checked 2026-10-30), may change
+    const todayText = () => new Date().toLocaleDateString('sv-SE'); // yyyy-MM-dd (local date)
+
+    export async function dormitoryMenuMessage() {
+      const menuDays = await publicData.dormitoryMenu();
+      // If today is missing (before a weekend refresh, for example) show the first day the school gave
+      const menuDay = menuDays.find((day) => day.date === todayText()) ?? menuDays[0];
+      if (!menuDay) return '기숙사 식단을 불러오지 못했습니다';
+      return `[기숙사 ${menuDay.date}]\n조식: ${menuDay.breakfast}\n중식: ${menuDay.lunch}\n석식: ${menuDay.dinner}`;
+    }
+
+    export async function cafeteriaMessage(placeId) {
+      const items = await publicData.cafeteriaMenu(placeId);
+      if (items.length === 0) return `${placeId}번 식당: 메뉴 없음`; // empty for a wrong number and for a day without a menu (cannot tell them apart)
+      // Dated cafeterias return a week at once, so keep today only; undated ones (standing menus) stay as they are
+      const todaysItems = items.filter((item) => item.date === '' || item.date === todayText());
+      const shownItems = todaysItems.length > 0 ? todaysItems : items;
+      const lines = shownItems.slice(0, 5).map((item) => `${item.mealName} ${item.menuName} ${item.price}원`.trim());
+      const first = shownItems[0];
+      return `[${first.placeName} ${first.buildingName} ${first.location}]\n${lines.join('\n')}`;
+    }
+
+    export async function latestDormitoryNoticeMessage() {
+      const notices = await publicData.dormitoryNotices({ rows: 3 });
+      return notices.items.map((notice) => `${notice.date} ${notice.title}`).join('\n') || '공지를 불러오지 못했습니다';
+    }
+
+    console.log(await dormitoryMenuMessage());
+    for (const placeId of CAFETERIA_PLACE_IDS) console.log(await cafeteriaMessage(placeId));
+    console.log(await latestDormitoryNoticeMessage());
+    ```
+  </TabItem>
+</Tabs>
+
+## Output
+
+Run on 2026-10-30 against the live school servers in all three languages. This is the start of the output, shortened. School data changes, so this is that day's example.
+
+```text
+[기숙사 2026-10-30]
+조식: 돈육장조림버터비빔밥 음료
+중식: 쌀밥 육개장 부추전 우엉떡잡채 아삭이고추무침 배추김치
+석식: 쌀밥 북어계란국 순살안동찜닭 꼬시래기무침 참나물흑임자무침 배추김치
+[계절밥상 군자관 6층]
+중식 얼갈이된장국 · 오징어제육볶음 · 감자튀김 · ... 7000원
+[진관키친 진관홀 B1층]
+라면 3300원
+...
+2026-10-19 [기숙사] 2026년 10월 정기소독 실시 안내
+```
+
+## Notes
+
+- Cafeteria numbers are the school's values (checked 2026-10-30: ids 1, 3, 4, 5, 6 had menus, id 2 returned an empty list). Numbers can change, and `place_name` in the result tells which cafeteria it is. An empty list appears both for a wrong number and for a day without a menu. You can also list cafeterias with `cafeteria_places()`. [Cafeterias](../../data/cafeteria/)
+- Cafeteria 1 returned a week of menus with dates; 3 to 6 returned undated standing menus. The examples handle both.
+- The dormitory menu covers 7 days: `dormitory_menu(location="SJ")`. [Dormitory](../../data/dormitory/)
+- To go easy on the school servers, refreshing a few times a day is enough (the library cache is already 24 hours).

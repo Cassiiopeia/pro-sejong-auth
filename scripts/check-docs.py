@@ -8,8 +8,8 @@ import re
 import subprocess
 import sys
 
-# 점검 제외: 작업 기록·도구 설정·자동 생성 문서
-EXCLUDED_PREFIXES = ("docs/projectops/", "docs/superpowers/", ".claude/", ".cursor/", ".github/", ".agents/")
+# 점검 제외: 작업 기록·도구 설정·자동 생성 문서, 문서 사이트(website/는 빌드 결과를 DOCS-PAGES 가 따로 점검)
+EXCLUDED_PREFIXES = ("docs/projectops/", "docs/superpowers/", ".claude/", ".cursor/", ".github/", ".agents/", "website/")
 EXCLUDED_NAMES = {"CHANGELOG.md"}
 
 # 번역 파일 이름: {기본 이름}.{소문자 2글자 언어코드}.md

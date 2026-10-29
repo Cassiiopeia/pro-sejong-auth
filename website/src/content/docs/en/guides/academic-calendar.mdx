@@ -1,0 +1,94 @@
+---
+title: Academic calendar widget
+description: Show the undergraduate academic events of the next 30 days ordered by start date, with a widget example in Java, Python and Node.js.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Shows the undergraduate academic events within the next 30 days, ordered by start date. No login is needed.
+
+## Code
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    import java.time.LocalDate;
+    import java.util.List;
+    import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+    import kr.suhsaechan.sejongpeia.publicdata.model.CalendarEvent;
+
+    class AcademicCalendarWidget {
+
+      static List<CalendarEvent> upcomingAcademicEvents(SejongPublicData publicData, int daysAhead) {
+        LocalDate today = LocalDate.now();
+        return publicData.calendar(today.toString(), today.plusDays(daysAhead).toString()).stream()
+            .sorted(java.util.Comparator.comparing(CalendarEvent::getStartDate))
+            .toList();
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from datetime import date, timedelta
+
+    from sejongpeia import SejongPublicData
+
+    public_data = SejongPublicData()
+
+
+    def upcoming_academic_events(days_ahead: int = 30) -> list:
+        """Undergraduate events that overlap the next days_ahead days (by start date)"""
+        today = date.today()
+        events = public_data.calendar(today.isoformat(), (today + timedelta(days=days_ahead)).isoformat())
+        # Dates are yyyy-MM-dd strings from the school, so string order equals date order
+        return sorted(events, key=lambda event: event.start_date)
+
+
+    if __name__ == "__main__":
+        for event in upcoming_academic_events():
+            period = event.start_date if event.start_date == event.end_date else f"{event.start_date} ~ {event.end_date}"
+            print(f"{period}  {event.title}")
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { SejongPublicData } from 'pro-sejongpeia';
+
+    const publicData = new SejongPublicData();
+
+    /** Undergraduate events that overlap the next daysAhead days (by start date) */
+    export async function upcomingAcademicEvents(daysAhead = 30) {
+      const toDateText = (date) => date.toLocaleDateString('sv-SE'); // yyyy-MM-dd (local date)
+      const today = new Date();
+      const end = new Date(today.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+      const events = await publicData.calendar({ start: toDateText(today), end: toDateText(end) });
+      // Dates are yyyy-MM-dd strings from the school, so string order equals date order
+      return events.sort((first, second) => first.startDate.localeCompare(second.startDate));
+    }
+
+    for (const event of await upcomingAcademicEvents()) {
+      const period = event.startDate === event.endDate ? event.startDate : `${event.startDate} ~ ${event.endDate}`;
+      console.log(`${period}  ${event.title}`);
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Output
+
+Run on 2026-10-30 against the live school servers in all three languages; all gave the same 4 events. School data changes, so this is that day's example.
+
+```text
+2026-10-27 ~ 2026-11-02  2학기 중간고사 성적 입력
+2026-11-02 ~ 2026-11-26  복수·부전공, 연계융합전공 신청
+2026-11-03 ~ 2026-11-07  2학기 중간고사 성적 열람 및 정정
+2026-11-09 ~ 2026-12-18  세종인재자기설계전공 신청
+```
+
+## Notes
+
+- `calendar(start, end, category_code="0001")`: `0001` is undergraduate; graduate schedules are `0002` to `0007`, or per site with `graduate_calendar(site_id, year, month)`. For the date format difference (`yyyy-MM-dd` on the homepage, `MM.dd` on graduate sites) see [Academic calendar](../../data/calendar/).
+- Opening the widget does not hit the school each time. The same arguments are cached for 24 hours. [Failure isolation and cache](../../understand/failure-isolation-cache/)
+- Titles are the school's own text (Korean). The English title is `title_en` / `titleEn`.
+- When a school server fails you get an empty list, which looks the same as a period with no events. Show a hint next to it.

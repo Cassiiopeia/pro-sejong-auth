@@ -1,0 +1,110 @@
+---
+title: Dormitory
+description: The dormitory_menu and dormitory_notices methods return the weekly dormitory menu (breakfast, lunch, dinner) and notice list without login.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+The weekly menu and the notice list that the dormitory site (`happydorm.sejong.ac.kr`) serves publicly. Common rules are on [Common rules](../overview/). For an example that turns the menu into a message, see [Dormitory and cafeteria bot](../../guides/dormitory-cafeteria-bot/).
+
+## Methods
+
+| Data | Java | Python | Node.js |
+|---|---|---|---|
+| Menu | `dormitoryMenu()`, `dormitoryMenu(String location)` | `dormitory_menu(location="SJ")` | `dormitoryMenu(location = 'SJ')` |
+| Notices | `dormitoryNotices()`, `dormitoryNotices(int page, int rows, String keyword, String location)` | `dormitory_notices(page=1, rows=10, keyword="", location="SJ")` | `dormitoryNotices({ page = 1, rows = 10, keyword = '', location = 'SJ' } = {})` |
+
+- The default `location` is `SJ`. Whether other values work was not checked.
+- Returns: the menu is a list of 7 `DormitoryMenuDay`; the notices are one `DormitoryNotices` object.
+- Java `dormitoryNotices()` means page 1, 10 rows, no keyword, `SJ`.
+
+## Request notes
+
+- Menu: `POST https://happydorm.sejong.ac.kr/food/indexFoodList.do`, form `locgbn=<location>`. `root[0]` holds `fo_*1` to `fo_*7` (7 days).
+- Notices: `POST https://happydorm.sejong.ac.kr/bbs/getBbsList.do`, form `cPage` (page), `rows` (count), `bbs_locgbn` (location), `bbs_id=notice`, `sType=subject`, `sWord` (title keyword).
+- Form request headers are `application/x-www-form-urlencoded; charset=UTF-8` and `X-Requested-With: XMLHttpRequest`.
+- **The responses are JSON with a `text/html` content type.** The library always reads the body as JSON.
+- The same answers came back with no cookie (survey period 2026-10-29 to 30).
+
+## Result fields
+
+Field names are Python `snake_case`; Node.js and Java use `camelCase`. The dormitory models have no `extra`. Missing values are empty strings, and `views` and `total` are `0`.
+
+### Menu (`DormitoryMenuDay`)
+
+| Field | School key | Meaning |
+|---|---|---|
+| `date` | `fo_date1` to `7` | Date (for example `2026-10-30`) |
+| `breakfast` | `fo_menu_mor1` to `7` | Breakfast |
+| `lunch` | `fo_menu_lun1` to `7` | Lunch |
+| `dinner` | `fo_menu_eve1` to `7` | Dinner |
+| `alternative` | `fo_sub_menu1` to `7` | Alternative menu |
+
+Menu strings are the school's text, and one cell can hold several dishes run together. The library does not split them.
+
+### Notices (`DormitoryNotices` and `DormitoryNotice`)
+
+| Field | School key | Meaning |
+|---|---|---|
+| `total` | `totalCount[0].cnt` | Total count (integer) |
+| `pinned` | `topList` | Pinned notices |
+| `items` | `list` | Regular notices |
+
+One notice:
+
+| Field | School key | Meaning |
+|---|---|---|
+| `id` | `seq` | Notice number |
+| `title` | `subject` | Title |
+| `date` | `regdate` | Posting date |
+| `views` | `visitcnt` | View count (integer) |
+| `file_name` | `file_name1` | Attachment file name (empty if none) |
+
+**The author fields (`regname`, `regid`) are not read and are not in the result.**
+
+## Examples
+
+<Tabs syncKey="language">
+<TabItem label="Java">
+
+```java
+List<DormitoryMenuDay> menuDays = publicData.dormitoryMenu();            // 7 days
+DormitoryNotices notices = publicData.dormitoryNotices(1, 3, "", "SJ"); // page 1, 3 rows
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+menu_days = public_data.dormitory_menu()      # 7 days
+notices = public_data.dormitory_notices(rows=3)  # latest 3
+for notice in notices.items:
+    print(notice.date, notice.title)
+```
+
+</TabItem>
+<TabItem label="Node.js">
+
+```javascript
+const menuDays = await publicData.dormitoryMenu(); // 7 days
+const notices = await publicData.dormitoryNotices({ rows: 3 }); // latest 3
+```
+
+</TabItem>
+</Tabs>
+
+## Cache and failure behavior
+
+- Cached for one day (86400 seconds by default) per method and arguments (location, page, rows, keyword). One request per call.
+- A school failure returns the last cached value. With no cache, the menu is an empty list and the notices are an object with `total` 0 and empty lists.
+- If the `root` array is missing or empty, that is a **failure for both the menu and the notices**, because the school always returns a first row.
+- **Notices only**: a missing `topList`, `list` or `totalCount` is read as "no results" (empty lists, `total` 0), not as an outage, so a search with no match is not treated as a failure.
+- These two methods never raise for input problems.
+
+## Known limits and what was not verified
+
+- Only the default `location` `SJ` was checked. Other location values were not.
+- Before the school posts the menu (weekends and similar), today's date may be missing from the list. Handle that in the caller ([Dormitory and cafeteria bot](../../guides/dormitory-cafeteria-bot/) shows the first day instead).
+- An empty list cannot tell "no notices or menu" from "a problem on the school side".
+- Notice bodies are not provided. You get the title, date, view count and attachment file name only.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

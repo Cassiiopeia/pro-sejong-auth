@@ -1,0 +1,49 @@
+---
+title: Legacy TLS
+description: Why the only TLS cipher the Sejong portal accepts is blocked by default in current JDK, Python and Node.js, and how the library re-enables it in each language.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Why it is hard
+
+The Sejong portal offers **only one** cipher on TLS 1.2: `TLS_RSA_WITH_AES_256_CBC_SHA` (OpenSSL name `AES256-SHA`). It is an old construction, and current JDK and OpenSSL defaults switch it off. An HTTPS client with default settings therefore fails at the handshake and never reaches the login form.
+
+## What the library does
+
+Each language solves it in its own way.
+
+| Language | Method | Scope |
+|---|---|---|
+| Python | Set the cipher list of the `ssl` context to `DEFAULT:AES256-SHA:@SECLEVEL=1` | This library's connections only |
+| Node.js | `https.Agent({ ciphers: 'DEFAULT:AES256-SHA:@SECLEVEL=1' })` | This library's connections only |
+| Java | Remove `TLS_RSA_*` from `jdk.tls.disabledAlgorithms` | **The whole JVM** |
+
+- Verified with Python 3.14 / OpenSSL 3.6 and Node.js 26 / OpenSSL 3.6.
+- `@SECLEVEL=1` is kept on purpose: level 0 would also accept weak certificate keys.
+- Certificate verification stays on by default ([Configuration](../../auth/configuration/)).
+
+## The Java catch
+
+JSSE reads this security property **once, at the JVM's first TLS use**. Changing it later has no effect.
+
+- Spring Boot: `SejongTlsEnvironmentPostProcessor` handles it automatically at startup.
+- Plain Java: call `SejongTlsSupport.ensureLegacyCipherEnabled()` first in `main()`. If another HTTPS call happens first, it is too late.
+- Calling it too late fails with `CONNECTION_FAILED`, and the message names the cause and the fix.
+- The change applies to the whole JVM, so other code in the same process may use this cipher too. If that is not acceptable, run authentication in a separate process.
+
+```java
+public static void main(String[] args) {
+    SejongTlsSupport.ensureLegacyCipherEnabled();   // before any other HTTPS call
+    // ... start the app
+}
+```
+
+<Aside type="tip" title="If you implement it yourself">
+The default TLS settings of a language will not connect to the portal. When you get a connection error, first check whether the cipher the server offers overlaps with what your runtime allows. How far you lower the setting (one connection or the whole process) has different security consequences, so choose it deliberately.
+</Aside>
+
+## Next
+
+- Source table: Transport requirements in [spec/PORTAL_FLOW.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PORTAL_FLOW.md)
+- The next barrier: [Firewall and User-Agent](../firewall-user-agent/)

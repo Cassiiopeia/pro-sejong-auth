@@ -1,0 +1,172 @@
+---
+title: 학과·강의 검색
+description: 학과 목록과 개설강좌를 JSON으로 내려주는 작은 서버를 Java, Python, Node.js로 만들고, 확인한 결과와 주의점을 정리합니다.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+학과 목록과 개설강좌를 JSON으로 내려주는 작은 서버입니다. 프런트엔드는 이 두 주소만 부르면 됩니다.
+
+- `GET /departments`: 학과 코드, 단과대, 학과 이름
+- `GET /lectures?department=<학과 코드>&name=<과목명>`: 둘 중 하나는 필수 (이 예시 서버가 정한 규칙이며, 라이브러리는 조건을 모두 비우면 그 학기 전체를 줍니다)
+
+학부·2026년 2학기 기준이며 `"20"`(학부)과 학기 값은 학교 값입니다. 목록은 `organization_categories()`, `terms(...)`로 확인하세요 ([학과·학기 코드](../../data/codes/)).
+
+## 코드
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    import java.util.List;
+    import kr.suhsaechan.sejongpeia.publicdata.SejongPublicData;
+    import kr.suhsaechan.sejongpeia.publicdata.model.Department;
+    import kr.suhsaechan.sejongpeia.publicdata.model.Lecture;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RequestParam;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    class LectureSearchController {
+
+      private static final String UNDERGRADUATE_CATEGORY = "20";
+      private static final String YEAR = "2026";
+      private static final String SEMESTER = "20";
+
+      private final SejongPublicData publicData;
+
+      LectureSearchController(SejongPublicData publicData) {
+        this.publicData = publicData;
+      }
+
+      @GetMapping("/departments")
+      List<Department> departments() {
+        return publicData.departments(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER);
+      }
+
+      @GetMapping("/lectures")
+      List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
+                             @RequestParam(defaultValue = "") String name) {
+        if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+          return List.of();
+        }
+        return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    표준 라이브러리 서버입니다.
+
+    ```python
+    import json
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    from sejongpeia import SejongPublicData
+
+    public_data = SejongPublicData()  # 프로세스당 하나만 만들어 캐시를 공유
+    UNDERGRADUATE_CATEGORY = "20"     # 학교의 소속 분류 코드 (organization_categories()로 확인)
+    YEAR, SEMESTER = "2026", "20"     # 학기 목록은 terms(UNDERGRADUATE_CATEGORY)
+
+
+    def search_lectures(department_code: str, course_name: str) -> list:
+        lectures = public_data.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER,
+                                        department_code=department_code, course_name=course_name)
+        return [
+            {"course": lecture.name, "department": lecture.department_name, "schedule": lecture.schedule,
+             "credits": lecture.credits, "course_number": lecture.course_number}
+            for lecture in lectures
+        ]
+
+
+    class LectureSearchHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            url = urlparse(self.path)
+            if url.path == "/departments":
+                departments = public_data.departments(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER)
+                body = [{"code": department.code, "college": department.college_name,
+                         "name": department.major_name or department.unit_name}
+                        for department in departments]
+            elif url.path == "/lectures":
+                query = parse_qs(url.query)
+                department_code = query.get("department", [""])[0].strip()
+                course_name = query.get("name", [""])[0].strip()
+                if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+                    self.send_error(400, "department or name is required")
+                    return
+                body = search_lectures(department_code, course_name)
+            else:
+                self.send_error(404)
+                return
+            payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(payload)
+
+
+    if __name__ == "__main__":
+        HTTPServer(("127.0.0.1", 8000), LectureSearchHandler).serve_forever()
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```js
+    import { createServer } from 'node:http';
+    import { SejongPublicData } from 'pro-sejongpeia';
+
+    const publicData = new SejongPublicData(); // 프로세스당 하나만 만들어 캐시를 공유
+    const UNDERGRADUATE_CATEGORY = '20';       // 학교의 소속 분류 코드 (organizationCategories()로 확인)
+    const YEAR = '2026';
+    const SEMESTER = '20';                     // 학기 목록은 terms(UNDERGRADUATE_CATEGORY)
+
+    async function searchLectures(departmentCode, courseName) {
+      const lectures = await publicData.lectures({
+        categoryCode: UNDERGRADUATE_CATEGORY, year: YEAR, semesterCode: SEMESTER, departmentCode, courseName,
+      });
+      return lectures.map((lecture) => ({
+        course: lecture.name, department: lecture.departmentName, schedule: lecture.schedule,
+        credits: lecture.credits, courseNumber: lecture.courseNumber,
+      }));
+    }
+
+    createServer(async (request, response) => {
+      const url = new URL(request.url, 'http://localhost');
+      let body;
+      if (url.pathname === '/departments') {
+        const departments = await publicData.departments({ categoryCode: UNDERGRADUATE_CATEGORY, year: YEAR, semesterCode: SEMESTER });
+        body = departments.map((department) => ({ code: department.code, college: department.collegeName, name: department.majorName || department.unitName }));
+      } else if (url.pathname === '/lectures') {
+        const departmentCode = (url.searchParams.get('department') ?? '').trim();
+        const courseName = (url.searchParams.get('name') ?? '').trim();
+        if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+          response.writeHead(400).end('department or name is required');
+          return;
+        }
+        body = await searchLectures(departmentCode, courseName);
+      } else {
+        response.writeHead(404).end();
+        return;
+      }
+      response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' }).end(JSON.stringify(body));
+    }).listen(8000, '127.0.0.1');
+    ```
+  </TabItem>
+</Tabs>
+
+## 확인한 결과
+
+2026-10-30, 실제 학교 서버로 확인했습니다. 각 서버를 띄우고 `curl`로 호출했습니다 (Java는 서버 없이 라이브러리 호출만 컴파일·실행했고, Spring 연결은 확인하지 않았습니다).
+
+- `/departments`: 학과 103건 (세 언어 모두 같은 건수)
+- `/lectures?name=알고리즘`: 18건. 한 건의 모양: `{"course":"알고리즘및실습","department":"컴퓨터공학과","schedule":"화13:00-15:00","credits":"3.0","courseNumber":"009954"}`
+- 조건 없이 `/lectures`: 400 (Python, Node). Java 컨트롤러는 같은 경우 빈 목록을 돌려주게 썼지만 Spring 서버로는 실행하지 않았습니다 (라이브러리 호출만 실행)
+
+학교 데이터는 바뀌므로 위 건수와 값은 그날의 예입니다.
+
+## 참고
+
+- `lectures`의 학과 코드, 과목명, 교수명은 모두 선택입니다. **모두 비우면 그 학기 전체**를 받는데 학부는 약 2,800행, 2.4MB라서(2026-10-30 기준, [개설강좌](../../data/lectures/)), 예시 서버는 조건을 필수로 했습니다. 전체가 필요하면 학과 단위로 나눠 조회하세요.
+- 강의 결과에는 교수 이름(`instructor`)도 들어 있습니다. 예시는 필요한 필드만 골라서 내려주고, 외부에 공개할 때는 어떤 필드를 낼지 직접 정하세요.
+- 과목명 검색은 부분 일치였습니다 (`알고리즘` 18건, `프로그래밍` 73건). 결과가 0건인 이름도 있으므로(예: 이 날 `자료구조`는 0건) 빈 결과 안내가 필요합니다.
+- 강의의 `course_number`와 `department_code`로 학과 교육과정의 학년·학기·교과목 개요(`curriculum_courses`)를 이어서 조회할 수 있습니다. [교육과정](../../data/curriculum/)
+- 공개 데이터는 학교 서버가 실패하면 빈 목록을 돌려줍니다. 「결과 없음」과 구분되지 않으니 화면에 안내를 두세요. [실패 격리와 캐시](../../understand/failure-isolation-cache/)

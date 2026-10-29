@@ -1,0 +1,61 @@
+---
+title: Failure isolation and cache
+description: The isolation rules that keep one data source failing from affecting the rest, and the cache and request merging that avoid putting load on the school servers.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Why it is needed
+
+School servers can be slow (the extracurricular schedule sometimes takes tens of seconds), can stop answering for a while, or can change the shape of a response. If the whole app stopped whenever one place failed, that would be a problem. And sending the same request to the school once per user would put load on its servers.
+
+## Failure isolation of public data
+
+Every method of the public data client (`SejongPublicData`) follows the same rules.
+
+- A connection failure, timeout, non-2xx status, non-JSON body, missing expected key or a school `_SUBMIT_ERROR_` answer all return **without an exception**: the last cached value (even if expired) or an empty value (an empty list, an empty object for dormitory notices).
+- Internal school server details (such as `STACK_TRACE`) are never logged or returned.
+- Only **invalid input** throws: `curriculum_courses` with a blank department code or course number, and `graduate_calendar` with a malformed site id (`INVALID_INPUT`, no request). `lectures` never throws for its filters.
+- A missing value is an empty string (`0` for `views` and `total`, `0.0` for coordinates), and one odd row never fails the whole list. Only a missing or non-array container (`data`, `items`, `events` and so on) counts as a failure.
+
+<Aside type="caution" title="Two meanings of an empty list">
+In public data an empty list cannot tell "there really is no data" from "the school had a problem and nothing could be fetched". Show a message such as "could not load" next to it. If you need to, judge the meaning yourself on the calling side.
+</Aside>
+
+## Cache
+
+| Item | Default | Behavior |
+|---|---|---|
+| Cache lifetime | 86400 s (24 hours) | Stored in memory per method and arguments. A fresh entry means no request |
+| Failure memory | 60 s | After a failure with no cached value, the same call returns the empty value without a request for this long. A stale cached value is still returned on failure |
+| Maximum entries | 500 | When full, the oldest entry is evicted |
+
+- Concurrent calls with the same arguments share **one** request.
+- Locks are per key but released together with their entries, so even user-typed search text does not make memory grow without bound.
+- One call is one request as a rule. The exception is `cafeteria_places`: it requests ids 1 to 10 **one after the other**, up to 10 requests, and one failed request fails the whole list so that a partial list is never cached for a day.
+- A whole undergraduate term of lectures is a few MB, so one cache entry is large. Prefer one department at a time ([Course listings](../../data/lectures/)).
+- Create **one** `SejongPublicData` per process. The cache and the request merging live inside the instance.
+
+The settings (`cache_ttl_seconds`, `failure_cache_seconds`, `cache_max_entries`) are in [Common rules](../../data/overview/).
+
+## Failure isolation in authentication
+
+| Step | If it fails |
+|---|---|
+| Input check, portal login | The whole call fails |
+| DHC (student info, classic reading) | The whole call fails |
+| SIS (contact, school codes) | The call succeeds, only those fields are null |
+| Portal main (`parentUnitName`) | The call succeeds, only that field is null |
+
+Authentication and public data never affect each other's failures. A dependency rule test keeps the two code bases from importing each other.
+
+## If you implement it yourself
+
+- Do not let an external server failure become an app failure, and keep the last good value.
+- Remember a failure briefly instead of repeating the same request right away.
+- Merge concurrent requests.
+
+## Next
+
+- Source: Failure isolation and cache in [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+- [Daily live portal check](../daily-live-check/)

@@ -1,0 +1,29 @@
+---
+// 직접 구현하면 어려운 것들: 카드마다 "이해하기" 상세 페이지 링크
+import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
+import { documentUrl } from '../i18n/links';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].hardParts;
+---
+
+<section class="landing-section" id="hard-parts">
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <ul class="landing-grid landing-grid--three">
+    {
+      copy.cards.map((card, cardIndex) => (
+        <li>
+          <a class="landing-card" href={documentUrl(locale, card.link)}>
+            <span class="landing-card__number">{cardIndex + 1}</span>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

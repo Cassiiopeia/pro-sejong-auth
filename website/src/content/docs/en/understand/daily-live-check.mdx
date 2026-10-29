@@ -1,0 +1,54 @@
+---
+title: Daily live portal check
+description: "What the daily workflow actually does: sign in to the live portal and compare the three languages, and check the response shape of public school data without login."
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The portal changes without notice. So that you do not learn about it from user complaints, the `PROJECT-SEJONG-LIVE-CHECK` workflow in the repository runs two checks every day. Below is only what the workflow and its scripts **actually do**.
+
+## Schedule
+
+- Runs every day at 09:00 KST (cron `0 0 * * *`, in UTC). It can also be started manually.
+- The two checks are separate jobs and do not affect each other's result.
+
+## 1. Live login check
+
+`scripts/live-check.sh` does the following.
+
+1. Java, Python and Node.js each run one integrated authentication with the **correct password** and summarize every field as a hash.
+2. The three summaries are compared. All three languages must succeed, the result must have fields, **no field may be null** (this catches a SIS lookup that failed quietly), and the hash of every field must be the same in the three languages.
+3. The output is field names with a `same` / `DIFFERENT` / `NULL` status only. No personal values are printed.
+
+There are account lock safeguards.
+
+- **No wrong password is ever tried.** Each language logs in to the portal once.
+- While a check-failure issue is open, the scheduled run skips the login. Confirm the fix with a manual run.
+- If the test account is not configured in the repository, this check is skipped.
+
+On failure, one issue is opened automatically (none is created if one is already open).
+
+## 2. Shape check without login
+
+No account is needed, so there is no lock risk, and it runs every day regardless of the issue state of the login check above.
+
+- `scripts/probe-reference-data.py`: sends 3 requests (1 second apart) to the department and term code APIs and checks that the dataset keys and required fields are unchanged.
+- `scripts/probe-public-data.py`: checks the response shape of public data sources such as course listings, department curriculum, academic calendar, dormitory menu and notices, cafeterias, the campus map and extracurricular programs.
+- The output is counts and names of missing fields only.
+- A network error or timeout is printed as `SKIP` and is not a failure. The library isolates failures, so the only thing the check wants to catch is **a changed shape**.
+- When a changed shape is detected, one issue is opened (none if an issue with the same title is already open).
+
+## What it does not guarantee
+
+- There is one test account, so behavior for other student types (graduate students and others) is not covered by this check.
+- The shape check looks at whether fields exist, not whether the values are right.
+- It runs once a day, so a change in between is unknown until the next check. There is no promised fix time (SLA) ([API stability](../../api-stability/)).
+
+<Aside type="note">
+The test account details are used only as repository secrets and are not written here. To run the live portal tests yourself, see [Issues and pull requests](../../contribute/issues-and-prs/).
+</Aside>
+
+## Next
+
+- [API stability](../../api-stability/): what happens when the school changes something
+- [Failure isolation and cache](../failure-isolation-cache/)
