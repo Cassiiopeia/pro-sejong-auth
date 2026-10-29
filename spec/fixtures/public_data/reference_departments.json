@@ -1,0 +1,30 @@
+{
+  "dl_code_dept": [
+    {
+      "DEPT_CD": "9101",
+      "DEPT_LEVEL_CD": "2",
+      "DEPT_L_CD": "9100",
+      "DEPT_L_PRINT": "예시대학",
+      "DEPT_M_CD": "9101",
+      "DEPT_M_PRINT": "예시공학과",
+      "DEPT_S_CD": null,
+      "DEPT_S_PRINT": null,
+      "DEPT_NM_ENG": "Department of Example Engineering",
+      "DEPT_NM": "예시대학 예시공학과【9101 학부】",
+      "CLOSE_DT": null
+    },
+    {
+      "DEPT_CD": "9201",
+      "DEPT_LEVEL_CD": "3",
+      "DEPT_L_CD": "9100",
+      "DEPT_L_PRINT": "예시대학",
+      "DEPT_M_CD": "9200",
+      "DEPT_M_PRINT": "",
+      "DEPT_S_CD": "9201",
+      "DEPT_S_PRINT": "예시전공A",
+      "DEPT_NM_ENG": null,
+      "DEPT_NM": "예시대학 예시학부 예시전공A【9201 학부】",
+      "CLOSE_DT": null
+    }
+  ]
+}

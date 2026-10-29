@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "placeName": "예시관",
+      "placeNameEn": "Example Hall",
+      "placeType": "BUILDING",
+      "welfareCategory": null,
+      "latitude": 37.5,
+      "longitude": 127.07,
+      "placeInfo": "예시 안내",
+      "telNum": "02-0000-0000",
+      "description": "",
+      "orderNo": 1,
+      "useYn": "Y"
+    }
+  ]
+}

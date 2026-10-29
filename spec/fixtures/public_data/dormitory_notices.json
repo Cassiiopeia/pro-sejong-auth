@@ -1,0 +1,35 @@
+{
+  "root": [
+    {
+      "topList": [
+        {
+          "seq": "10",
+          "subject": "고정 공지",
+          "regdate": "2099-10-01",
+          "visitcnt": "5",
+          "file_name1": "a.pdf",
+          "regname": "가상",
+          "regid": "x",
+          "topflag": "Y"
+        }
+      ],
+      "list": [
+        {
+          "seq": "11",
+          "subject": "일반 공지",
+          "regdate": "2099-10-02",
+          "visitcnt": "7",
+          "file_name1": null,
+          "regname": "가상",
+          "regid": "x",
+          "topflag": "N"
+        }
+      ],
+      "totalCount": [
+        {
+          "cnt": 2
+        }
+      ]
+    }
+  ]
+}
