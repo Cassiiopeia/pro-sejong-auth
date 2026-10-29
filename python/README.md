@@ -33,6 +33,33 @@ except SejongAuthError as error:
 | `authenticate_dhc(id, pw, include_raw=False)` | 학생 정보 + 고전독서 |
 | `authenticate_sis(id, pw, include_raw=False)` | 학생 정보 + 이메일, 전화번호, 영문 이름 |
 
+### 로그인 없이 쓰는 학교 데이터
+
+학번·비밀번호 없이 학교가 공개로 내려주는 정보를 받습니다. Java·Node 패키지와 같은 메서드, 같은 결과입니다.
+
+| 정보 | 메서드 |
+|---|---|
+| 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
+| 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `course_types`, `selective_domains` |
+| 학사일정 | `calendar` |
+| 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
+| 학식 메뉴, 캠퍼스 장소 | `cafeteria_menu`, `campus_places` |
+| 비교과 프로그램 일정 | `extracurricular_events` |
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")          # 학부, 2026년 2학기
+lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+```
+
+- **학교 값을 그대로** 돌려주고, 쓰지 않은 학교 필드는 `extra`에 담깁니다. 코드표를 박아 두지 않아 학과가 바뀌어도 코드를 고칠 필요가 없습니다.
+- **한 곳이 실패해도 나머지는 그대로**: 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (검색 조건이 하나도 없는 `lectures`만 예외). 결과는 메모리에 24시간 캐시합니다.
+- 계약과 필드 대응: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+로그인 결과에는 고전독서 학기 3개(`completed_semesters`, `certified_semesters`, `certification_status`), 사용자 구분(`user_category`), 학과의 상위 소속 이름(`parent_unit_name`)도 포함됩니다.
+
 ### 대신 해결해 주는 것
 
 직접 구현하려면 모두 풀어야 하는 부분입니다.
@@ -56,3 +83,5 @@ Python 3.9 이상. 세종대학교 공식 제품이 아닙니다.
 ## English
 
 Verify a Sejong University student with a student ID and portal password, and get their major, year, classic-reading certification and contact info. The API above is the same in English; error messages are in English. Full English docs: [README.en.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md).
+
+Also included: public data (no login): course lists, academic calendar, dormitory and cafeteria menus, campus places and extracurricular events via `SejongPublicData`, with caching and failure isolation. See the Korean section above and [README.en.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md).
