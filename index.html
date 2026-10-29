@@ -190,6 +190,7 @@ footer a{color:var(--text-muted)}
   <div class="container">
     <a class="brand" href="#top"><img src="https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/sejong-seal.png" alt=""><span>pro-sejongpeia</span></a>
     <nav class="top-nav">
+      <a href="#public-data" data-i18n="navPublic">학교 데이터</a>
       <a href="#demo" data-i18n="navDemo">체험하기</a>
       <a href="#quick-start" data-i18n="navQuickStart">빠른 시작</a>
       <a href="#usage" data-i18n="navUsage">사용법</a>
@@ -298,6 +299,46 @@ result.getMajor();   <span class="comment">// "컴퓨터공학과"</span></pre><
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
           <h3 data-i18n="hard6Title">세 언어 동일 동작</h3>
           <p data-i18n="hard6Body">Java, Python, Node가 같은 결과를 내도록 공통 계약과 교차 검증으로 맞추고, 매일 실제 포털에 로그인해 점검합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 로그인 없이 쓰는 학교 데이터 -->
+  <section class="block" id="public-data">
+    <div class="container">
+      <h2 class="section-title" data-i18n="publicTitle">로그인 없이 쓰는 학교 데이터</h2>
+      <p class="section-lead" data-i18n="publicLead">학번과 비밀번호 없이 학교가 공개로 내려주는 정보를 세 언어에서 같은 메서드, 같은 결과로 받습니다. 한 곳이 실패해도 나머지는 그대로 동작하고, 결과는 메모리에 캐시합니다.</p>
+      <div class="grid-three">
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd1Title">개설강좌와 학과 코드</h3>
+          <p data-i18n="pd1Body">학과, 과목명, 교수명으로 개설강좌를 찾고, 단과대·학과·학기 코드는 학교 값 그대로 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd2Title">학사일정</h3>
+          <p data-i18n="pd2Body">기간을 주면 학부·대학원 학사일정을 날짜와 제목으로 돌려줍니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd3Title">기숙사 식단과 공지</h3>
+          <p data-i18n="pd3Body">일주일 식단(조식·중식·석식)과 공지 목록을 받습니다. 작성자 필드는 결과에서 제외합니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd4Title">학식 메뉴</h3>
+          <p data-i18n="pd4Body">식당별 메뉴와 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd5Title">캠퍼스 장소</h3>
+          <p data-i18n="pd5Body">건물과 편의시설의 이름, 위치(위도·경도), 안내 정보를 받습니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd6Title">비교과 프로그램 일정</h3>
+          <p data-i18n="pd6Body">기간별 비교과 프로그램을 분류와 함께 받습니다. 응답이 느린 학교 서버에 맞춰 캐시하고 실패를 격리합니다.</p>
         </div>
       </div>
     </div>
@@ -536,7 +577,7 @@ const ERROR_CODES = ['AUTHENTICATION_FAILED', 'INVALID_INPUT', 'CONNECTION_FAILE
 
 const MESSAGES = {
   ko: {
-    navDemo: '체험하기', navQuickStart: '빠른 시작', navUsage: '사용법', navReference: 'API', navFaq: 'FAQ',
+    navPublic: '학교 데이터', navDemo: '체험하기', navQuickStart: '빠른 시작', navUsage: '사용법', navReference: 'API', navFaq: 'FAQ',
     heroEyebrow: '세종대학교 통합 라이브러리 · Java · Python · Node.js', pageTitle: '세종대학교 통합 라이브러리 · 세종대 로그인 API와 학교 데이터 | pro-sejongpeia',
     heroTitle: '세종대 로그인과 학교 데이터,<br><em>한 곳에서</em>',
     heroLead: '학번과 비밀번호로 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 가져오고, 로그인 없이도 학과 코드, 개설강좌, 학사일정 같은 공개 데이터를 받습니다. SSO, 쿠키, HTML 파싱은 라이브러리가 처리합니다.',
@@ -552,6 +593,13 @@ const MESSAGES = {
     hard4Title: '로그인 판정과 계정 보호', hard4Body: '200 응답 안의 스크립트 값으로 비밀번호 오류, 계정 잠금, 이용 불가를 즉시 구분합니다. 틀린 비밀번호는 재시도하지 않아 계정 잠금을 막습니다.',
     hard5Title: 'HTML 표와 JSON 파싱', hard5Body: 'DHC의 HTML 표와 SIS의 JSON API 응답을 정리된 결과 객체로 돌려줍니다.',
     hard6Title: '세 언어 동일 동작', hard6Body: 'Java, Python, Node가 같은 결과를 내도록 공통 계약과 교차 검증으로 맞추고, 매일 실제 포털에 로그인해 점검합니다.',
+    publicTitle: '로그인 없이 쓰는 학교 데이터', publicLead: '학번과 비밀번호 없이 학교가 공개로 내려주는 정보를 세 언어에서 같은 메서드, 같은 결과로 받습니다. 한 곳이 실패해도 나머지는 그대로 동작하고, 결과는 메모리에 캐시합니다.',
+    pd1Title: '개설강좌와 학과 코드', pd1Body: '학과, 과목명, 교수명으로 개설강좌를 찾고, 단과대·학과·학기 코드는 학교 값 그대로 받습니다. 학교가 모든 필터 키를 요구하는 까다로운 요청은 라이브러리가 맞춥니다.',
+    pd2Title: '학사일정', pd2Body: '기간을 주면 학부·대학원 학사일정을 날짜와 제목으로 돌려줍니다.',
+    pd3Title: '기숙사 식단과 공지', pd3Body: '일주일 식단(조식·중식·석식)과 공지 목록을 받습니다. 작성자 필드는 결과에서 제외합니다.',
+    pd4Title: '학식 메뉴', pd4Body: '식당별 메뉴와 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.',
+    pd5Title: '캠퍼스 장소', pd5Body: '건물과 편의시설의 이름, 위치(위도·경도), 안내 정보를 받습니다.',
+    pd6Title: '비교과 프로그램 일정', pd6Body: '기간별 비교과 프로그램을 분류와 함께 받습니다. 응답이 느린 학교 서버에 맞춰 캐시하고 실패를 격리합니다.',
     demoTitle: '지금 바로 체험하기', demoLead: '본인 세종대 포털 계정으로 라이브러리가 실제로 무엇을 돌려주는지 확인해 보세요.',
     studentIdLabel: '학번', studentIdPlaceholder: '예: 21011234', passwordLabel: '포털 비밀번호', passwordPlaceholder: '세종대 포털 비밀번호',
     authTypeLabel: '조회 방식', authIntegrated: '통합 (추천)', authIntegratedDesc: '학생 정보 + 고전독서 + 연락처 전부',
@@ -591,7 +639,7 @@ const MESSAGES = {
     contributing: '기여하기', disclaimer: '이 프로젝트는 세종대학교의 공식 제품이 아니며 세종대학교와 제휴 관계가 없습니다. 세종대학교 교표의 권리는 세종대학교에 있습니다.'
   },
   en: {
-    navDemo: 'Try it', navQuickStart: 'Quick start', navUsage: 'Usage', navReference: 'API', navFaq: 'FAQ',
+    navPublic: 'School data', navDemo: 'Try it', navQuickStart: 'Quick start', navUsage: 'Usage', navReference: 'API', navFaq: 'FAQ',
     heroEyebrow: 'Sejong University integrated library · Java · Python · Node.js', pageTitle: 'Sejong University Integrated Library: Login API and School Data | pro-sejongpeia',
     heroTitle: 'Sejong University login and school data,<br><em>in one place</em>',
     heroLead: 'Verify a student with a student ID and password and get their major, year, classic-reading certification and contact info. Without logging in, get public data such as department codes, courses and the academic calendar. The library handles SSO, cookies and HTML parsing.',
@@ -607,6 +655,13 @@ const MESSAGES = {
     hard4Title: 'Login verdict and account safety', hard4Body: 'Reads the verdict hidden in a 200 response to tell wrong password, locked account and unavailable account apart at once. A wrong password is never retried, so the account does not get locked.',
     hard5Title: 'HTML tables and JSON parsing', hard5Body: 'Turns the DHC HTML tables and the SIS JSON API responses into typed result objects.',
     hard6Title: 'Same behavior in three languages', hard6Body: 'A shared contract and cross-language checks keep Java, Python and Node identical, and a daily workflow signs in to the live portal to verify.',
+    publicTitle: 'School data without login', publicLead: 'Get what the school serves publicly, without a student ID or password, with the same methods and results in three languages. One source failing never blocks another, and results are cached in memory.',
+    pd1Title: 'Course lists and department codes', pd1Body: 'Search courses by department, course name or instructor, and get college, department and term codes as the school serves them. The library handles the request the school only accepts with every filter key present.',
+    pd2Title: 'Academic calendar', pd2Body: 'Give a date range and get the undergraduate or graduate calendar with dates and titles.',
+    pd3Title: 'Dormitory menu and notices', pd3Body: 'Get the weekly menu (breakfast, lunch, dinner) and the notice list. Author fields are left out of the result.',
+    pd4Title: 'Cafeteria menus', pd4Body: 'Get menus and prices per cafeteria, including fixed menus that have no date.',
+    pd5Title: 'Campus places', pd5Body: 'Get buildings and facilities with names, coordinates and info.',
+    pd6Title: 'Extracurricular events', pd6Body: 'Get extracurricular programs for a period with their categories. Results are cached and failures isolated, since the school server can be slow.',
     demoTitle: 'Try it live', demoLead: 'Sign in with your own Sejong portal account and see exactly what the library returns.',
     studentIdLabel: 'Student ID', studentIdPlaceholder: 'e.g. 21011234', passwordLabel: 'Portal password', passwordPlaceholder: 'Sejong portal password',
     authTypeLabel: 'Lookup', authIntegrated: 'Integrated (recommended)', authIntegratedDesc: 'Student info + classic reading + contact',
