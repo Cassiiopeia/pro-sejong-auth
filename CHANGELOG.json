@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T19:16:36Z",
-    "currentVersion": "1.2.49",
+    "lastUpdated": "2026-10-29T22:57:04Z",
+    "currentVersion": "1.2.57",
     "projectType": "spring",
-    "totalReleases": 22,
+    "totalReleases": 23,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,43 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.57",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 114,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **새 기능**\n  * 학식 식당 목록 조회 추가 (식당 번호, 이름, 건물, 위치)\n  * 개설강좌를 학과·과목·교수 조건 없이 학기 전체로 조회 가능\n  * 공식 문서 사이트 새로 공개 (한국어·영어, 가이드와 레퍼런스, 체험 데모)\n\n* **개선**\n  * 인증과 공개 데이터를 독립 모듈로 정리 (Java 패키지 경로가 바뀌고 하위 호환은 지원하지 않음)\n  * README를 전면 개편하고 세 언어 지원 범위를 한눈에 볼 수 있게 정리\n  * API 안정성 정책과 통합 예시 문서 추가\n\n* **버그 수정**\n  * 설치본에서 공개 데이터 조회가 조용히 빈 값이 되던 경로 오류 수정",
+      "parsed_changes": {
+        "새_기능": {
+          "title": "새 기능",
+          "items": [
+            "학식 식당 목록 조회 추가 (식당 번호, 이름, 건물, 위치)",
+            "개설강좌를 학과·과목·교수 조건 없이 학기 전체로 조회 가능",
+            "공식 문서 사이트 새로 공개 (한국어·영어, 가이드와 레퍼런스, 체험 데모)"
+          ]
+        },
+        "개선": {
+          "title": "개선",
+          "items": [
+            "인증과 공개 데이터를 독립 모듈로 정리 (Java 패키지 경로가 바뀌고 하위 호환은 지원하지 않음)",
+            "README를 전면 개편하고 세 언어 지원 범위를 한눈에 볼 수 있게 정리",
+            "API 안정성 정책과 통합 예시 문서 추가"
+          ]
+        },
+        "버그_수정": {
+          "title": "버그 수정",
+          "items": [
+            "설치본에서 공개 데이터 조회가 조용히 빈 값이 되던 경로 오류 수정"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.49",
       "project_type": "spring",
