@@ -263,6 +263,46 @@ result.getMajor();   <span class="comment">// "컴퓨터공학과"</span></pre><
     </div>
   </section>
 
+  <!-- 직접 구현하면 어려운 것들 -->
+  <section class="block" id="hard-parts">
+    <div class="container">
+      <h2 class="section-title" data-i18n="hardTitle">직접 구현하면 어려운 것들</h2>
+      <p class="section-lead" data-i18n="hardLead">포털 로그인은 눈에 보이는 것보다 훨씬 까다롭습니다. 아래를 모두 라이브러리가 대신 처리합니다.</p>
+      <div class="grid-three">
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="hard1Title">레거시 TLS 암호 처리</h3>
+          <p data-i18n="hard1Body">포털이 허용하는 유일한 암호(TLS_RSA_WITH_AES_256_CBC_SHA)를 최신 JDK, Python, Node 기본 설정이 막습니다. 언어마다 다른 방식으로 풀어 두었고, Spring Boot는 시작할 때 자동으로 적용합니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="hard2Title">방화벽과 User-Agent</h3>
+          <p data-i18n="hard2Body">기본 라이브러리 User-Agent는 방화벽이 막고, 없으면 일부 사이트가 404를 돌려줍니다. 식별 가능한 User-Agent를 자동으로 보냅니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="hard3Title">SSO 쿠키와 리다이렉트</h3>
+          <p data-i18n="hard3Body">세종대 도메인 여러 곳에 걸친 SSO 쿠키와 리다이렉트를 처리해, 로그인 한 번으로 DHC와 SIS를 모두 조회합니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="hard4Title">로그인 판정과 계정 보호</h3>
+          <p data-i18n="hard4Body">200 응답 안의 스크립트 값으로 비밀번호 오류, 계정 잠금, 이용 불가를 즉시 구분합니다. 틀린 비밀번호는 재시도하지 않아 계정 잠금을 막습니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="hard5Title">HTML 표와 JSON 파싱</h3>
+          <p data-i18n="hard5Body">DHC의 HTML 표와 SIS의 JSON API 응답을 정리된 결과 객체로 돌려줍니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="hard6Title">세 언어 동일 동작</h3>
+          <p data-i18n="hard6Body">Java, Python, Node가 같은 결과를 내도록 공통 계약과 교차 검증으로 맞추고, 매일 실제 포털에 로그인해 점검합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 체험하기 -->
   <section class="block" id="demo">
     <div class="container">
@@ -505,6 +545,13 @@ const MESSAGES = {
     feature1Title: '포털 SSO 자동 처리', feature1Body: '세종 포털 로그인, SSO 리다이렉트, 세션 쿠키를 알아서 처리하고 비밀번호가 틀리면 바로 알려 줍니다.',
     feature2Title: '학생 정보 + 고전독서', feature2Body: '이름, 학과, 학년, 재학 상태와 대양휴머니티칼리지 고전독서 인증 현황을 구조화된 객체로 돌려줍니다.',
     feature3Title: '설정 없이 바로', feature3Body: 'Spring Boot Auto Configuration으로 의존성만 추가하면 SuhSejongAuthEngine을 주입받아 씁니다.',
+    hardTitle: '직접 구현하면 어려운 것들', hardLead: '포털 로그인은 눈에 보이는 것보다 훨씬 까다롭습니다. 아래를 모두 라이브러리가 대신 처리합니다.',
+    hard1Title: '레거시 TLS 암호 처리', hard1Body: '포털이 허용하는 유일한 암호(TLS_RSA_WITH_AES_256_CBC_SHA)를 최신 JDK, Python, Node 기본 설정이 막습니다. 언어마다 다른 방식으로 풀어 두었고, Spring Boot는 시작할 때 자동으로 적용합니다.',
+    hard2Title: '방화벽과 User-Agent', hard2Body: '기본 라이브러리 User-Agent는 방화벽이 막고, 없으면 일부 사이트가 404를 돌려줍니다. 식별 가능한 User-Agent를 자동으로 보냅니다.',
+    hard3Title: 'SSO 쿠키와 리다이렉트', hard3Body: '세종대 도메인 여러 곳에 걸친 SSO 쿠키와 리다이렉트를 처리해, 로그인 한 번으로 DHC와 SIS를 모두 조회합니다.',
+    hard4Title: '로그인 판정과 계정 보호', hard4Body: '200 응답 안의 스크립트 값으로 비밀번호 오류, 계정 잠금, 이용 불가를 즉시 구분합니다. 틀린 비밀번호는 재시도하지 않아 계정 잠금을 막습니다.',
+    hard5Title: 'HTML 표와 JSON 파싱', hard5Body: 'DHC의 HTML 표와 SIS의 JSON API 응답을 정리된 결과 객체로 돌려줍니다.',
+    hard6Title: '세 언어 동일 동작', hard6Body: 'Java, Python, Node가 같은 결과를 내도록 공통 계약과 교차 검증으로 맞추고, 매일 실제 포털에 로그인해 점검합니다.',
     demoTitle: '지금 바로 체험하기', demoLead: '본인 세종대 포털 계정으로 라이브러리가 실제로 무엇을 돌려주는지 확인해 보세요.',
     studentIdLabel: '학번', studentIdPlaceholder: '예: 21011234', passwordLabel: '포털 비밀번호', passwordPlaceholder: '세종대 포털 비밀번호',
     authTypeLabel: '조회 방식', authIntegrated: '통합 (추천)', authIntegratedDesc: '학생 정보 + 고전독서 + 연락처 전부',
@@ -553,6 +600,13 @@ const MESSAGES = {
     feature1Title: 'Portal SSO handled', feature1Body: 'Logs in to the Sejong portal, follows SSO redirects and keeps session cookies. A wrong password fails fast.',
     feature2Title: 'Student info + classic reading', feature2Body: 'Returns name, major, year, enrollment status and Daeyang Humanity College classic-reading certification as typed objects.',
     feature3Title: 'Zero configuration', feature3Body: 'Spring Boot auto-configuration: add the dependency and inject SuhSejongAuthEngine.',
+    hardTitle: 'What you would otherwise build', hardLead: 'Portal login is trickier than it looks. The library handles all of this for you.',
+    hard1Title: 'Legacy TLS cipher handled', hard1Body: 'The portal accepts only one cipher (TLS_RSA_WITH_AES_256_CBC_SHA), which current JDK, Python and Node defaults block. It is re-enabled the right way in each language, and Spring Boot applies it automatically at startup.',
+    hard2Title: 'Firewall and User-Agent', hard2Body: 'The firewall blocks default library User-Agents, and some sites answer 404 without one. An identifying User-Agent is sent automatically.',
+    hard3Title: 'SSO cookies and redirects', hard3Body: 'Handles SSO cookies and redirects across several Sejong domains, so one login serves both DHC and SIS.',
+    hard4Title: 'Login verdict and account safety', hard4Body: 'Reads the verdict hidden in a 200 response to tell wrong password, locked account and unavailable account apart at once. A wrong password is never retried, so the account does not get locked.',
+    hard5Title: 'HTML tables and JSON parsing', hard5Body: 'Turns the DHC HTML tables and the SIS JSON API responses into typed result objects.',
+    hard6Title: 'Same behavior in three languages', hard6Body: 'A shared contract and cross-language checks keep Java, Python and Node identical, and a daily workflow signs in to the live portal to verify.',
     demoTitle: 'Try it live', demoLead: 'Sign in with your own Sejong portal account and see exactly what the library returns.',
     studentIdLabel: 'Student ID', studentIdPlaceholder: 'e.g. 21011234', passwordLabel: 'Portal password', passwordPlaceholder: 'Sejong portal password',
     authTypeLabel: 'Lookup', authIntegrated: 'Integrated (recommended)', authIntegratedDesc: 'Student info + classic reading + contact',
