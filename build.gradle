@@ -1,7 +1,7 @@
 // 루트: 세 언어(Java, Python, Node) 공통 버전 단일 원본 (version.yml 과 함께 projectops 가 갱신)
 // Java 라이브러리는 java/ 하위 프로젝트 :sejong-univ-auth
 group = 'kr.suhsaechan'
-version = '1.2.21'
+version = '1.2.22'
 
 subprojects {
 	group = rootProject.group
