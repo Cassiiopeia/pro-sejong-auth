@@ -17,7 +17,7 @@ from .models import (
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
 )
-from ..common.transport import USER_AGENT, create_ssl_context
+from ..common.transport import USER_AGENT, UrllibSession, create_ssl_context
 
 LOGGER = logging.getLogger(__name__)
 
@@ -437,7 +437,6 @@ class SejongPublicData:
         return self._session
 
     def _create_default_session(self) -> Any:
-        from .transport import UrllibSession
         return UrllibSession(create_ssl_context(self.ssl_verification), self.timeout_seconds, USER_AGENT)
 
     def _lock_for(self, cache_key: Tuple) -> threading.Lock:

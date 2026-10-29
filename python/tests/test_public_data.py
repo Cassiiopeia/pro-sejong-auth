@@ -360,3 +360,8 @@ def test_cache_evicts_oldest_entry_and_its_lock():
         client.cafeteria_menu(place_id)
     assert len(client._cache) == 2 and len(client._key_locks) == 2
     assert ("cafeteria_menu", "1") not in client._cache
+
+
+# ---- 기본 세션 (네트워크 없이 생성만 확인: 패키지 이동 뒤 임포트 누락 방지)
+def test_default_session_can_be_created_without_network():
+    assert SejongPublicData()._create_default_session() is not None
