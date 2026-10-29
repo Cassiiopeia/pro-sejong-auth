@@ -113,6 +113,31 @@
       }
     }
   ],
+  "curriculum_courses": [
+    {
+      "department_code": "9101",
+      "department_name": "예시학과",
+      "category_code": "20",
+      "year": "2099",
+      "course_number": "900001",
+      "name": "예시프로그래밍",
+      "course_type_code": "23",
+      "course_type_name": "전공기초",
+      "credits": "3",
+      "lecture_hours": "2",
+      "practice_hours": "2",
+      "total_hours": "4",
+      "grade_level": "1",
+      "semester_code": "1",
+      "semester_name": "1학기",
+      "overview": "예시 교과목 개요 본문입니다. 두 문장입니다.",
+      "extra": {
+        "curiYear": "2099",
+        "sameSlcCnt": "1",
+        "studentYear": "1"
+      }
+    }
+  ],
   "calendar": [
     {
       "year": "2099",

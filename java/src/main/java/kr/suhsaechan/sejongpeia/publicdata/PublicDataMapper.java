@@ -167,6 +167,17 @@ final class PublicDataMapper {
             "placeInfo", "telNum", "description"))).build();
   }
 
+  static CurriculumCourse toCurriculumCourse(JsonNode row) {
+    return CurriculumCourse.builder().departmentCode(text(row, "deptCd")).departmentName(text(row, "deptNm"))
+        .categoryCode(text(row, "orgnClsfCd")).year(text(row, "year")).courseNumber(text(row, "curiNo"))
+        .name(text(row, "curiNm")).courseTypeCode(text(row, "curiTypeCd")).courseTypeName(text(row, "curiTypeNm"))
+        .credits(text(row, "cdt")).lectureHours(text(row, "lecTmNum")).practiceHours(text(row, "exeTmNum"))
+        .totalHours(text(row, "curiTm")).gradeLevel(text(row, "stuYearCd")).semesterCode(text(row, "smtDanCd"))
+        .semesterName(text(row, "smtDanNm")).overview(text(row, "remark"))
+        .extra(extraOf(row, Set.of("deptCd", "deptNm", "orgnClsfCd", "year", "curiNo", "curiNm", "curiTypeCd", "curiTypeNm",
+            "cdt", "lecTmNum", "exeTmNum", "curiTm", "stuYearCd", "smtDanCd", "smtDanNm", "remark"))).build();
+  }
+
   static ExtracurricularEvent toExtracurricularEvent(JsonNode row) {
     JsonNode detail = row.path("data");
     return ExtracurricularEvent.builder().id(text(row, "id")).title(text(row, "title")).start(text(row, "start"))

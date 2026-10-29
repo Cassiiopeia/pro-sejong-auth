@@ -68,6 +68,7 @@ ALL_SOURCES = {
     SIS_BASE + "doYearsmtlist.do": fixture_response("reference_terms.json"),
     SIS_BASE + "doLesndeptgroup.do": fixture_response("reference_departments.json"),
     SIS_BASE + "doList.do": fixture_response("lectures.json"),
+    "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do": fixture_response("curriculum_course.json"),
     "https://www.sejong.ac.kr/kor/academics/academic-calendar.do": fixture_response("calendar.json"),
     "https://graduate.sejong.ac.kr/": fixture_response("graduate_calendar.json"),
     "https://happydorm.sejong.ac.kr/food/": fixture_response("dormitory_menu.json"),
@@ -84,6 +85,7 @@ CALLS = {
     "course_types": lambda c: c.course_types(),
     "selective_domains": lambda c: c.selective_domains(),
     "lectures": lambda c: c.lectures("20", "2099", "20", department_code="9101"),
+    "curriculum_courses": lambda c: c.curriculum_courses("9101", "900001"),
     "calendar": lambda c: c.calendar("2099-10-01", "2099-11-01"),
     "graduate_calendar": lambda c: c.graduate_calendar("graduate", 2099, 10),
     "dormitory_menu": lambda c: c.dormitory_menu(),
@@ -140,6 +142,23 @@ def test_get_urls():
     assert queries[1] == {"mode": ["getMenuList"], "placeId": ["7"]}
     assert queries[2] == {"mode": ["getPlaceUserList"], "placeType": ["BUILDING"]}
     assert session.requests[0]["url"].startswith("https://www.sejong.ac.kr/kor/academics/academic-calendar.do?")
+
+
+def test_curriculum_courses_request_and_input_check():
+    client, session = create_client(ALL_SOURCES)
+    client.curriculum_courses("9101", "900001")
+    assert session.requests[0]["method"] == "GET"
+    assert session.requests[0]["url"] == "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=900001&deptNo=9101"
+    # 학교가 Accept: application/json 이 없으면 404 를 돌려줌
+    assert session.requests[0]["headers"]["Accept"] == "application/json"
+    for department_code, course_number in (("", "900001"), ("9101", "  "), (None, "900001")):
+        with pytest.raises(SejongAuthError) as error_info:
+            client.curriculum_courses(department_code, course_number)
+        assert error_info.value.code == ErrorCode.INVALID_INPUT
+    assert len(session.requests) == 1  # 잘못된 입력은 요청 없음
+    # 그 학과 교육과정에 없는 과목은 빈 items 로 오며 정상 응답
+    empty_client, _ = create_client({"https://": json_response('{"success": true, "items": []}')})
+    assert empty_client.curriculum_courses("9101", "000000") == []
 
 
 def test_graduate_calendar_request_and_input_check():

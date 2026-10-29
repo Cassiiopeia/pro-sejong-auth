@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""공개 데이터 소스 8곳 형태 점검 (개설강좌, 학사일정, 기숙사 식단·공지, 학식, 캠퍼스맵, 비교과) - 로그인·계정 불필요
+"""공개 데이터 소스 9곳 형태 점검 (개설강좌, 학과 교육과정, 학사일정, 기숙사 식단·공지, 학식, 캠퍼스맵, 비교과) - 로그인·계정 불필요
 
-  실제 호출:   python3 scripts/probe-public-data.py          (요청 8건, 1초 간격)
+  실제 호출:   python3 scripts/probe-public-data.py          (요청 9건, 1초 간격)
   오프라인:    python3 scripts/probe-public-data.py --offline (spec/fixtures/public_data 로 검사 로직만 확인)
   종료 코드: 0 정상, 1 형태 변경 감지 (spec/PUBLIC_DATA.md 와 세 언어 구현을 함께 고칠 것)
 네트워크 오류·시간 초과는 SKIP 으로 출력만 하고 실패로 보지 않음 (라이브러리는 실패를 격리하므로 형태 변경만 잡음)
@@ -26,12 +26,16 @@ REQUEST_INTERVAL_SECONDS = 1
 TIMEOUT_SECONDS = 60  # 비교과 일정이 느림 (수십 초)
 FIXTURE_DIRECTORY = ROOT / "spec" / "fixtures" / "public_data"
 SAMPLE_PLACE_ID = "1"  # 학식 식당 번호 (비어 있으면 빈 결과도 정상)
+# 학과 교육과정 점검용 학과 코드·과목 번호 (교육과정에서 빠지면 빈 결과, 형태 점검은 건너뜀)
+SAMPLE_CURRICULUM_DEPARTMENT_CODE = "3513"
+SAMPLE_CURRICULUM_COURSE_NUMBER = "009912"
 
 # 소스별 (컨테이너 키 경로, 행 필수 필드, 빈 결과 허용 여부) - spec/PUBLIC_DATA.md 표와 동일하게 유지
 DORMITORY_DAY_FIELDS = tuple(f"{prefix}{day}" for day in range(1, 8)
                              for prefix in ("fo_date", "fo_menu_mor", "fo_menu_lun", "fo_menu_eve"))  # fo_sub_menu 는 일부 요일에 없을 수 있어 제외
 SOURCES: Dict[str, Tuple[str, Tuple[str, ...], bool]] = {
     "lectures": ("dl_main", ("CURI_NO", "CLASS", "CURI_NM", "LESN_TIME", "LESN_EMP", "DEPT_CD"), True),
+    "curriculum_courses": ("items", ("deptCd", "curiNo", "curiNm", "cdt", "stuYearCd", "smtDanCd", "remark"), True),
     "calendar": ("data", ("collDiv", "scmSubject", "frDt", "toDt"), True),
     "graduate_calendar": ("items", ("collDiv", "scmSubject", "frDt", "toDt"), True),
     "dormitory_menu": ("root", DORMITORY_DAY_FIELDS, False),
@@ -124,9 +128,11 @@ def build_live_requests(session: UrllibSession) -> Dict[str, Callable[[], object
     calendar_query = urllib.parse.urlencode({"mode": "getCalendarData", **month_query, "collDiv": "0001"})
     cafeteria_query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": SAMPLE_PLACE_ID})
     campus_query = urllib.parse.urlencode({"mode": "getPlaceUserList", "placeType": ""})
+    curriculum_query = urllib.parse.urlencode({"curiNo": SAMPLE_CURRICULUM_COURSE_NUMBER, "deptNo": SAMPLE_CURRICULUM_DEPARTMENT_CODE})
     graduate_query = urllib.parse.urlencode({"year": "2026", "month": "10", "siteId": "graduate"})
     return {
         "lectures": lambda: lectures_request(session),
+        "curriculum_courses": lambda: request_json(session, "GET", f"{module.CURRICULUM_COURSE_URL}?{curriculum_query}"),
         "calendar": lambda: request_json(session, "GET", f"{module.ACADEMIC_CALENDAR_URL}?{calendar_query}"),
         "graduate_calendar": lambda: request_json(
             session, "GET", f"{module.GRADUATE_CALENDAR_URL.format(site_id='graduate')}?{graduate_query}"),
@@ -152,7 +158,7 @@ def _count_graduate_calendar_items(body: object) -> int:
 
 
 def load_fixture_bodies() -> Dict[str, object]:
-    file_by_source = {"lectures": "lectures", "calendar": "calendar", "graduate_calendar": "graduate_calendar", "dormitory_menu": "dormitory_menu",
+    file_by_source = {"lectures": "lectures", "curriculum_courses": "curriculum_course", "calendar": "calendar", "graduate_calendar": "graduate_calendar", "dormitory_menu": "dormitory_menu",
                       "dormitory_notices": "dormitory_notices", "cafeteria": "cafeteria",
                       "campus_places": "campus_places", "extracurricular_events": "extracurricular_events"}
     return {name: json.loads((FIXTURE_DIRECTORY / f"{file}.json").read_text(encoding="utf-8"))

@@ -1,4 +1,4 @@
-"""공개 데이터 조회(로그인 없음): 학사 기준 정보, 강의, 학사일정, 기숙사, 식당, 캠퍼스, 비교과
+"""공개 데이터 조회(로그인 없음): 학사 기준 정보, 강의, 학과 교육과정, 학사일정, 기숙사, 식당, 캠퍼스, 비교과
 요청 > JSON 검증 > 모델 변환 > 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (spec/PUBLIC_DATA.md)
 """
 
@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .errors import ErrorCode, SejongAuthError
 from .public_data_models import (
-    CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, Department, DormitoryMenuDay,
+    CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay,
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
 )
@@ -22,6 +22,8 @@ from .transport import USER_AGENT, create_ssl_context
 LOGGER = logging.getLogger(__name__)
 
 SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/"
+# 학과 교육과정 과목 1건: deptNo 는 SIS 학과 코드(DEPT_CD)와 같은 값, Accept: application/json 이 없으면 404
+CURRICULUM_COURSE_URL = "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do"
 ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do"
 # 대학원 사이트별 학사일정: {site_id} 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
 GRADUATE_CALENDAR_URL = "https://{site_id}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp"
@@ -154,6 +156,19 @@ def _to_lecture(row):
     return Lecture(*_fields(row, *LECTURE_FIELD_NAMES), _extra_of(row, set(LECTURE_FIELD_NAMES)))
 
 
+# CurriculumCourse 생성자 인자 순서와 같음 (remark 는 교과목 개요 본문이라 overview 로 받음)
+CURRICULUM_COURSE_FIELD_NAMES = (
+    "deptCd", "deptNm", "orgnClsfCd", "year", "curiNo", "curiNm", "curiTypeCd", "curiTypeNm", "cdt",
+    "lecTmNum", "exeTmNum", "curiTm", "stuYearCd", "smtDanCd", "smtDanNm", "remark",
+)
+
+
+def _to_curriculum_course(row):
+    row = _object_of(row)
+    return CurriculumCourse(*_fields(row, *CURRICULUM_COURSE_FIELD_NAMES),
+                            _extra_of(row, set(CURRICULUM_COURSE_FIELD_NAMES)))
+
+
 def _to_calendar_event(row):
     row = _object_of(row)
     names = ("scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt")
@@ -228,7 +243,7 @@ def _year_of(date_text: str) -> str:
 
 
 class SejongPublicData:
-    """공개 데이터 클라이언트: 메서드 13개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
+    """공개 데이터 클라이언트: 메서드 14개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
 
     def __init__(self, timeout_seconds: float = 10, cache_ttl_seconds: float = 86400, ssl_verification: bool = True,
                  failure_cache_seconds: float = 60, cache_max_entries: int = 500,
@@ -273,6 +288,16 @@ class SejongPublicData:
                   "YEAR_SMT": f"{year}/{semester_code}", "DEPT_CD": department_code, "CURI_NM": course_name,
                   "EMP_NM": instructor_name, "LANG_CHK": "KOR"}
         return self._sis_dataset("doList.do", search, "dl_main", _to_lecture)
+
+    def curriculum_courses(self, department_code: str, course_number: str) -> List[CurriculumCourse]:
+        """학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요), 그 학과 교육과정에 없으면 빈 목록
+        학과 코드·과목 번호 필수 (없으면 INVALID_INPUT)"""
+        if not str(department_code or "").strip() or not str(course_number or "").strip():
+            raise SejongAuthError(ErrorCode.INVALID_INPUT, "Department code and course number are required")
+        query = urllib.parse.urlencode({"curiNo": course_number, "deptNo": department_code})
+        return self._fetch(("curriculum_courses", department_code, course_number), "GET",
+                           f"{CURRICULUM_COURSE_URL}?{query}", None, None,
+                           lambda body: [_to_curriculum_course(row) for row in _dataset(body, "items")], [])
 
     def calendar(self, start: str, end: str, category_code: str = "0001") -> List[CalendarEvent]:
         query = urllib.parse.urlencode({"mode": "getCalendarData", "start": start, "end": end, "collDiv": category_code})

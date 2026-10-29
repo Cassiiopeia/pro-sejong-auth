@@ -42,6 +42,7 @@ except SejongAuthError as error:
 |---|---|
 | 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
 | 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `course_types`, `selective_domains` |
+| 학과 교육과정의 과목 (권장 학년·학기, 학점, 교과목 개요) | `curriculum_courses` |
 | 학사일정 | `calendar` |
 | 대학원 학사일정 (사이트별) | `graduate_calendar` |
 | 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
@@ -54,6 +55,8 @@ from sejongpeia import SejongPublicData
 public_data = SejongPublicData()
 departments = public_data.departments("20", "2026", "20")          # 학부, 2026년 2학기
 lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+# 강의의 과목 번호로 그 학과 교육과정의 학년·학기·교과목 개요 (없으면 빈 목록)
+courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
 ```
 
 - **학교 값을 그대로** 돌려주고, 쓰지 않은 학교 필드는 `extra`에 담깁니다. 코드표를 박아 두지 않아 학과가 바뀌어도 코드를 고칠 필요가 없습니다.

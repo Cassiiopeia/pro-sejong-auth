@@ -16,6 +16,11 @@ export interface Lecture {
   departmentCode: string; departmentName: string; managingDepartment: string; remark: string;
   year: string; semesterCode: string; extra: ExtraFields;
 }
+export interface CurriculumCourse {
+  departmentCode: string; departmentName: string; categoryCode: string; year: string; courseNumber: string; name: string;
+  courseTypeCode: string; courseTypeName: string; credits: string; lectureHours: string; practiceHours: string; totalHours: string;
+  gradeLevel: string; semesterCode: string; semesterName: string; overview: string; extra: ExtraFields;
+}
 export interface CalendarEvent {
   year: string; month: string; categoryCode: string; categoryName: string; title: string; titleEn: string;
   startDate: string; endDate: string; extra: ExtraFields;

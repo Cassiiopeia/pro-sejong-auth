@@ -1,7 +1,7 @@
 // 공개 데이터(로그인 없는 소스) 조회: 요청 > JSON 파싱 > 매핑 > 캐시, 업스트림 실패는 마지막 캐시 또는 빈 값 (spec/PUBLIC_DATA.md)
 import { ErrorCode, SejongAuthError } from './errors.js';
 import type {
-  CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, Department, DormitoryMenuDay, DormitoryNotice, DormitoryNotices,
+  CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay, DormitoryNotice, DormitoryNotices,
   ExtraFields, ExtracurricularEvent, Lecture, OrganizationCategory, SelectiveDomain, Term,
 } from './publicDataModels.js';
 import { NodeHttpsSession, USER_AGENT, type Session } from './transport.js';
@@ -10,6 +10,11 @@ export type * from './publicDataModels.js';
 
 const SIS_BASE_URL = 'https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/';
 const HOMEPAGE_BASE_URL = 'https://www.sejong.ac.kr/kor/';
+// 학과 교육과정 과목 1건: deptNo 는 SIS 학과 코드(DEPT_CD)와 같은 값
+const CURRICULUM_COURSE_URL = 'https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do';
+// remark 는 교과목 개요 본문이라 overview 로 받음 (CurriculumCourse 필드 순서와 별개, 매핑에 쓴 키 목록)
+const CURRICULUM_COURSE_USED_KEYS = ['deptCd', 'deptNm', 'orgnClsfCd', 'year', 'curiNo', 'curiNm', 'curiTypeCd', 'curiTypeNm', 'cdt',
+  'lecTmNum', 'exeTmNum', 'curiTm', 'stuYearCd', 'smtDanCd', 'smtDanNm', 'remark'];
 // 대학원 사이트별 학사일정: siteId 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
 const GRADUATE_CALENDAR_URL_PREFIX = '.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp';
 // 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
@@ -19,6 +24,8 @@ const DORMITORY_BASE_URL = 'https://happydorm.sejong.ac.kr/';
 const EXTRACURRICULAR_URL = 'https://do.sejong.ac.kr/ko/process/schedule/getEvents';
 
 const SIS_JSON_HEADERS = { 'Content-Type': 'application/json; charset="UTF-8"', Accept: 'application/json' };
+// GET 도 Accept 가 없으면 학교(교육과정)가 404 를 돌려줌
+const JSON_ACCEPT_HEADERS = { Accept: 'application/json' };
 const FORM_HEADERS = { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' };
 
 // 결과 extra 에서 제외: 교직원 이름 등 개인 식별, 서버 내부 정보
@@ -54,6 +61,7 @@ export interface SejongPublicDataOptions {
 
 export interface DepartmentsQuery { categoryCode: string; year: string; semesterCode: string }
 export interface LecturesQuery extends DepartmentsQuery { departmentCode?: string; courseName?: string; instructorName?: string }
+export interface CurriculumCoursesQuery { departmentCode: string; courseNumber: string }
 export interface CalendarQuery { start: string; end: string; categoryCode?: string }
 export interface GraduateCalendarQuery { siteId: string; year: number | string; month: number | string }
 export interface DormitoryNoticesQuery { page?: number; rows?: number; keyword?: string; location?: string }
@@ -116,7 +124,7 @@ const toCalendarEvent = (row: SchoolRow): CalendarEvent => ({
   extra: extraOf(row, CALENDAR_EVENT_USED_KEYS),
 });
 
-/** 세종대 공개 데이터 13종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
+/** 세종대 공개 데이터 14종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
 export class SejongPublicData {
   readonly timeoutSeconds: number;
   readonly cacheTtlSeconds: number;
@@ -206,6 +214,22 @@ export class SejongPublicData {
       departmentCode: toText(row.DEPT_CD), departmentName: toText(row.SCH_DEPT_ALIAS), managingDepartment: toText(row.MANAGE_DEPT_NM),
       remark: toText(row.REMARK), year: toText(row.YEAR), semesterCode: toText(row.SMT_CD), extra: extraOf(row, usedKeys),
     }), [categoryCode, year, semesterCode, departmentCode, courseName, instructorName]);
+  }
+
+  /** 학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요), 그 학과 교육과정에 없으면 빈 목록. 학과 코드·과목 번호 필수 */
+  curriculumCourses({ departmentCode, courseNumber }: CurriculumCoursesQuery): Promise<CurriculumCourse[]> {
+    if (!String(departmentCode ?? '').trim() || !String(courseNumber ?? '').trim()) {
+      throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Department code and course number are required.');
+    }
+    const url = `${CURRICULUM_COURSE_URL}?${new URLSearchParams({ curiNo: courseNumber, deptNo: departmentCode })}`;
+    return this.fetchCached('curriculumCourses', [departmentCode, courseNumber], () => [], () => this.requestJson('GET', url), (body) =>
+      rowsOf(body, 'items').map((row) => ({
+        departmentCode: toText(row['deptCd']), departmentName: toText(row['deptNm']), categoryCode: toText(row['orgnClsfCd']), year: toText(row['year']),
+        courseNumber: toText(row['curiNo']), name: toText(row['curiNm']), courseTypeCode: toText(row['curiTypeCd']), courseTypeName: toText(row['curiTypeNm']),
+        credits: toText(row['cdt']), lectureHours: toText(row['lecTmNum']), practiceHours: toText(row['exeTmNum']), totalHours: toText(row['curiTm']),
+        gradeLevel: toText(row['stuYearCd']), semesterCode: toText(row['smtDanCd']), semesterName: toText(row['smtDanNm']), overview: toText(row['remark']),
+        extra: extraOf(row, CURRICULUM_COURSE_USED_KEYS),
+      })));
   }
 
   /** 학사 일정 */
@@ -364,7 +388,7 @@ export class SejongPublicData {
     this.session ??= this.sessionFactory();
     const isJsonRequest = jsonBody !== undefined;
     const response = await this.session.request(method, url, {
-      headers: isJsonRequest ? SIS_JSON_HEADERS : form ? FORM_HEADERS : {},
+      headers: isJsonRequest ? SIS_JSON_HEADERS : form ? FORM_HEADERS : JSON_ACCEPT_HEADERS,
       body: isJsonRequest ? jsonBody : form?.toString(),
     });
     if (response.status < 200 || response.status >= 300) throw new Error(`status ${response.status}`);

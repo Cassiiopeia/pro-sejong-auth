@@ -27,7 +27,7 @@ from .models import (  # noqa: E402
 )
 from .public_data import SejongPublicData  # noqa: E402
 from .public_data_models import (  # noqa: E402
-    CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, Department, DormitoryMenuDay,
+    CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay,
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
 )
@@ -62,6 +62,6 @@ __all__ = [
     "ClassicCertification", "ClassicExamRecord", "ClassicSubjectRecord", "ClassicContestRecord",
     "SejongPublicData", "OrganizationCategory", "Term", "Department", "CourseType", "SelectiveDomain", "Lecture",
     "CalendarEvent", "DormitoryMenuDay", "DormitoryNotice", "DormitoryNotices", "CafeteriaMenuItem",
-    "CampusPlace", "ExtracurricularEvent",
+    "CampusPlace", "ExtracurricularEvent", "CurriculumCourse",
     "__version__",
 ]
