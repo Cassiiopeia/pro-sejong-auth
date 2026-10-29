@@ -10,9 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import kr.suhsaechan.sejongpeia.config.SejongAuthProperties;
-import kr.suhsaechan.sejongpeia.exception.SejongAuthErrorCode;
-import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
+import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
 /**

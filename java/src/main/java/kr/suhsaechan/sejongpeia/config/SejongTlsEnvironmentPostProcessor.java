@@ -1,6 +1,6 @@
 package kr.suhsaechan.sejongpeia.config;
 
-import kr.suhsaechan.sejongpeia.util.SejongTlsSupport;
+import kr.suhsaechan.sejongpeia.common.util.SejongTlsSupport;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;

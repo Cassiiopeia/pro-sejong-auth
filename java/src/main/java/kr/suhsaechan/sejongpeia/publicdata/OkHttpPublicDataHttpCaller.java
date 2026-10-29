@@ -1,8 +1,8 @@
 package kr.suhsaechan.sejongpeia.publicdata;
 
 import java.io.IOException;
-import kr.suhsaechan.sejongpeia.client.SejongHttpSupport;
-import kr.suhsaechan.sejongpeia.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
+import kr.suhsaechan.sejongpeia.common.http.SejongHttpSupport;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
