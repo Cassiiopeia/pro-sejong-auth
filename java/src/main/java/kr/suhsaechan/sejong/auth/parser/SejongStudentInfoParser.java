@@ -105,14 +105,14 @@ public class SejongStudentInfoParser {
   private Map<String, String> parseTableData(String html) {
     try {
       Document doc = Jsoup.parse(html);
-      Map<String, String> data = extractTableData(doc);
+      Map<String, String> valueByLabel = extractTableData(doc);
 
-      if (data.isEmpty()) {
+      if (valueByLabel.isEmpty()) {
         throw new SejongAuthException(SejongAuthErrorCode.PARSE_ERROR,
             "Student info table not found");
       }
 
-      return data;
+      return valueByLabel;
     } catch (SejongAuthException e) {
       throw e;
     } catch (Exception e) {
@@ -128,16 +128,16 @@ public class SejongStudentInfoParser {
   }
 
   private Map<String, String> extractTableData(Document doc) {
-    Map<String, String> data = new HashMap<>();
+    Map<String, String> valueByLabel = new HashMap<>();
 
     doc.select(USER_INFO_SELECTOR).forEach(row -> {
       String label = CommonUtil.trimToEmpty(row.select("th").text());
-      String value = CommonUtil.trimToEmpty(row.select("td").text());
+      String labelValue = CommonUtil.trimToEmpty(row.select("td").text());
       if (CommonUtil.hasText(label)) {
-        data.put(label, value);
+        valueByLabel.put(label, labelValue);
       }
     });
 
-    return data;
+    return valueByLabel;
   }
 }

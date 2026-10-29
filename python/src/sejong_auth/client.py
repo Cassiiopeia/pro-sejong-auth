@@ -2,6 +2,7 @@
 
 import base64
 import json
+import logging
 import ssl
 import urllib.parse
 from datetime import datetime
@@ -12,6 +13,9 @@ from .errors import ErrorCode, SejongAuthError
 from .models import SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult
 from .parsers import ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading, parse_sis_user_info, parse_student_info
 from .transport import HttpResponse, UrllibSession, create_ssl_context
+
+# 라이브러리 로거: 출력 방식은 사용하는 앱이 설정
+LOGGER = logging.getLogger("sejong_auth")
 
 PORTAL_LOGIN_URL = "https://portal.sejong.ac.kr/jsp/login/login_action.jsp"
 PORTAL_REFERER = "https://portal.sejong.ac.kr"
@@ -57,8 +61,8 @@ class SejongAuthClient:
         try:
             sis_user_info = parse_sis_user_info(self._fetch_sis_json_with_session(session))
             email, phone_number, english_name = sis_user_info.email, sis_user_info.phone_number, sis_user_info.english_name
-        except Exception:  # SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
-            pass
+        except Exception as error:  # SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
+            LOGGER.warning("[sejong auth] SIS contact lookup failed (ignored) : %s", type(error).__name__)
 
         return SejongAuthResult(
             success=True, student_id=dhc_result.student_id, name=dhc_result.name, major=dhc_result.major,
