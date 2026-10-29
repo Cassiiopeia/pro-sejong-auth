@@ -17,7 +17,7 @@ import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
 /**
  * 로그인 없는 학교 공개 데이터 조회 15종: 학사 코드, 강의, 학과 교육과정, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
- * 메서드당 요청 1건 (cafeteriaPlaces 만 최대 10건) > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 잘못된 입력뿐: curriculumCourses, graduateCalendar)
+ * 메서드당 요청 1건 (cafeteriaPlaces 만 최대 50건, 기본 10건) > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 잘못된 입력뿐: curriculumCourses, graduateCalendar)
  */
 public class SejongPublicData {
 
@@ -34,8 +34,10 @@ public class SejongPublicData {
   // 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
   private static final java.util.regex.Pattern GRADUATE_SITE_ID_PATTERN = java.util.regex.Pattern.compile("[a-z0-9][a-z0-9-]{0,30}");
   private static final String CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do";
-  // 학교에 식당 목록 API가 없어 번호 1~10을 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
-  private static final List<String> CAFETERIA_PROBE_PLACE_IDS = List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
+  // 학교에 식당 목록 API가 없어 번호 1부터 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
+  // 식당 번호는 1부터 호출자가 정한 상한까지 조회 (기본 10, 최대 50: 한 번 갱신의 요청 수를 제한)
+  private static final int CAFETERIA_DEFAULT_MAX_PLACE_ID = 10;
+  private static final int CAFETERIA_LIMIT_MAX_PLACE_ID = 50;
   private static final String CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do";
   private static final String DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do";
   private static final String DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do";
@@ -177,16 +179,26 @@ public class SejongPublicData {
         listOf("items", PublicDataMapper::toCafeteriaMenuItem), List.of());
   }
 
-  /**
-   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~10의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
-   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음)
-   */
+  /** 학식 식당 목록: 번호 1~10 (기본 상한) */
   public List<CafeteriaPlace> cafeteriaPlaces() {
-    List<PublicDataRequest> requests = CAFETERIA_PROBE_PLACE_IDS.stream()
+    return cafeteriaPlaces(CAFETERIA_DEFAULT_MAX_PLACE_ID);
+  }
+
+  /**
+   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~maxPlaceId(최대 50)의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음), 범위 밖 값은 INVALID_INPUT
+   */
+  public List<CafeteriaPlace> cafeteriaPlaces(int maxPlaceId) {
+    if (maxPlaceId < 1 || maxPlaceId > CAFETERIA_LIMIT_MAX_PLACE_ID) {
+      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT,
+          "Max place id must be an integer from 1 to " + CAFETERIA_LIMIT_MAX_PLACE_ID);
+    }
+    List<String> probePlaceIds = java.util.stream.IntStream.rangeClosed(1, maxPlaceId).mapToObj(String::valueOf).toList();
+    List<PublicDataRequest> requests = probePlaceIds.stream()
         .map(placeId -> new PublicDataRequest("GET", CAFETERIA_URL + "?" + queryOf("mode", "getMenuList", "placeId", placeId), null, null))
         .toList();
-    return fetcher.fetchInSequence(cacheKeyOf("cafeteriaPlaces"), requests,
-        responses -> PublicDataMapper.toCafeteriaPlaces(CAFETERIA_PROBE_PLACE_IDS, responses), List.of());
+    return fetcher.fetchInSequence(cacheKeyOf("cafeteriaPlaces", String.valueOf(maxPlaceId)), requests,
+        responses -> PublicDataMapper.toCafeteriaPlaces(probePlaceIds, responses), List.of());
   }
 
   public List<CampusPlace> campusPlaces() {

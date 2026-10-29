@@ -35,8 +35,10 @@ const SIS_SUBMIT_ERROR_KEY = '_SUBMIT_ERROR_';
 const LECTURE_EMPTY_FILTERS = Object.fromEntries(
   ['SMT_NM', 'CURI_TYPE_CD', 'SLT_DOMAIN_CD', 'CURI_NO', 'CLASS', 'SLT_DEPT_CD', 'PLAN_REG_YN', 'CORS_SCHE_GRP_CD'].map((key) => [key, '']),
 );
-// 학교에 식당 목록 API가 없어 번호 1~10을 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
-const CAFETERIA_PROBE_PLACE_IDS = Array.from({ length: 10 }, (_, index) => String(index + 1));
+// 학교에 식당 목록 API가 없어 번호 1부터 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
+// 식당 번호는 1부터 호출자가 정한 상한까지 차례로 조회 (기본 10, 최대 50: 한 번 갱신의 요청 수를 제한)
+const CAFETERIA_DEFAULT_MAX_PLACE_ID = 10;
+const CAFETERIA_LIMIT_MAX_PLACE_ID = 50;
 // 메뉴 응답 행의 알려진 필드 (식당 extra 에는 이 밖의 필드만)
 const CAFETERIA_MENU_USED_KEYS = ['placeId', 'placeName', 'buildingName', 'location', 'menuDate', 'day', 'mealTypeId', 'mealName', 'menuName', 'price'];
 const DORMITORY_DAYS_PER_WEEK = 7;
@@ -69,6 +71,7 @@ export interface CurriculumCoursesQuery { departmentCode: string; courseNumber: 
 export interface CalendarQuery { start: string; end: string; categoryCode?: string }
 export interface GraduateCalendarQuery { siteId: string; year: number | string; month: number | string }
 export interface DormitoryNoticesQuery { page?: number; rows?: number; keyword?: string; location?: string }
+export interface CafeteriaPlacesQuery { maxPlaceId?: number }
 export interface ExtracurricularEventsQuery { start: string; end: string; category?: string }
 
 // isFailure: 캐시 없이 실패해 빈 값을 잠시 기억하는 항목
@@ -301,25 +304,29 @@ export class SejongPublicData {
   }
 
   /**
-   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~10의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
-   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음)
+   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~maxPlaceId(기본 10, 최대 50)의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음), 범위 밖 값은 INVALID_INPUT
    */
-  cafeteriaPlaces(): Promise<CafeteriaPlace[]> {
+  cafeteriaPlaces({ maxPlaceId = CAFETERIA_DEFAULT_MAX_PLACE_ID }: CafeteriaPlacesQuery = {}): Promise<CafeteriaPlace[]> {
+    if (!Number.isInteger(maxPlaceId) || maxPlaceId < 1 || maxPlaceId > CAFETERIA_LIMIT_MAX_PLACE_ID) {
+      throw new SejongAuthError(ErrorCode.INVALID_INPUT, `Max place id must be an integer from 1 to ${CAFETERIA_LIMIT_MAX_PLACE_ID}.`);
+    }
+    const probePlaceIds = Array.from({ length: maxPlaceId }, (_, index) => String(index + 1));
     const requestAllPlaceIds = async (): Promise<JsonObject> => {
       const responses: JsonObject[] = [];
-      for (const placeId of CAFETERIA_PROBE_PLACE_IDS) { // 순서대로 한 건씩, 병렬 요청 없음
+      for (const placeId of probePlaceIds) { // 순서대로 한 건씩, 병렬 요청 없음
         const url = `${HOMEPAGE_BASE_URL}unilife/cafeteria-info.do?${new URLSearchParams({ mode: 'getMenuList', placeId })}`;
         responses.push(await this.requestJson('GET', url));
       }
       return { responses };
     };
-    return this.fetchCached('cafeteriaPlaces', [], () => [], requestAllPlaceIds, (body) => {
+    return this.fetchCached('cafeteriaPlaces', [String(maxPlaceId)], () => [], requestAllPlaceIds, (body) => {
       // 번호 순서대로 첫 행의 식당 정보, 같은 식당 번호는 한 번만
       const placeById = new Map<string, CafeteriaPlace>();
       (body.responses as JsonObject[]).forEach((response, index) => {
         const firstRow = rowsOf(response, 'items').find((row) => Object.keys(row).length > 0);
         if (!firstRow) return;
-        const placeId = toText(firstRow.placeId) || CAFETERIA_PROBE_PLACE_IDS[index];
+        const placeId = toText(firstRow.placeId) || probePlaceIds[index];
         if (placeById.has(placeId)) return;
         placeById.set(placeId, {
           placeId, placeName: toText(firstRow.placeName), buildingName: toText(firstRow.buildingName), location: toText(firstRow.location),

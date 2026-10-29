@@ -5,7 +5,7 @@ description: The cafeteria_menu method returns a cafeteria's menu and prices, an
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-Get a cafeteria's menu and prices from the school's own cafeteria number (`cafeteria_menu`), and a list of cafeteria numbers, names, buildings and locations (`cafeteria_places`). **The school has no cafeteria list API**, so the list is built by the library: it calls the menu answer for numbers 1 to 10 one after the other and collects the places. That is the cause of the limits below, so please read them. Common rules are on [Common rules](../overview/).
+Get a cafeteria's menu and prices from the school's own cafeteria number (`cafeteria_menu`), and a list of cafeteria numbers, names, buildings and locations (`cafeteria_places`). **The school has no cafeteria list API**, so the list is built by the library: it calls the menu answer for numbers 1 to `max_place_id` (10 by default) one after the other and collects the places. That is the cause of the limits below, so please read them. Common rules are on [Common rules](../overview/).
 
 ## Methods
 
@@ -25,7 +25,7 @@ Return `CafeteriaMenuItem` list and `CafeteriaPlace` list.
 
 ### `cafeteria_places`
 
-- Calls the same address for `placeId` 1 to 10, **one request at a time** (never in parallel). It is the only method that can make up to 10 requests in one call.
+- Calls the same address for `placeId` 1 to `max_place_id` (10 by default, at most 50), **one request at a time** (never in parallel). It is the only method that makes several requests in one call, and a value outside the range raises `INVALID_INPUT` without a request.
 - Per number, the first row of the answer gives one place: `placeId`, `placeName`, `buildingName`, `location`. `extra` holds the row's other fields except the menu fields (`menuDate`, `day`, `mealTypeId`, `mealName`, `menuName`, `price`). A number with no rows adds nothing, the same `placeId` is listed once, and the result is in number order.
 - **One failed request fails the whole list** (last cached value or an empty list), so a partial list is never cached for a day.
 
@@ -80,7 +80,7 @@ The school page draws 1 as lunch and 2 as dinner and ignores other values. The l
 <TabItem label="Java">
 
 ```java
-List<CafeteriaPlace> places = publicData.cafeteriaPlaces();   // up to 10 requests, cached for a day
+List<CafeteriaPlace> places = publicData.cafeteriaPlaces();   // 10 requests by default (maxPlaceId raises it to 50), cached for a day
 List<CafeteriaMenuItem> menu = publicData.cafeteriaMenu("1");  // menu of cafeteria 1
 ```
 
@@ -88,7 +88,7 @@ List<CafeteriaMenuItem> menu = publicData.cafeteriaMenu("1");  // menu of cafete
 <TabItem label="Python">
 
 ```python
-places = public_data.cafeteria_places()  # up to 10 requests, cached for a day
+places = public_data.cafeteria_places()  # 10 requests by default (max_place_id raises it to 50), cached for a day
 menu = public_data.cafeteria_menu("1")   # menu of cafeteria 1
 ```
 
@@ -96,7 +96,7 @@ menu = public_data.cafeteria_menu("1")   # menu of cafeteria 1
 <TabItem label="Node.js">
 
 ```javascript
-const places = await publicData.cafeteriaPlaces(); // up to 10 requests, cached for a day
+const places = await publicData.cafeteriaPlaces(); // 10 requests by default (maxPlaceId raises it to 50), cached for a day
 const menu = await publicData.cafeteriaMenu('1');  // menu of cafeteria 1
 ```
 
@@ -108,14 +108,14 @@ Numbers can change, so ask `cafeteria_places()` instead of writing numbers into 
 ## Cache and failure behavior
 
 - `cafeteria_menu`: cached for one day (86400 seconds by default) per number, one request. A failure returns the last cached value or an empty list.
-- `cafeteria_places`: cached for one day, up to 10 requests per refresh. If any one fails, the result is the last cached value or an empty list, and a partial list is never cached. A failure with no cache returns an empty list without a request for 60 seconds (default).
+- `cafeteria_places`: cached for one day, one request per number per refresh (10 by default, at most 50). If any one fails, the result is the last cached value or an empty list, and a partial list is never cached. A failure with no cache returns an empty list without a request for 60 seconds (default).
 - Neither method raises.
 - **An empty `cafeteria_menu` does not prove a number is invalid.** It is empty both when the number does not exist and when that day has no menu (a weekly menu not yet posted, or a holiday).
 
 ## Known limits and what was not verified
 
 - A cafeteria whose menu is empty on that day (weekly menu not yet posted, holiday) is missing from the list until the next refresh (the cache lifetime, one day by default). The fixed-menu stalls (3 to 6) always have rows; the weekly one (1) does not always.
-- **A cafeteria numbered above 10 is not found.**
+- **A cafeteria numbered above `max_place_id` is not found.** Raise `max_place_id` when cafeterias are added (at most 50).
 - One card on the school page (`빅베어레스토랑`) has no menu number at all, so it can never appear in this list.
 - The library never guesses a name from a number.
 - The per-number results above are one measurement on 2026-10-30. This page did not check whether the school has changed the numbers since. Numbers can change.

@@ -298,6 +298,18 @@ def test_cafeteria_places_collects_each_place_once_in_id_order_with_bounded_requ
     assert len(session.place_ids) == 10  # 캐시 유효 중에는 요청 없음
 
 
+def test_cafeteria_places_max_place_id_sets_range_and_rejects_out_of_range():
+    session = CafeteriaPlaceSession({"1": [cafeteria_row(1, "첫째")], "14": [cafeteria_row(14, "열넷째")]})
+    client = SejongPublicData(_session_factory=lambda: session)
+    assert [place.place_id for place in client.cafeteria_places(max_place_id=14)] == ["1", "14"]
+    assert session.place_ids == [str(number) for number in range(1, 15)]
+    for invalid in (0, 51, True, "10"):
+        with pytest.raises(SejongAuthError) as error_info:
+            client.cafeteria_places(max_place_id=invalid)
+        assert error_info.value.code == ErrorCode.INVALID_INPUT
+    assert len(session.place_ids) == 14  # 잘못된 값은 요청 없음
+
+
 def test_cafeteria_places_one_failed_request_fails_the_whole_list_and_keeps_stale_value():
     clock = FakeClock()
     session = CafeteriaPlaceSession({"1": [cafeteria_row(1, "첫째")]})
