@@ -9,14 +9,13 @@ import time
 import urllib.parse
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from .client import USER_AGENT
 from .errors import ErrorCode, SejongAuthError
 from .public_data_models import (
     CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, Department, DormitoryMenuDay,
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
 )
-from .transport import create_ssl_context
+from .transport import USER_AGENT, create_ssl_context
 
 LOGGER = logging.getLogger(__name__)
 

@@ -3,8 +3,7 @@ import { ErrorCode, SejongAuthError } from './errors.js';
 import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
 import { ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
 import { parseParentUnitName } from './portalMainParser.js';
-import { NodeHttpsSession, TimeoutError, type HttpResponse, type RequestOptions, type Session } from './transport.js';
-import { VERSION } from './version.js';
+import { NodeHttpsSession, TimeoutError, USER_AGENT, type HttpResponse, type RequestOptions, type Session } from './transport.js';
 
 export const PORTAL_LOGIN_URL = 'https://portal.sejong.ac.kr/jsp/login/login_action.jsp';
 export const PORTAL_REFERER = 'https://portal.sejong.ac.kr';
@@ -29,7 +28,7 @@ const SIS_EMPTY_ADD_PARAM = Buffer.from(
   'utf8',
 ).toString('base64');
 
-export const USER_AGENT = `pro-sejongpeia-node/${VERSION}`;
+export { USER_AGENT };
 const HTTP_UNAUTHORIZED = 401;
 
 export interface SejongAuthClientOptions {
