@@ -25,7 +25,7 @@ const SIS_EMPTY_ADD_PARAM = Buffer.from(
   'utf8',
 ).toString('base64');
 
-const USER_AGENT = `pro-sejongpeia-node/${VERSION}`;
+export const USER_AGENT = `pro-sejongpeia-node/${VERSION}`;
 const HTTP_UNAUTHORIZED = 401;
 
 export interface SejongAuthClientOptions {

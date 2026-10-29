@@ -7,6 +7,8 @@ import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthRes
 export { SejongAuthClient, type SejongAuthClientOptions } from './client.js';
 export { ErrorCode, SejongAuthError } from './errors.js';
 export type * from './models.js';
+export { SejongPublicData, type SejongPublicDataOptions } from './publicData.js';
+export type * from './publicDataModels.js';
 export { VERSION } from './version.js';
 
 const defaultClient = new SejongAuthClient();
