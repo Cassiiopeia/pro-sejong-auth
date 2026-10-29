@@ -1,0 +1,7 @@
+{
+  "dl_code_yearSmt": [
+    { "YEAR": "2099", "SMT_CD": "20", "YEAR_SMT_CD": "2099/20", "YEAR_SMT_NM": "2099/2학기" },
+    { "YEAR": "2099", "SMT_CD": "11", "YEAR_SMT_CD": "2099/11", "YEAR_SMT_NM": "2099/여름학기" },
+    { "YEAR": "2099", "SMT_CD": "10", "YEAR_SMT_CD": "2099/10", "YEAR_SMT_NM": "2099/1학기" }
+  ]
+}

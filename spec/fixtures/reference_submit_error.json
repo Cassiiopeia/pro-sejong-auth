@@ -1,0 +1,1 @@
+{"_SUBMIT_ERROR_": {"ERRMSG": "example error message", "ERRTYPE": "ERROR", "ERRCODE": "EXAMPLE.ERROR", "STACK_TRACE": "example.internal.Exception: never expose this to callers"}}
