@@ -1,0 +1,88 @@
+# DOCS-PAGES.yaml
+# 문서 사이트(website/) 빌드와 GitHub Pages 배포
+#
+# 동작:
+# - main 에 website/ 변경이 들어오면 Astro Starlight 사이트를 빌드해 Pages 에 배포
+# - 수동 재배포는 workflow_dispatch
+# - website/ 변경 PR 은 빌드와 링크 점검만 실행 (배포하지 않음)
+#
+# 릴리스 워크플로우와 분리한 이유:
+#   경로 필터로 website/ 변경에만 반응하므로 버전 bump·CHANGELOG 커밋에는 뜨지 않음
+#
+# 전제: Settings > Pages > Build and deployment > Source 를 "GitHub Actions" 로 설정해야 배포 job 이 성공함
+#   사이트 주소는 https://cassiiopeia.github.io/pro-sejongpeia/ (base 는 website/astro.config.mjs)
+
+name: DOCS-PAGES
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "website/**"
+      - ".github/workflows/DOCS-PAGES.yaml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "website/**"
+      - ".github/workflows/DOCS-PAGES.yaml"
+  workflow_dispatch:
+
+# 배포 중인 실행을 끊으면 Pages 가 반쯤 갱신된 상태로 남을 수 있어 취소하지 않고 순서대로 처리
+concurrency:
+  group: docs-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 문서 사이트 빌드
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v7
+
+      # Astro 는 Node 22.12 이상을 요구
+      - name: Node.js 설정
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 사이트 빌드
+        run: npm run build
+
+      # 빌드 결과(dist)의 내부 링크·에셋 경로가 모두 열리는지 확인
+      - name: 내부 링크 점검
+        run: node scripts/check-links.mjs
+
+      - name: Pages 아티팩트 업로드
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/dist
+
+  deploy:
+    name: GitHub Pages 배포
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # deploy-pages 는 OIDC 토큰으로 Pages 에 배포하므로 이 job 에만 쓰기 권한을 줌
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Pages 배포
+        id: deployment
+        uses: actions/deploy-pages@v5
