@@ -101,7 +101,7 @@ jobs:
   reference-data-check:
     if: github.repository == 'Cassiiopeia/pro-sejongpeia'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
@@ -112,8 +112,14 @@ jobs:
         id: probe
         run: python3 scripts/probe-reference-data.py
 
+      # 공개 데이터 7곳 형태 점검 (앞 단계가 실패해도 실행)
+      - name: Probe public data sources (no login)
+        id: probe_public
+        if: always()
+        run: python3 scripts/probe-public-data.py
+
       - name: Report drift as issue
-        if: failure() && steps.probe.outcome == 'failure'
+        if: failure() && (steps.probe.outcome == 'failure' || steps.probe_public.outcome == 'failure')
         uses: actions/github-script@v7
         with:
           script: |
@@ -127,7 +133,7 @@ jobs:
               '📝 현재 문제점',
               '---',
               '',
-              `- 학교 참조 데이터 형태 점검(scripts/probe-reference-data.py)이 실패했습니다: ${runUrl}`,
+              `- 학교 참조 데이터 형태 점검(scripts/probe-reference-data.py, scripts/probe-public-data.py)이 실패했습니다: ${runUrl}`,
               '- 학교가 코드표나 응답 형태를 바꿨거나 서버가 일시적으로 응답하지 않았을 수 있습니다. 로그에서 `[probe] DRIFT` 줄을 확인하세요',
               '- 형태가 바뀌었다면 spec/REFERENCE_DATA.md와 세 언어 구현을 같은 PR에서 고칩니다',
             ].join('\n');
