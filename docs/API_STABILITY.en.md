@@ -60,7 +60,7 @@ These must be the same in every language, and tests fail when they drift.
 | Request URLs, portal verdict to error code mapping and other shared values | [spec/contract.json](../spec/contract.json) is the single source; each language's contract test compares its constants |
 | The 10 error codes (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, ...) and their meaning | [spec/RESULT_SCHEMA.md](../spec/RESULT_SCHEMA.md), contract tests |
 | Authentication result fields and meaning (only the spelling differs) | RESULT_SCHEMA, expected-value tests on the sanitized sample responses in `spec/fixtures/` |
-| The 14 public-data methods, their result fields and value rules (missing value is an empty string, failure isolation, cache) | [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md), one shared expected-result file (`expected_public_data.json`) compared in all three languages |
+| The 15 public-data methods, their result fields and value rules (missing value is an empty string, failure isolation, cache) | [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md), one shared expected-result file (`expected_public_data.json`) compared in all three languages |
 | Authentication and public data do not depend on each other | dependency-rule tests (Python, Node, Java each) |
 | Results against the real portal | a daily live login check in all three languages, field-by-field hash comparison (`scripts/verify-live.sh`) |
 

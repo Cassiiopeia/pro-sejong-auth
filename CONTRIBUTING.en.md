@@ -115,7 +115,7 @@ Building a feature is not the end: it has to show up everywhere people look. Che
 - README in Korean and English: the feature and a usage example, and the `Result fields` table if fields were added
 - `python/README.md`, `node/README.md`: the PyPI and npm package pages
 - `spec/`: the contract document, `spec/contract.json`, synthetic fixtures
-- The project site (`index.html` and `sitemap.xml` on the `gh-pages` branch): feature intro, field table, demo. It is updated after the release, so leave the to-do in the issue
+- The project site (`website/`, Korean and English docs): feature intro, reference, guides. It is deployed automatically when merged to `main`, so update it in the same PR
 - Package descriptions and keywords: `python/pyproject.toml`, `node/package.json`, `java/build.gradle`
 - A one-line summary for the release notes (the commit message)
 - Only promote what is actually supported

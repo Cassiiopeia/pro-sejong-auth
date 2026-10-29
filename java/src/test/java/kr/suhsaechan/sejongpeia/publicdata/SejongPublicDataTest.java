@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * 공개 데이터 12종: fixture 주입 가짜 HTTP 결과 == expected_public_data.json, 캐시, 실패 격리, 입력 검증, 요청 형태
+ * 공개 데이터 15종: fixture 주입 가짜 HTTP 결과 == expected_public_data.json, 캐시, 실패 격리, 입력 검증, 요청 형태
  */
 class SejongPublicDataTest {
 

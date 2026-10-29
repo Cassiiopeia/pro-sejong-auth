@@ -128,7 +128,7 @@ const toCalendarEvent = (row: SchoolRow): CalendarEvent => ({
   extra: extraOf(row, CALENDAR_EVENT_USED_KEYS),
 });
 
-/** 세종대 공개 데이터 14종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
+/** 세종대 공개 데이터 15종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
 export class SejongPublicData {
   readonly timeoutSeconds: number;
   readonly cacheTtlSeconds: number;
