@@ -1,6 +1,6 @@
 {
   "name": "pro-sejongpeia",
-  "version": "1.2.31",
+  "version": "1.2.32",
   "description": "Sejong University login API for Node.js: verify students with portal SSO (세종대 로그인 API)",
   "keywords": [
     "sejong",
