@@ -84,6 +84,7 @@ session cookies, legacy TLS and HTML/JSON parsing. Same features, same results i
 - [Quick start: Python](#quick-start-python)
 - [Quick start: Node.js](#quick-start-nodejs)
 - [Operations](#operations)
+- [School data without login](#school-data-without-login)
 - [Result fields](#result-fields)
 - [Error codes](#error-codes)
 - [Configuration](#configuration)
@@ -223,6 +224,46 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
         + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
 }
 ```
+
+## School data without login
+
+Public school data in the same shape, no student ID or password needed. The three languages share the same methods and results. The contract is [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
+
+| Data | Methods (Python names; Node and Java use camelCase) |
+|---|---|
+| College and department codes (by category and term) | `organization_categories`, `terms`, `departments` |
+| Lectures (search by department, course name, instructor) | `lectures`, `course_types`, `selective_domains` |
+| Academic calendar | `calendar` |
+| Dormitory menu and notices | `dormitory_menu`, `dormitory_notices` |
+| Cafeteria menu, campus places | `cafeteria_menu`, `campus_places` |
+| Extracurricular program schedule | `extracurricular_events` |
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")          # undergraduate, 2026 second semester
+lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+```
+
+```javascript
+import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData();
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
+```
+
+```java
+SejongPublicData publicData = new SejongPublicData();   // a bean in Spring
+List<Department> departments = publicData.departments("20", "2026", "20");
+List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
+```
+
+- **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change. School fields that are not mapped land in `extra`.
+- **One source failing never breaks the rest.** On failure you get the last cached value or an empty list, not an exception (only `lectures` with no search condition raises).
+- Results are cached in memory for 24 hours and identical requests are sent once. Please be gentle with the school's servers.
+- The lecture search handles the awkward parts for you, such as the school requiring every filter key in the request.
 
 ## Result fields
 
