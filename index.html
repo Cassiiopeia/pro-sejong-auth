@@ -340,6 +340,16 @@ result.getMajor();   <span class="comment">// "컴퓨터공학과"</span></pre><
           <h3 data-i18n="pd6Title">비교과 프로그램 일정</h3>
           <p data-i18n="pd6Body">기간별 비교과 프로그램을 분류와 함께 받습니다. 응답이 느린 학교 서버에 맞춰 캐시하고 실패를 격리합니다.</p>
         </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd7Title">학사 업무 기간 (로그인)</h3>
+          <p data-i18n="pd7Body">수강신청, 성적 조회처럼 학사 업무별 기간을 받습니다. 학사정보시스템이 요구하는 실행 값 조합과 호출 순서는 라이브러리가 맞추고, 세션 값은 결과와 로그에 남기지 않습니다.</p>
+        </div>
+        <div class="card card-padded feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h3 data-i18n="pd8Title">원문과 확장 필드 옵션</h3>
+          <p data-i18n="pd8Body">통합 인증에서 학교 원문 응답을 옵션으로 받고, 학교가 주는 나머지 사용자 필드는 extra로 받습니다. 세션·계정 상태·연락처 같은 민감한 필드는 항상 제외합니다.</p>
+        </div>
       </div>
       <p class="section-lead" style="margin-top:24px"><span data-i18n="publicContribute">학교가 공개로 주는 다른 정보가 있나요? 이슈로 제안하거나 직접 추가할 수 있습니다. 소스는 서로 독립적이라 내 소스만 만들면 됩니다.</span> <a class="button" href="https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/CONTRIBUTING.md#새-정보-출처-추가하기" data-i18n="publicContributeLink">새 정보 출처 추가하기</a></p>
     </div>
@@ -601,6 +611,8 @@ const MESSAGES = {
     pd4Title: '학식 메뉴', pd4Body: '식당별 메뉴와 가격을 받습니다. 날짜가 없는 고정 메뉴도 함께 돌려줍니다.',
     pd5Title: '캠퍼스 장소', pd5Body: '건물과 편의시설의 이름, 위치(위도·경도), 안내 정보를 받습니다.',
     pd6Title: '비교과 프로그램 일정', pd6Body: '기간별 비교과 프로그램을 분류와 함께 받습니다. 응답이 느린 학교 서버에 맞춰 캐시하고 실패를 격리합니다.',
+    pd7Title: '학사 업무 기간 (로그인)', pd7Body: '수강신청, 성적 조회처럼 학사 업무별 기간을 받습니다. 학사정보시스템이 요구하는 실행 값 조합과 호출 순서는 라이브러리가 맞추고, 세션 값은 결과와 로그에 남기지 않습니다.',
+    pd8Title: '원문과 확장 필드 옵션', pd8Body: '통합 인증에서 학교 원문 응답을 옵션으로 받고, 학교가 주는 나머지 사용자 필드는 extra로 받습니다. 세션·계정 상태·연락처 같은 민감한 필드는 항상 제외합니다.',
     publicContribute: '학교가 공개로 주는 다른 정보가 있나요? 이슈로 제안하거나 직접 추가할 수 있습니다. 소스는 서로 독립적이라 내 소스만 만들면 됩니다.', publicContributeLink: '새 정보 출처 추가하기',
     demoTitle: '지금 바로 체험하기', demoLead: '본인 세종대 포털 계정으로 라이브러리가 실제로 무엇을 돌려주는지 확인해 보세요.',
     studentIdLabel: '학번', studentIdPlaceholder: '예: 21011234', passwordLabel: '포털 비밀번호', passwordPlaceholder: '세종대 포털 비밀번호',
@@ -664,6 +676,8 @@ const MESSAGES = {
     pd4Title: 'Cafeteria menus', pd4Body: 'Get menus and prices per cafeteria, including fixed menus that have no date.',
     pd5Title: 'Campus places', pd5Body: 'Get buildings and facilities with names, coordinates and info.',
     pd6Title: 'Extracurricular events', pd6Body: 'Get extracurricular programs for a period with their categories. Results are cached and failures isolated, since the school server can be slow.',
+    pd7Title: 'Academic business periods (login)', pd7Body: 'Get the periods of academic tasks such as course registration and grade lookup. The library sets the run values and call order the student information system requires, and keeps session values out of results and logs.',
+    pd8Title: 'Raw response and extra-field options', pd8Body: 'Ask the integrated login for the school\'s raw response, and get the other user fields the school provides in extra. Sensitive fields such as sessions, account state and contact details are always excluded.',
     publicContribute: 'Know other public information the school serves? Propose it in an issue or add it yourself. Sources are independent, so you only build yours.', publicContributeLink: 'Add a new data source',
     demoTitle: 'Try it live', demoLead: 'Sign in with your own Sejong portal account and see exactly what the library returns.',
     studentIdLabel: 'Student ID', studentIdPlaceholder: 'e.g. 21011234', passwordLabel: 'Portal password', passwordPlaceholder: 'Sejong portal password',
