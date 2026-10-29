@@ -32,10 +32,13 @@ class OkHttpPublicDataHttpCaller implements PublicDataHttpCaller {
     boolean isPost = "POST".equals(request.getHttpMethod());
     if (isPost) {
       // 본문 형식 지정: 문자 집합 포함 값을 그대로 헤더로 (OkHttp 가 charset 을 덧붙이지 않게 바이트 본문 사용)
-      RequestBody body = RequestBody.create(request.getBody().getBytes(java.nio.charset.StandardCharsets.UTF_8),
-          MediaType.parse(request.getContentType()));
-      builder.post(body).header("Content-Type", request.getContentType());
-      if (FORM_CONTENT_TYPE.equals(request.getContentType())) {
+      // 본문·Content-Type 이 null 이어도 빈 본문으로 전송
+      String bodyText = request.getBody() == null ? "" : request.getBody();
+      String contentType = request.getContentType() == null ? FORM_CONTENT_TYPE : request.getContentType();
+      RequestBody body = RequestBody.create(bodyText.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+          MediaType.parse(contentType));
+      builder.post(body).header("Content-Type", contentType);
+      if (FORM_CONTENT_TYPE.equals(contentType)) {
         builder.header("X-Requested-With", "XMLHttpRequest");
       }
     }

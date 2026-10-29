@@ -5,14 +5,13 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * 세종대학교 인증 설정 프로퍼티
+ * 세종대학교 인증 설정 프로퍼티 (접두사 sejongpeia)
  *
  * application.yml 예시:
- * sejong:
- *   auth:
- *     ssl-verification: true
- *     timeout-seconds: 10
- *     max-retry: 3
+ * sejongpeia:
+ *   ssl-verification: true
+ *   timeout-seconds: 10
+ *   max-retry: 3
  */
 @Getter
 @Setter
@@ -39,4 +38,10 @@ public class SejongAuthProperties {
 
   /** 공개 데이터(로그인 없는 소스) 캐시 유효 시간 (초, 기본: 86400) */
   private long publicDataCacheTtlSeconds = 86400;
+
+  /** 공개 데이터 실패 기억 시간 (초, 기본: 60) */
+  private long publicDataFailureCacheSeconds = 60;
+
+  /** 공개 데이터 캐시 최대 항목 수 (기본: 500, 가득 차면 가장 오래된 항목 제거) */
+  private int publicDataCacheMaxEntries = 500;
 }
