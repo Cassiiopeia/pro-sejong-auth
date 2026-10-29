@@ -87,6 +87,18 @@ cd node && npm ci && npm test                     # Node 18+
 
 의존 규칙은 테스트가 지킵니다: 인증 코드와 공개 데이터는 서로 임포트하지 않습니다(`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). 규칙에 걸리면 공유가 필요한 부분을 `transport`나 `errors`로 옮기세요.
 
+**코드를 놓을 위치** (공개 데이터 소스 기준, 메서드 하나에 파일 세 곳이 대응합니다)
+
+| 언어 | 메서드와 요청 | 결과 모델 | 테스트 |
+|---|---|---|---|
+| Python | `python/src/sejongpeia/public_data.py` | `public_data_models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData.ts` | `publicDataModels.ts` | `node/test/publicData.test.mjs` |
+| Java | `publicdata/SejongPublicData.java`, 변환은 `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
+
+- 메서드 이름은 Python `snake_case`, Node와 Java `camelCase`입니다. 쓰지 않은 학교 필드는 `extra`에 담습니다.
+- 로그인이 필요한 소스는 이 절차의 대상이 아닙니다. 인증 코드(`client`, `parsers`)와 얽히므로 이슈에서 먼저 방향을 맞춰 주세요.
+- 공개 메서드나 결과 필드를 더하거나 바꾸면 [API 안정성 정책](docs/API_STABILITY.md)의 「공개 API」 목록과 [통합 예시](docs/INTEGRATION_EXAMPLES.md)가 여전히 맞는지 확인하세요.
+
 ## 새 기능을 추가했다면
 
 기능은 만들었다고 끝이 아닙니다. 사용하는 사람이 보는 모든 곳에 드러나야 합니다. PR을 올리기 전에 확인하세요 (PR 템플릿에도 같은 체크리스트가 있습니다).

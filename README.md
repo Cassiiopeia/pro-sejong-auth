@@ -75,6 +75,7 @@
 - [결과 필드](#결과-필드)
 - [에러 코드](#에러-코드)
 - [설정](#설정)
+- [더 보기: 통합 예시와 API 안정성](#더-보기-통합-예시와-api-안정성)
 - [FAQ](#faq)
 - [기여하기](#기여하기)
 
@@ -323,6 +324,11 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 > **Java TLS 안내**: 세종 포털은 최신 JDK가 막아 둔 레거시 cipher(`TLS_RSA_WITH_AES_256_CBC_SHA`)만 제공합니다. Java 라이브러리는 `jdk.tls.disabledAlgorithms`에서 `TLS_RSA_*`를 빼는데, 이 설정은 **JVM 전체**에 적용되고 JVM의 첫 TLS 연결 전에만 효과가 있습니다. Spring Boot는 시작할 때 자동으로 처리합니다. Spring 없이 쓰면 `main()` 맨 앞에서 `SejongTlsSupport.ensureLegacyCipherEnabled()`를 부르세요. 늦게 부르면 인증이 `CONNECTION_FAILED`와 그 원인을 알리는 메시지로 실패합니다. JVM 전체 변경을 허용할 수 없다면 인증을 별도 프로세스로 분리하세요. Python·Node는 자기 연결의 TLS 설정만 바꿉니다.
 
 포털 흐름 설명: [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md), [DHC 로그인 플로우](docs/DHC_LOGIN_FLOW.md), [SIS 로그인 플로우](docs/SIS_LOGIN_FLOW.md)
+
+## 더 보기: 통합 예시와 API 안정성
+
+- [통합 예시](docs/INTEGRATION_EXAMPLES.md): 학생 인증(동아리 가입), 학과·강의 검색, 학사일정 위젯, 기숙사·학식 봇을 Java, Python, Node로. 공개 데이터 예시는 실제 학교 서버로 실행해 확인했습니다.
+- [API 안정성 정책](docs/API_STABILITY.md): 공개 API와 내부 구현의 경계, 버전 규칙. **하위 호환은 보장하지 않으니 버전을 고정해서 쓰세요.**
 
 ## FAQ
 

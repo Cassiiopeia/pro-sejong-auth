@@ -87,6 +87,18 @@ How to add new data the school serves (course lists, menus, other public data). 
 
 Tests enforce the dependency rule: authentication code and public data do not import each other (`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). If a rule fails, move what needs sharing into `transport` or `errors`.
 
+**Where the code goes** (for a public-data source; one method maps to three files)
+
+| Language | Method and request | Result model | Test |
+|---|---|---|---|
+| Python | `python/src/sejongpeia/public_data.py` | `public_data_models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData.ts` | `publicDataModels.ts` | `node/test/publicData.test.mjs` |
+| Java | `publicdata/SejongPublicData.java`, mapping in `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
+
+- Method names are `snake_case` in Python and `camelCase` in Node and Java. School fields you do not map go into `extra`.
+- Login-required sources are not covered by this procedure. They are entangled with the authentication code (`client`, `parsers`), so agree on the direction in an issue first.
+- When you add or change a public method or result field, check that the "Public API" list in the [API stability policy](docs/API_STABILITY.en.md) and the [integration examples](docs/INTEGRATION_EXAMPLES.en.md) are still correct.
+
 ## When you add a feature
 
 Building a feature is not the end: it has to show up everywhere people look. Check this list before opening the PR (the PR template has the same checklist).
