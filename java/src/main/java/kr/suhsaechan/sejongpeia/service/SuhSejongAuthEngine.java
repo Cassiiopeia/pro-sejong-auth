@@ -118,8 +118,9 @@ public class SuhSejongAuthEngine {
     // 3. 같은 세션으로 포털 메인 1회 (보조 조회: 실패 시 null)
     String parentUnitName = fetchParentUnitName(session, dhcResult.getMajor());
 
-    // 4. 결과 합치기
-    SejongAuthResult.SejongAuthResultBuilder integratedResult = SejongAuthResult.builder()
+    // 4. 결과 합치기 (SIS 실패 시 코드 필드 null, extra 는 요청했을 때만)
+    SejongSisSchoolFields fields = schoolFields != null ? schoolFields : SejongSisSchoolFields.unavailable();
+    SejongAuthResult result = SejongAuthResult.builder()
         .success(true)
         .major(dhcResult.getMajor())
         .studentId(dhcResult.getStudentId())
@@ -134,22 +135,7 @@ public class SuhSejongAuthEngine {
         .parentUnitName(parentUnitName)
         .authenticatedAt(LocalDateTime.now())
         .rawHtml(dhcResult.getRawHtml())
-        .rawJson(shouldIncludeRaw ? sisJson : null);
-    if (schoolFields != null) {
-      integratedResult = applySchoolFields(integratedResult, schoolFields, shouldIncludeExtra);
-    }
-    SejongAuthResult result = integratedResult.build();
-
-    log.info("[sejong auth] integrated auth completed : studentId={}", studentId);
-    return result;
-  }
-
-  /**
-   * SIS 학교 제공 코드 > 통합 결과 빌더 (extra 는 요청했을 때만)
-   */
-  private SejongAuthResult.SejongAuthResultBuilder applySchoolFields(SejongAuthResult.SejongAuthResultBuilder builder,
-      SejongSisSchoolFields fields, boolean shouldIncludeExtra) {
-    return builder
+        .rawJson(shouldIncludeRaw ? sisJson : null)
         .departmentCode(fields.departmentCode())
         .organizationClassificationCode(fields.organizationClassificationCode())
         .enrollmentStatusCode(fields.enrollmentStatusCode())
@@ -161,7 +147,11 @@ public class SuhSejongAuthEngine {
         .menuSystemId(fields.menuSystemId())
         .menuSystemName(fields.menuSystemName())
         .locale(fields.locale())
-        .extra(shouldIncludeExtra ? fields.extra() : null);
+        .extra(shouldIncludeExtra ? fields.extra() : null)
+        .build();
+
+    log.info("[sejong auth] integrated auth completed : studentId={}", studentId);
+    return result;
   }
 
   // 연도 4자리, 월 1~12 또는 빈 값(연간 전체)

@@ -19,4 +19,9 @@ public record SejongSisSchoolFields(
     String menuSystemName,
     String locale,
     Map<String, String> extra) {
+
+  /** SIS 조회 실패 시 값: 전부 null */
+  public static SejongSisSchoolFields unavailable() {
+    return new SejongSisSchoolFields(null, null, null, null, null, null, null, null, null, null, null, null);
+  }
 }
