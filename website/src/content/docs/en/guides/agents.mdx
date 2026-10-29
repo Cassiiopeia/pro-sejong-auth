@@ -1,0 +1,85 @@
+---
+title: Using with coding agents
+description: Files (llms.txt, llms-full.txt, api.json) that teach coding agents such as Claude Code, Cursor and Codex how to use this library, ready-to-paste prompts, and what to watch for.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+So that coding agents such as Claude Code, Cursor, Codex and Copilot use this library correctly, the site builds agent-friendly files on every build. An agent that contributes to this repository should read [`AGENTS.md`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/AGENTS.md) at the repository root.
+
+## Files to give an agent
+
+| File | What it holds | Use it when |
+|---|---|---|
+| [`/llms.txt`](https://cassiiopeia.github.io/pro-sejongpeia/llms.txt) | Doc index with one-line descriptions (Korean list first, then English) | The agent should pick and read the docs it needs |
+| [`/api.json`](https://cassiiopeia.github.io/pro-sejongpeia/api.json) | Every public method: names in three languages, parameters and defaults, return model fields, failure behavior, cache, login requirement | The agent should write code now (most exact and shortest) |
+| [`/llms-full.en.txt`](https://cassiiopeia.github.io/pro-sejongpeia/llms-full.en.txt) | All English docs in one file (Korean: [`/llms-full.txt`](https://cassiiopeia.github.io/pro-sejongpeia/llms-full.txt)) | The environment cannot follow links, so paste everything |
+| [`AGENTS.md`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/AGENTS.md) | Repository layout, dependency rule, test commands, how to add a data source | Changing this repository |
+
+The three files are generated when the docs site is built, so they always match the site. There is one source for each: `api.json` comes from `spec/api-index.json` in the repository, the two `llms` files come from this site's docs. CI fails if `spec/api-index.json` drifts from the three implementations.
+
+## Prompt examples
+
+Tell the agent the file addresses first, then say what to build in one sentence.
+
+### Example 1. Add student verification to a Spring app
+
+```text
+Read https://cassiiopeia.github.io/pro-sejongpeia/api.json and
+https://cassiiopeia.github.io/pro-sejongpeia/en/guides/student-verification/ , then add
+Sejong student verification to the club sign-up API of my Spring Boot app.
+- Add the pro-sejongpeia dependency pinned to libraryVersion from api.json
+- Check only the student id and affiliation from the authenticate result; never store the password or write it to a log
+- Branch on SejongAuthException errorCode when responding (do not retry a wrong password)
+- In tests do not call the real portal; replace SuhSejongAuthEngine with a mock
+```
+
+### Example 2. Show this semester's lectures in a Python bot
+
+```text
+Read https://cassiiopeia.github.io/pro-sejongpeia/llms.txt , read the docs you need, then add a
+"/lectures department course" command to my Discord bot. Use SejongPublicData from pro-sejongpeia
+to find this semester's offered lectures (no login needed).
+- Do not hard-code department or semester codes; look them up with departments and terms
+- On an empty list answer "could not load, or no results"
+- An empty department returns the whole term (thousands of rows), so always pass a department code
+```
+
+## Good to know
+
+- **Pin the version.** This library does not promise backward compatibility. Tell the agent to use `libraryVersion` from `api.json` and it installs the same version the docs describe. See [API stability](../../api-stability/).
+- **Do not put a student id or password in a prompt.** It stays in the agent's history. If a test account is needed, name the environment variables and set the values yourself. Also check that the generated code never writes the password to a log or an exception message.
+- **Log in from a server only.** If the agent writes code that calls the portal from a browser or an app, have it redo that. The reason is in [Authentication methods](../../auth/methods/).
+- **Check login-free data against the real school once.** Invented field names are the common mistake. `python3 scripts/probe-public-data.py` checks the response shape of the school's public data without an account (when you have the repository). Try the login part once with your own account; several wrong passwords can lock it ([Login verdict and account lock prevention](../../understand/login-verdict/)).
+- **Values are the school's own text and empty when missing.** If the agent writes code that expects `null` or rewrites values, compare it with the [common rules](../../data/overview/).
+
+## Reading `api.json`
+
+```json
+{
+  "libraryVersion": "…",
+  "methods": [
+    {
+      "id": "lectures",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "lectures", "node": "lectures", "java": ["lectures"] },
+      "usage": { "python": "lectures(category_code, year, …)", "node": "await lectures({ categoryCode, year, … })", "java": ["lectures(String categoryCode, …)"] },
+      "parameters": [{ "name": "category_code", "required": true, "…": "…" }],
+      "returns": { "model": "Lecture", "isList": true, "fields": [{ "python": "course_number", "node": "courseNumber", "java": "courseNumber", "type": "string" }] },
+      "failure": { "mode": "returns-empty-value", "emptyValue": "[]", "invalidInput": null }
+    }
+  ],
+  "models": { "Lecture": [{ "python": "course_number", "node": "courseNumber", "java": "courseNumber", "type": "string" }] }
+}
+```
+
+- `group` `public_data` needs no login; `auth` needs a student id and password.
+- `failure.mode` `returns-empty-value` means a school-side problem does not raise; you get the last cached value or an empty value. Only the cases in `invalidInput` raise.
+- Field names are Python `snake_case` and Node.js `camelCase`. Java models expose the same `camelCase` names as getters (`getCourseNumber()`).
+
+## Read on
+
+- [Quick start](../../start/quickstart/): install and first call
+- [School data reference](../../data/overview/): request, fields and cache per method
+- [Repository structure](../../contribute/structure/): the folders a contributing agent looks at first

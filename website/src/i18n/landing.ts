@@ -107,7 +107,7 @@ export interface LandingCopy {
   features: { title: string; lead: string; cards: FeatureCard[] };
   matrix: { title: string; lead: string; featureHeader: string; supported: string; note: string; rows: MatrixRow[] };
   hardParts: { title: string; lead: string; cards: HardPartCard[] };
-  closing: { title: string; lead: string; docs: string; stability: string; contribute: string; disclaimer: string };
+  closing: { title: string; lead: string; docs: string; stability: string; contribute: string; agents: string; disclaimer: string };
 }
 
 export const LANDING_COPY: Record<LandingLocale, LandingCopy> = {
@@ -305,6 +305,7 @@ export const LANDING_COPY: Record<LandingLocale, LandingCopy> = {
       docs: '문서 소개',
       stability: 'API 안정성',
       contribute: '기여하기',
+      agents: 'AI 에이전트와 쓰기',
       disclaimer:
         '이 프로젝트는 세종대학교의 공식 제품이 아니며 세종대학교와 제휴 관계가 없습니다. 세종대학교 교표의 권리는 세종대학교에 있습니다.',
     },
@@ -503,6 +504,7 @@ export const LANDING_COPY: Record<LandingLocale, LandingCopy> = {
       docs: 'Introduction',
       stability: 'API stability',
       contribute: 'Contribute',
+      agents: 'With coding agents',
       disclaimer:
         'This project is not an official product of Sejong University and is not affiliated with it. The Sejong University seal belongs to Sejong University.',
     },

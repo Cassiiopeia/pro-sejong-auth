@@ -55,7 +55,23 @@ for (const htmlFile of htmlFiles) {
   }
 }
 
-console.log(`checked ${htmlFiles.length} pages`);
+// 에이전트용 파일: llms.txt 의 사이트 링크와 api.json 의 docs 링크가 빌드된 페이지로 이어지고, api.json 이 읽히는지 확인
+const SITE_PREFIX = `https://cassiiopeia.github.io${BASE_PATH}`;
+function checkSiteUrl(sourceName, url) {
+  if (!url.startsWith(SITE_PREFIX)) return;
+  const urlPath = decodeURIComponent(url.slice('https://cassiiopeia.github.io'.length)).split('#')[0];
+  if (!resolveDistFile(urlPath)) problems.push(`${sourceName}: ${url} (target not found)`);
+}
+const llmsText = readFileSync(join(DIST_DIRECTORY, 'llms.txt'), 'utf8');
+const llmsLinks = [...llmsText.matchAll(/\]\((https?:[^)\s]+)\)/g)].map((match) => match[1]);
+llmsLinks.forEach((url) => checkSiteUrl('llms.txt', url));
+const apiIndex = JSON.parse(readFileSync(join(DIST_DIRECTORY, 'api.json'), 'utf8'));
+if (!Array.isArray(apiIndex.methods) || apiIndex.methods.length === 0) problems.push('api.json: methods is empty');
+apiIndex.methods?.forEach((method) => Object.values(method.docs).forEach((url) => checkSiteUrl(`api.json ${method.id}`, url)));
+for (const fullTextName of ['llms-full.txt', 'llms-full.en.txt']) {
+  [...readFileSync(join(DIST_DIRECTORY, fullTextName), 'utf8').matchAll(/\]\((https?:[^)\s]+)\)/g)].forEach((match) => checkSiteUrl(fullTextName, match[1]));
+}
+console.log(`checked ${htmlFiles.length} pages, ${llmsLinks.length} llms.txt links, ${apiIndex.methods?.length ?? 0} api.json methods`);
 if (problems.length > 0) {
   console.error(`${problems.length} broken references:\n${[...new Set(problems)].join('\n')}`);
   process.exit(1);

@@ -8,6 +8,8 @@ interface Props {
 }
 const { locale } = Astro.props;
 const copy = LANDING_COPY[locale].closing;
+// 빌드 때 생성되는 에이전트용 문서 목차 (scripts/generate-llms.mjs)
+const llmsTextUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/llms.txt`;
 ---
 
 <section class="landing-section landing-closing" id="read-on">
@@ -17,6 +19,8 @@ const copy = LANDING_COPY[locale].closing;
     <a class="landing-button landing-button--primary" href={documentUrl(locale, 'start/introduction/')}>{copy.docs}</a>
     <a class="landing-button" href={documentUrl(locale, 'api-stability/')}>{copy.stability}</a>
     <a class="landing-button" href={documentUrl(locale, 'contribute/issues-and-prs/')}>{copy.contribute}</a>
+    <a class="landing-button" href={documentUrl(locale, 'guides/agents/')}>{copy.agents}</a>
+    <a class="landing-button" href={llmsTextUrl}>llms.txt</a>
     <a class="landing-button" href={REPOSITORY_URL}>GitHub</a>
   </div>
   <p class="landing-disclaimer">{copy.disclaimer}</p>

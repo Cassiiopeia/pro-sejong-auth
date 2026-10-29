@@ -6,6 +6,8 @@
 # - 수동 재배포는 workflow_dispatch
 # - website/ 변경 PR 은 빌드와 링크 점검만 실행 (배포하지 않음)
 #
+# 빌드 전에 website/scripts/generate-llms.mjs 가 llms.txt, llms-full*.txt, api.json 을 생성 (원본: 문서와 spec/api-index.json)
+#
 # 릴리스 워크플로우와 분리한 이유:
 #   경로 필터로 website/ 변경에만 반응하므로 버전 bump·CHANGELOG 커밋에는 뜨지 않음
 #
@@ -19,11 +21,19 @@ on:
     branches: ["main"]
     paths:
       - "website/**"
+      # llms.txt, api.json 의 원본 (website/scripts/generate-llms.mjs 가 빌드 때 읽음)
+      - "spec/api-index.json"
+      - "python/src/sejongpeia/public_data/models.py"
+      - "python/src/sejongpeia/common/errors.py"
       - ".github/workflows/DOCS-PAGES.yaml"
   pull_request:
     branches: ["main"]
     paths:
       - "website/**"
+      # llms.txt, api.json 의 원본 (website/scripts/generate-llms.mjs 가 빌드 때 읽음)
+      - "spec/api-index.json"
+      - "python/src/sejongpeia/public_data/models.py"
+      - "python/src/sejongpeia/common/errors.py"
       - ".github/workflows/DOCS-PAGES.yaml"
   workflow_dispatch:
 

@@ -4,7 +4,10 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
+    "generate:llms": "node scripts/generate-llms.mjs",
+    "predev": "node scripts/generate-llms.mjs",
     "dev": "astro dev",
+    "prebuild": "node scripts/generate-llms.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },

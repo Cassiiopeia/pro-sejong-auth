@@ -89,3 +89,9 @@ node/dist/
 # SDD workspace
 .superpowers/
 node/src/common/version.ts
+
+# 문서 사이트 빌드 때 생성하는 에이전트용 파일 (website/scripts/generate-llms.mjs, 원본은 spec/api-index.json 과 문서)
+website/public/llms.txt
+website/public/llms-full.txt
+website/public/llms-full.en.txt
+website/public/api.json

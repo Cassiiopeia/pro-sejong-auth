@@ -1,0 +1,85 @@
+---
+title: 코딩 에이전트와 함께 쓰기
+description: Claude Code, Cursor, Codex 같은 코딩 에이전트에게 이 라이브러리의 사용법을 알려 주는 파일(llms.txt, llms-full.txt, api.json)과 바로 붙여 넣을 프롬프트, 주의할 점을 정리합니다.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Claude Code, Cursor, Codex, Copilot 같은 코딩 에이전트가 이 라이브러리를 정확하게 쓰도록, 사이트가 빌드 때마다 에이전트가 읽기 좋은 파일을 만들어 줍니다. 이 저장소에 기여하는 에이전트는 저장소 루트의 [`AGENTS.md`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/AGENTS.md)를 읽게 하세요.
+
+## 에이전트에게 줄 파일
+
+| 파일 | 내용 | 이럴 때 |
+|---|---|---|
+| [`/llms.txt`](https://cassiiopeia.github.io/pro-sejongpeia/llms.txt) | 문서 목차와 한 줄 설명 (한국어 목록 뒤에 영어 목록) | 에이전트가 필요한 문서를 스스로 골라 읽게 할 때 |
+| [`/api.json`](https://cassiiopeia.github.io/pro-sejongpeia/api.json) | 공개 메서드 전체: 세 언어 이름, 인자와 기본값, 반환 모델 필드, 실패 동작, 캐시, 로그인 필요 여부 | 코드를 바로 짜게 할 때 (가장 정확하고 짧음) |
+| [`/llms-full.txt`](https://cassiiopeia.github.io/pro-sejongpeia/llms-full.txt) | 한국어 문서 전체를 한 파일로 (영어는 [`/llms-full.en.txt`](https://cassiiopeia.github.io/pro-sejongpeia/llms-full.en.txt)) | 에이전트가 링크를 따라가지 못하는 환경에 통째로 붙여 줄 때 |
+| [`AGENTS.md`](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/AGENTS.md) | 저장소 구조, 의존 규칙, 테스트 명령, 새 정보 출처 추가 절차 | 이 저장소를 고치는 기여 작업 |
+
+세 파일은 문서 사이트를 빌드할 때 만들어지므로 사이트 문서와 항상 같은 내용입니다. 원본은 하나입니다: `api.json`은 저장소의 `spec/api-index.json`, 두 `llms` 파일은 이 사이트의 문서입니다. `spec/api-index.json`이 세 언어 구현과 어긋나면 CI가 실패하도록 해 두었습니다.
+
+## 프롬프트 예시
+
+에이전트에게 파일 주소를 먼저 알려 주고, 만들 것을 한 문장으로 말하면 됩니다.
+
+### 예시 1. Spring 앱에 재학생 확인 붙이기
+
+```text
+https://cassiiopeia.github.io/pro-sejongpeia/api.json 과
+https://cassiiopeia.github.io/pro-sejongpeia/guides/student-verification/ 를 읽고,
+내 Spring Boot 앱의 동아리 가입 API에 세종대 재학생 확인을 추가해 줘.
+- pro-sejongpeia 의존성은 api.json 의 libraryVersion 으로 버전을 고정해서 넣어 줘
+- authenticate 결과의 학번과 소속만 확인하고, 비밀번호는 저장하지도 로그에 남기지도 마
+- 실패는 SejongAuthException 의 errorCode 로 나눠서 응답해 줘 (틀린 비밀번호는 재시도하지 마)
+- 테스트는 실제 포털을 부르지 말고 SuhSejongAuthEngine 을 mock 으로 대체해 줘
+```
+
+### 예시 2. Python 봇에 이번 학기 강의 보여 주기
+
+```text
+https://cassiiopeia.github.io/pro-sejongpeia/llms.txt 를 보고 필요한 문서를 읽은 다음,
+내 디스코드 봇에 "/강의 학과 과목명" 명령을 추가해 줘. pro-sejongpeia 의 SejongPublicData 로
+이번 학기 개설 강의를 찾아 보여 주는 거야. (로그인 필요 없음)
+- 학과 코드와 학기 코드는 코드로 적지 말고 departments, terms 로 찾아서 써 줘
+- 결과가 빈 목록이면 "정보를 불러오지 못했거나 검색 결과가 없어요"라고 답해 줘
+- 학과를 비우면 학기 전체(수천 행)가 오니까 학과 코드는 꼭 넘겨 줘
+```
+
+## 알아 두면 좋은 점
+
+- **버전을 고정하세요.** 이 라이브러리는 하위 호환을 보장하지 않습니다. 에이전트에게 `api.json`의 `libraryVersion`을 쓰라고 하면 문서와 같은 버전이 설치됩니다. 자세한 내용은 [API 안정성](../../api-stability/)입니다.
+- **프롬프트에 학번과 비밀번호를 넣지 마세요.** 에이전트의 대화 기록에 남습니다. 테스트 계정이 필요하면 환경변수 이름만 알려 주고 값은 직접 설정하세요. 에이전트가 만든 코드가 비밀번호를 로그나 예외 메시지에 남기지 않는지도 확인하세요.
+- **로그인은 서버에서만 합니다.** 브라우저나 앱에서 직접 부르는 코드를 짜 오면 되돌리게 하세요. 이유는 [인증 메서드](../../auth/methods/)에 있습니다.
+- **로그인 없는 데이터는 실제로 한 번 확인하세요.** 에이전트가 지어낸 필드 이름이 흔한 실수입니다. `python3 scripts/probe-public-data.py`는 계정 없이 학교 공개 데이터의 응답 모양을 확인합니다 (저장소를 받았을 때). 로그인이 필요한 부분은 본인 계정으로 한 번만 시도하세요. 비밀번호를 여러 번 틀리면 계정이 잠길 수 있습니다 ([로그인 판정과 계정 잠금 방지](../../understand/login-verdict/)).
+- **값은 학교 원문이고 없으면 빈 문자열입니다.** `null`을 기대하는 코드나 값을 바꿔 주는 코드를 짜 오면 [공통 규칙](../../data/overview/)과 맞는지 확인하세요.
+
+## `api.json` 읽는 법
+
+```json
+{
+  "libraryVersion": "…",
+  "methods": [
+    {
+      "id": "lectures",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "lectures", "node": "lectures", "java": ["lectures"] },
+      "usage": { "python": "lectures(category_code, year, …)", "node": "await lectures({ categoryCode, year, … })", "java": ["lectures(String categoryCode, …)"] },
+      "parameters": [{ "name": "category_code", "required": true, "…": "…" }],
+      "returns": { "model": "Lecture", "isList": true, "fields": [{ "python": "course_number", "node": "courseNumber", "java": "courseNumber", "type": "string" }] },
+      "failure": { "mode": "returns-empty-value", "emptyValue": "[]", "invalidInput": null }
+    }
+  ],
+  "models": { "Lecture": [{ "python": "course_number", "node": "courseNumber", "java": "courseNumber", "type": "string" }] }
+}
+```
+
+- `group`이 `public_data`면 로그인이 필요 없고, `auth`면 학번과 비밀번호가 필요합니다.
+- `failure.mode`가 `returns-empty-value`이면 학교 서버 문제로 예외를 던지지 않고 마지막 캐시 값이나 빈 값을 줍니다. `invalidInput`에 적힌 경우만 예외입니다.
+- 필드 이름은 Python `snake_case`, Node.js `camelCase`입니다. Java 모델은 같은 `camelCase` 이름의 getter(`getCourseNumber()`)입니다.
+
+## 이어서 보기
+
+- [빠른 시작](../../start/quickstart/): 설치와 첫 호출
+- [학교 데이터 레퍼런스](../../data/overview/): 메서드마다 요청, 필드, 캐시
+- [레포 구조](../../contribute/structure/): 기여하는 에이전트가 먼저 볼 폴더 구성
