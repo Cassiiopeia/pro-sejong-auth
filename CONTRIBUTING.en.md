@@ -71,6 +71,18 @@ Live tests log in to the real Sejong portal, so they only run when you provide a
 - The `## 최신 버전 :` line in `README.md` is updated by the release workflow; do not edit it by hand.
 - Check with `python3 scripts/check-docs.py` (broken relative links, missing language links). `PROJECT-SEJONG-DOCS-CHECK` also runs on pull requests.
 
+## When you add a feature
+
+Building a feature is not the end: it has to show up everywhere people look. Check this list before opening the PR (the PR template has the same checklist).
+
+- README in Korean and English: the feature and a usage example, and the `Result fields` table if fields were added
+- `python/README.md`, `node/README.md`: the PyPI and npm package pages
+- `spec/`: the contract document, `spec/contract.json`, synthetic fixtures
+- The project site (`index.html` and `sitemap.xml` on the `gh-pages` branch): feature intro, field table, demo. It is updated after the release, so leave the to-do in the issue
+- Package descriptions and keywords: `python/pyproject.toml`, `node/package.json`, `java/build.gradle`
+- A one-line summary for the release notes (the commit message)
+- Only promote what is actually supported
+
 ## Pull requests
 
 - Branch from `main`.
