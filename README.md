@@ -10,7 +10,9 @@
 
 > 이전 이름: `pro-sejong-auth`(PyPI, npm), `kr.suhsaechan:sejong-univ-auth`(Maven). 이름과 함께 Python 임포트 이름(`sejongpeia`), Java 패키지(`kr.suhsaechan.sejongpeia`), Spring 설정 접두사(`sejongpeia.*`)도 바뀌었습니다.
 
-**세종대 로그인 API: 세종대학교 포털 인증을 Java·Python·Node에서 한 번에**
+**세종대학교 통합 라이브러리: 포털 로그인(학번 인증)과 로그인 없이 쓰는 학교 공개 데이터(학과 코드, 개설강좌, 학사일정 등)를 Java·Python·Node에서 한 번에**
+
+<sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 · 학교 데이터 라이브러리 (Java · Python · Node)</sub>
 
 한국어 | [English](README.en.md)
 

@@ -10,7 +10,7 @@
 
 > Formerly `pro-sejong-auth` (PyPI, npm) and `kr.suhsaechan:sejong-univ-auth` (Maven). The Python import name (`sejongpeia`), the Java package (`kr.suhsaechan.sejongpeia`) and the Spring property prefix (`sejongpeia.*`) changed with the name.
 
-**Sejong University login API for Java, Python and Node.js: verify students in one call**
+**The Sejong University integrated library for Java, Python and Node.js: portal login (student verification) plus public school data without login (department codes, courses, academic calendar and more)**
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 라이브러리 (Java · Python · Node)</sub>
 
