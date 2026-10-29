@@ -41,7 +41,7 @@ Java의 `auth.client.*`, `auth.parser.*`는 Spring 없이 쓸 때 [README](../RE
 - 지금 번호가 `1`이라서 안정 선언을 했다는 뜻도 아닙니다.
 - 깨지는 변경은 이렇게 알립니다. 모든 릴리스는 [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases)와 [CHANGELOG.md](../CHANGELOG.md)에 한 줄 요약이 남고, 이름이나 시그니처가 바뀌면 그 줄에 적습니다.
 
-실제 사례: 프로젝트 이름이 `pro-sejong-auth`에서 `pro-sejongpeia`로 바뀔 때 PyPI·npm 패키지 이름, Python 임포트 이름(`sejongpeia`), Java 패키지(`kr.suhsaechan.sejongpeia`), Spring 설정 접두사(`sejongpeia.*`)가 한꺼번에 바뀌었고 호환용 별칭은 두지 않았습니다. 이런 변경이 앞으로도 생길 수 있다는 뜻입니다.
+이름·시그니처 변경(메서드나 필드 이름, 패키지 경로, 설정 키)은 호환용 별칭 없이 한꺼번에 바뀔 수 있습니다. 그런 변경이 앞으로도 생길 수 있다는 뜻입니다.
 
 ### 그래도 하는 일
 

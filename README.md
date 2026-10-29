@@ -6,15 +6,12 @@
 
 # pro-sejongpeia
 
-**Pro Sejongpeia: 세종대 개발자들의 작은 유토피아.** 세종대 로그인과 학교 데이터를 Java, Python, Node.js로 한 번에.
-
-> 이전 이름: `pro-sejong-auth`(PyPI, npm), `kr.suhsaechan:sejong-univ-auth`(Maven). 이름과 함께 Python 임포트 이름(`sejongpeia`), Java 패키지(`kr.suhsaechan.sejongpeia`), Spring 설정 접두사(`sejongpeia.*`)도 바뀌었습니다.
-
-**세종대학교 통합 라이브러리: 포털 로그인(학번 인증)과 로그인 없이 쓰는 학교 공개 데이터(학과 코드, 개설강좌, 학사일정 등)를 Java·Python·Node에서 한 번에**
+**Pro Sejongpeia: 세종대 개발자들의 작은 유토피아.**
+학번 인증부터 학과·강의·학사일정·학식까지, Java·Python·Node.js에서 호출 한 번으로.
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 · 학교 데이터 라이브러리 (Java · Python · Node)</sub>
 
-한국어 | [English](README.en.md)
+[사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [빠른 시작](#빠른-시작-java--spring-boot) · [기능](#기능) · [문서](#더-보기-통합-예시와-api-안정성) · 한국어 | [English](README.en.md)
 
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
 ## 최신 버전 : v1.2.49 (2026-10-29)
@@ -25,70 +22,117 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
-### [▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
-
 </div>
 
 ---
 
-학번과 비밀번호만으로 세종대 재학생 여부, 학과, 학년, 고전독서 인증, 연락처를 가져옵니다.
-포털 로그인, SSO 리다이렉트, 세션 쿠키, 오래된 TLS 방식, HTML·JSON 파싱은 라이브러리가 처리합니다. 어떤 언어로 써도 기능과 결과가 같습니다.
+## 바로 해 보기
 
-| Java / Spring Boot | Python | Node.js |
-|---|---|---|
-| `implementation "kr.suhsaechan:sejongpeia:<버전>"` | `pip install pro-sejongpeia` | `npm install pro-sejongpeia` |
+학번도 비밀번호도 필요 없습니다. 2026학년도 2학기 학과 목록과 소프트웨어학과(3220) 개설강좌를 받아 옵니다. 세 언어가 같은 호출, 같은 결과입니다.
 
-**호출 한 번, 포털 로그인 한 번** (약 0.6~0.8초) · **세 언어 모두 같은 결과 객체** · Python·Node는 **외부 의존성 0개** · **비밀번호가 틀리면 바로 멈춰** 계정 잠금을 막음 · **매일 실제 포털로 점검**
+**Python** · `pip install pro-sejongpeia`
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")
+lectures = public_data.lectures("20", "2026", "20", department_code="3220")
+print(len(departments), lectures[0].name)
+```
+
+**Node.js** · `npm install pro-sejongpeia`
+
+```js
+import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData();
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: '3220' });
+console.log(departments.length, lectures[0].name);
+```
+
+**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<버전>"`
+
+```java
+SejongPublicData publicData = new SejongPublicData();   // Spring에서는 빈으로 주입
+List<Department> departments = publicData.departments("20", "2026", "20");
+List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "");
+System.out.println(departments.size() + " " + lectures.get(0).getName());
+```
+
+실제로 돌린 결과입니다 (Python, 2026-10-30, 학교 서버 3번 호출에 0.3초).
+
+<p align="center">
+  <img src="docs/assets/demo/public-data-run.png" alt="SejongPublicData를 실제로 호출한 결과: 학과 103개, 소프트웨어학과 개설강좌, 학사일정" width="760">
+</p>
+
+학번 인증은 브라우저에서 먼저 해 볼 수 있습니다. 코드는 [빠른 시작](#빠른-시작-java--spring-boot)에 있습니다.
 
 <p align="center">
   <a href="https://cassiiopeia.github.io/pro-sejongpeia/#demo">
-    <img src="docs/assets/demo-ko.png" alt="소개 페이지의 실시간 인증 데모" width="820">
+    <img src="docs/assets/demo-ko.png" alt="소개 페이지의 실시간 인증 데모" width="760">
   </a>
   <br>
-  <sub>소개 페이지의 실시간 데모. 실제 인증 결과이며 개인정보 칸만 예시값으로 바꿨습니다.</sub>
+  <sub>소개 페이지의 실시간 데모 (▶ 눌러서 체험). 실제 인증 결과이며 개인정보 칸만 예시값으로 바꿨습니다.</sub>
 </p>
+
+## 기능
+
+**전부 세 언어에서 똑같이 지원합니다.** 같은 기능, 같은 결과 모양, 이름 표기만 언어 관례(Python은 snake_case)를 따릅니다.
+
+| 기능 | Java | Python | Node |
+|---|---|---|---|
+| **로그인 (학번 + 포털 비밀번호)** | | | |
+| 통합 인증: 학생 정보 + 고전독서 + 연락처 (포털 로그인 1번) | ✅ `authenticate` | ✅ `authenticate` | ✅ `authenticate` |
+| DHC 인증: 학생 정보 + 고전독서 인증 현황 | ✅ `authenticateWithDHC` | ✅ `authenticate_dhc` | ✅ `authenticateDhc` |
+| SIS 인증: 학생 정보 + 이메일, 전화번호, 영문 이름 | ✅ `authenticateWithSIS` | ✅ `authenticate_sis` | ✅ `authenticateSis` |
+| SIS 사용자 코드 (학과 코드 등 11개) + 나머지 필드 `extra` | ✅ `authenticate(id, pw, false, true)` | ✅ `include_extra=True` | ✅ `{ includeExtra: true }` |
+| 원본 응답 포함 (디버깅) | ✅ `authenticateWithRaw` 외 | ✅ `include_raw=True` | ✅ `{ includeRaw: true }` |
+| SIS 학사 업무 기간 (수강신청·증명서 출력 등 업무별 허용 기간) | ✅ `fetchSisBusinessPeriods` | ✅ `fetch_sis_business_periods` | ✅ `fetchSisBusinessPeriods` |
+| **로그인 없이 (학교 공개 데이터)** | | | |
+| 단과대·학과 코드, 학기 (소속 분류별) | ✅ `departments` 외 | ✅ `departments` 외 | ✅ `departments` 외 |
+| 개설강좌, 학기 전체 (학과·과목명·교수명 검색) | ✅ `lectures` | ✅ `lectures` | ✅ `lectures` |
+| 교육과정 과목과 교과목 개요 (권장 학년·학기, 학점) | ✅ `curriculumCourses` | ✅ `curriculum_courses` | ✅ `curriculumCourses` |
+| 학사일정: 학부 + 대학원 | ✅ `calendar`, `graduateCalendar` | ✅ `calendar`, `graduate_calendar` | ✅ `calendar`, `graduateCalendar` |
+| 기숙사 식단·공지 | ✅ `dormitoryMenu`, `dormitoryNotices` | ✅ `dormitory_menu`, `dormitory_notices` | ✅ `dormitoryMenu`, `dormitoryNotices` |
+| 학식 식당 목록·메뉴 | ✅ `cafeteriaPlaces`, `cafeteriaMenu` | ✅ `cafeteria_places`, `cafeteria_menu` | ✅ `cafeteriaPlaces`, `cafeteriaMenu` |
+| 캠퍼스 장소 | ✅ `campusPlaces` | ✅ `campus_places` | ✅ `campusPlaces` |
+| 비교과 프로그램 일정 | ✅ `extracurricularEvents` | ✅ `extracurricular_events` | ✅ `extracurricularEvents` |
+
+- 학과 분류·학기·학과는 `organizationCategories`, `terms`, `departments`, 개설강좌 보조 코드는 `courseTypes`, `selectiveDomains`입니다 (Python은 `organization_categories`, `course_types`, `selective_domains`). 공개 데이터 계약은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
+- 원본 응답 옵션은 Java에서 `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw`입니다.
+- **언어 간 같은 결과**는 공통 값을 [spec/contract.json](spec/contract.json) 한 곳에 두고, 어긋나면 언어별 테스트가 실패하게 해서 지킵니다.
+- 통합 인증은 포털에 **한 번만** 로그인하고 같은 세션으로 DHC와 SIS를 조회합니다. SIS(연락처) 조회가 실패해도 학생 정보는 돌려주고 연락처 칸만 null입니다. 실측 시간(2026-10-24, 서울, 5회 중앙값)은 Java 0.57초, Python 0.76초, Node 0.69초이고 대부분 포털 응답 시간입니다.
+- SIS 학사 업무 기간은 공개 학사일정(`calendar`)과 다른 자료입니다. 본인 SIS의 "학사일정조회" 화면이 주는 업무별 허용 기간(`period`, `scheduleName`, `businessName`, `target`, `timeText` 등, 학교 원문)이고, 연도와 월(비우면 연간 전체)로 조회합니다. 학교가 형태가 틀린 요청에 세션을 끊기 때문에 브라우저와 같은 순서로만 요청하고, 실패하면 재시도 없이 멈춥니다. 학부생 계정 1개로 확인했고 다른 신분은 확인하지 못했습니다. 흐름은 [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)의 2d입니다.
+
+| 로그인 데이터 소스 | 도메인 | 제공 정보 |
+|---|---|---|
+| **DHC** (대양휴머니티칼리지) | classic.sejong.ac.kr | 학생 정보 + 고전독서 인증 현황 |
+| **SIS** (학사정보시스템) | sjpt.sejong.ac.kr | 학생 정보 + 이메일, 전화번호, 영문 이름 |
 
 ## 왜 이 라이브러리인가
 
+직접 붙이려면 만나게 되는 어려운 부분을 미리 풀어 두었습니다.
+
 | 직접 구현하면 | 이 라이브러리 |
 |---|---|
-| 포털 로그인 폼과 SSO 리다이렉트를 직접 분석 | `authenticate()`가 로그인과 SSO 과정을 처리 |
-| 세종대 도메인 3곳의 세션 쿠키를 직접 관리 | 호출마다 쿠키 관리, 따로 저장할 것 없음 |
-| 포털의 오래된 암호화 방식과 방화벽을 직접 통과 | 언어별로 처리됨 ([spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
-| 최신 JDK·OpenSSL 기본 설정이 막는, 포털이 유일하게 허용하는 암호(`TLS_RSA_WITH_AES_256_CBC_SHA`)를 언어마다 다르게 풀기 | Java(JVM 설정), Python, Node 모두 처리하고 Spring Boot는 시작할 때 자동 적용 |
-| 기본 라이브러리 User-Agent를 방화벽이 막고, 없으면 일부 사이트가 404를 돌려주는 문제 | 식별 가능한 User-Agent를 자동으로 보냄 |
-| 틀린 비밀번호를 재시도하면 계정이 잠기는 문제 | 틀린 비밀번호와 잠금은 재시도 없이 즉시 실패 |
-| HTML 표(DHC)와 JSON API(SIS)를 직접 파싱 | 정리된 결과 객체 |
-| 200 응답 속 포털 판정(비밀번호 오류, 계정 잠금)을 직접 판별 | `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED`로 즉시 실패 |
-| 학생 정보 따로, 연락처 따로 두 번 로그인 | 호출 한 번에 포털 로그인 한 번 |
+| 최신 JDK·OpenSSL 기본 설정이 막는, 포털이 유일하게 허용하는 암호(`TLS_RSA_WITH_AES_256_CBC_SHA`)를 언어마다 다르게 풀기 | Java(JVM 설정), Python, Node 모두 처리, Spring Boot는 시작할 때 자동 적용 |
+| 기본 라이브러리 User-Agent를 방화벽이 막고, 없으면 일부 사이트가 404를 돌려줌 | 식별 가능한 User-Agent를 자동으로 보냄 |
+| 포털 로그인 폼, SSO 리다이렉트, 세종대 도메인 3곳의 세션 쿠키 | 호출마다 처리하고 따로 저장할 것 없음 ([spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
+| 200 응답 속 판정(비밀번호 오류, 계정 잠금)을 직접 판별, 틀린 비밀번호 재시도로 계정이 잠김 | `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED`로 첫 실패에서 즉시 멈춤 |
+| HTML 표(DHC)와 JSON API(SIS) 파싱, 학생 정보와 연락처에 로그인 두 번 | 정리된 결과 객체, 호출 한 번에 포털 로그인 한 번 |
+| 학교 서버 하나가 실패하면 앱 전체가 흔들림 | 공개 데이터는 마지막 캐시 값이나 빈 목록으로 대응, 24시간 메모리 캐시 |
 | 포털이 바뀐 걸 사용자 불만으로 알게 됨 | 매일 워크플로우가 세 언어로 실제 포털에 로그인하고, 실패하면 이슈를 엶 |
-| 세 언어 구현을 손으로 맞춤 | 공통 값은 [spec/contract.json](spec/contract.json) 한 곳, 어긋나면 언어별 테스트가 실패 |
+| 세 언어 구현을 손으로 맞춤 | 공통 값은 [spec/contract.json](spec/contract.json) 한 곳, 어긋나면 테스트가 실패 |
 
-## 목차
-
-- [이런 곳에 씁니다](#이런-곳에-씁니다)
-- [빠른 시작: Java / Spring Boot](#빠른-시작-java--spring-boot)
-- [빠른 시작: Python](#빠른-시작-python)
-- [빠른 시작: Node.js](#빠른-시작-nodejs)
-- [기능](#기능)
-- [로그인 없이 쓰는 학교 데이터](#로그인-없이-쓰는-학교-데이터)
-- [결과 필드](#결과-필드)
-- [에러 코드](#에러-코드)
-- [설정](#설정)
-- [더 보기: 통합 예시와 API 안정성](#더-보기-통합-예시와-api-안정성)
-- [FAQ](#faq)
-- [기여하기](#기여하기)
+Python·Node는 **외부 의존성이 0개**입니다.
 
 ## 이런 곳에 씁니다
 
 - 동아리·학생회·학내 커뮤니티 가입 시 **세종대 학생 인증**
-- 학과·학년 조건이 있는 학내 이벤트 참여 확인
-- 고전독서 인증 현황을 보여 주는 학습 도우미
-
-| 데이터 소스 | 도메인 | 제공 정보 |
-|---|---|---|
-| **DHC** (대양휴머니티칼리지) | classic.sejong.ac.kr | 학생 정보 + 고전독서 인증 현황 |
-| **SIS** (학사정보시스템) | sjpt.sejong.ac.kr | 학생 정보 + 이메일, 전화번호, 영문 이름 |
+- 학과·학년 조건이 있는 학내 이벤트 참여 확인, 고전독서 인증 현황을 보여 주는 학습 도우미
+- 학과·강의 검색, 학사일정 위젯, 기숙사·학식 봇 ([통합 예시](docs/INTEGRATION_EXAMPLES.md))
 
 ## 빠른 시작: Java / Spring Boot
 
@@ -158,6 +202,17 @@ SejongAuthResult result = engine.authenticate(studentId, password);
 
 </details>
 
+**고전독서 인증 확인 (Java)**
+
+```java
+SejongDhcAuthResult result = sejongAuthEngine.authenticateWithDHC(studentId, password);
+
+for (ClassicCertification certification : result.getClassicReading().getCertifications()) {
+    System.out.println(certification.getArea() + " "
+        + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
+}
+```
+
 ## 빠른 시작: Python
 
 Python 3.9+, 표준 라이브러리 외 의존성 없음.
@@ -202,48 +257,9 @@ try {
 }
 ```
 
-## 기능
-
-| 기능 | Java | Python | Node |
-|---|---|---|---|
-| 통합: 학생 정보 + 고전독서 + 연락처 | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
-| DHC: 학생 정보 + 고전독서 | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
-| SIS: 학생 정보 + 연락처 | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
-| SIS 학사 업무 기간 (로그인 필요, 수강신청·증명서 출력 등 업무별 허용 기간) | `fetchSisBusinessPeriods` | `fetch_sis_business_periods` | `fetchSisBusinessPeriods` |
-| 나머지 SIS 필드 포함 | `authenticate(id, pw, false, true)` | `include_extra=True` | `{ includeExtra: true }` |
-| 원본 응답 포함 (디버깅) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
-
-SIS 학사 업무 기간은 학교 공개 학사일정(`calendar`)과 다른 자료입니다. 본인 SIS의 "학사일정조회" 화면이 주는 업무별 허용 기간(`period`, `scheduleName`, `businessName`, `target`, `timeText` 등, 학교 원문)이고, 연도와 월(비우면 연간 전체)로 조회합니다. 학교가 형태가 틀린 요청에 세션을 끊기 때문에 라이브러리는 브라우저와 같은 순서로만 요청하고, 실패하면 재시도 없이 멈춥니다. 학부생 계정 1개로 확인했고 다른 신분은 확인하지 못했습니다. 흐름은 [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)의 2d입니다.
-
-통합 인증은 포털에 **한 번만** 로그인하고 같은 세션으로 DHC와 SIS를 조회합니다. SIS(연락처) 조회가 실패해도 학생 정보는 돌려주고, 연락처 칸만 null이 됩니다.
-
-통합 인증 실측 시간 (2026-10-24, 서울, 5회 중앙값): Java 0.57초, Python 0.76초, Node 0.69초. 대부분 포털 자체 응답 시간입니다.
-
-**고전독서 인증 확인 (Java)**
-
-```java
-SejongDhcAuthResult result = sejongAuthEngine.authenticateWithDHC(studentId, password);
-
-for (ClassicCertification certification : result.getClassicReading().getCertifications()) {
-    System.out.println(certification.getArea() + " "
-        + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
-}
-```
-
 ## 로그인 없이 쓰는 학교 데이터
 
-학번·비밀번호 없이 학교가 공개로 내려주는 정보를 같은 모양으로 받습니다. 세 언어가 같은 메서드와 같은 결과를 가집니다. 계약은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
-
-| 정보 | 메서드 (Python / Node·Java는 camelCase) |
-|---|---|
-| 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
-| 개설강좌 (학과·과목명·교수명으로 검색, 모두 비우면 그 학기 전체) | `lectures`, `course_types`, `selective_domains` |
-| 학과 교육과정의 과목 (권장 학년·학기, 학점, 교과목 개요) | `curriculum_courses` |
-| 학사일정 | `calendar` |
-| 대학원 학사일정 (사이트별) | `graduate_calendar` |
-| 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
-| 학식 식당 목록·메뉴, 캠퍼스 장소 | `cafeteria_places`, `cafeteria_menu`, `campus_places` |
-| 비교과 프로그램 일정 | `extracurricular_events` |
+학번·비밀번호 없이 학교가 공개로 내려주는 정보를 같은 모양으로 받습니다. 메서드 목록은 위 [기능](#기능) 표를, 첫 호출은 [바로 해 보기](#바로-해-보기)를 보세요. 강의에서 교육과정으로 이어 가는 예시입니다 (Node·Java는 같은 이름의 camelCase 메서드).
 
 ```python
 from sejongpeia import SejongPublicData
@@ -255,20 +271,6 @@ lectures = public_data.lectures("20", "2026", "20", department_code=departments[
 courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
 ```
 
-```javascript
-import { SejongPublicData } from 'pro-sejongpeia';
-
-const publicData = new SejongPublicData();
-const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
-const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
-```
-
-```java
-SejongPublicData publicData = new SejongPublicData();   // Spring에서는 빈으로 주입
-List<Department> departments = publicData.departments("20", "2026", "20");
-List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
-```
-
 - **학교 값을 그대로** 돌려줍니다. 코드표나 이름 매핑을 라이브러리에 박아 두지 않아서 학과가 바뀌어도 코드를 고칠 필요가 없습니다. 쓰지 않은 학교 필드는 `extra`에 담깁니다.
 - **한 곳이 실패해도 나머지는 그대로**입니다. 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (잘못된 입력값만 예외).
 - 결과를 메모리에 24시간 캐시하고, 같은 요청은 한 번만 보냅니다. 학교 서버에 부담을 주지 않도록 쓰세요.
@@ -276,6 +278,9 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 - 개설강좌 조회는 학교가 모든 필터 키를 요구하는 등 직접 맞추기 까다로운 부분을 라이브러리가 처리합니다. 학과·과목명·교수명을 모두 비우면 그 학기 전체를 한 번에 받습니다 (학부 2026/2학기 약 2,800행, 응답 2.4MB이므로 가능하면 학과 단위로 조회하세요).
 
 ## 결과 필드
+
+<details>
+<summary>전체 결과 필드 펼치기</summary>
 
 아래 이름은 Java·Node 기준입니다. Python은 snake_case(`student_id`, `phone_number` 등)를 씁니다. 전체 스키마: [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md)
 
@@ -302,6 +307,8 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 - 원본 옵션은 추가 요청 없이 이미 받은 응답만 담습니다. SIS 원문에는 세션 식별자로 보이는 값, 접속 IP, 접속 시각이 들어 있으니 외부 클라이언트에 그대로 내려주지 마세요. 원문의 키와 구조는 학교가 바꾸면 달라질 수 있어 호환성 보장 범위 밖입니다.
 - DHC 결과: 연락처 필드 없음, 원본 옵션 사용 시 `rawHtml` 포함
 - SIS 결과: `userCategory` 포함, 고전독서 필드 없음, `grade`·`status`는 빈 문자열, 원본 옵션 사용 시 `rawJson` 포함
+
+</details>
 
 ## 에러 코드
 
@@ -369,12 +376,6 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 <summary><b>포털 계정이 잠겼어요</b></summary>
 
 비밀번호를 여러 번 틀리면 포털이 계정을 잠그고, 라이브러리는 `ACCOUNT_LOCKED`를 돌려줍니다. <https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp> 에서 본인 확인 후 비밀번호를 재설정하세요. 기다린다고 풀리지 않습니다.
-</details>
-
-<details>
-<summary><b>예전에 SUH Nexus 저장소를 썼어요</b></summary>
-
-예전 Java 버전은 `https://nexus.suhsaechan.kr/repository/maven-releases/`에 배포했습니다. 새 버전은 Maven Central에 올라가므로(당분간 Nexus에도 함께 배포) 저장소 설정을 지워도 됩니다.
 </details>
 
 ## 기여하기

@@ -41,7 +41,7 @@ Even inside the public API, the following is **outside the guarantee**.
 - Being at `1` does not mean a stability declaration.
 - How breaking changes are announced: every release gets a one-line summary on [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases) and in [CHANGELOG.md](../CHANGELOG.md), and a rename or signature change is stated in that line.
 
-A real example: when the project was renamed from `pro-sejong-auth` to `pro-sejongpeia`, the PyPI and npm package names, the Python import name (`sejongpeia`), the Java package (`kr.suhsaechan.sejongpeia`) and the Spring property prefix (`sejongpeia.*`) all changed at once, with no compatibility alias. Expect that kind of change to be possible again.
+Renames and signature changes (method or field names, package paths, configuration keys) can land at once, with no compatibility alias. Expect that kind of change to be possible again.
 
 ### What we still do
 

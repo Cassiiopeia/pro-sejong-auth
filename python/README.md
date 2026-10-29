@@ -1,18 +1,35 @@
 # pro-sejongpeia (Python)
 
-**세종대학교 통합 라이브러리 (Python)** · Sejong University integrated library: portal login and public school data (세종대 로그인 API)
+**Pro Sejongpeia: 세종대 개발자들의 작은 유토피아.** 학번 인증부터 학과·강의·학사일정·학식까지, Python에서 호출 한 번으로. 표준 라이브러리 외 의존성이 없습니다.
 
-한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
+[사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [전체 기능표](https://github.com/Cassiiopeia/pro-sejongpeia#기능) · [GitHub](https://github.com/Cassiiopeia/pro-sejongpeia) · 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
-학번과 포털 비밀번호로 세종대 재학생 여부를 확인하고 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. 표준 라이브러리 외 의존성이 없습니다.
-
-로그인 없이 쓰는 학교 공개 데이터(학과 코드, 개설강좌, 학사일정 등)도 같은 패키지에서 제공합니다. 자세한 사용법은 [루트 README](https://github.com/Cassiiopeia/pro-sejongpeia#로그인-없이-쓰는-학교-데이터)를 보세요.
-
-**[▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)** · 호출 한 번에 포털 로그인 한 번 (약 0.8초) · Java·Node 패키지와 같은 결과 · 비밀번호가 틀리면 바로 멈춤 · 매일 실제 포털로 점검
+[![PyPI](https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejongpeia/) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ```bash
 pip install pro-sejongpeia
 ```
+
+## 바로 해 보기
+
+학번도 비밀번호도 필요 없습니다. 2026학년도 2학기 학과 목록과 소프트웨어학과(3220) 개설강좌입니다.
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")
+lectures = public_data.lectures("20", "2026", "20", department_code="3220")
+print(len(departments), lectures[0].name)
+```
+
+실제로 돌린 결과입니다 (Python, 2026-10-30, 학교 서버 3번 호출에 0.3초).
+
+![SejongPublicData를 실제로 호출한 결과: 학과 103개, 소프트웨어학과 개설강좌, 학사일정](https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/demo/public-data-run.png)
+
+## 학번 인증
+
+학번과 포털 비밀번호로 세종대 재학생 여부를 확인하고 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. 표준 라이브러리 외 의존성이 없고, 호출 한 번에 포털 로그인 한 번(약 0.8초)입니다. 비밀번호가 틀리면 바로 멈추고, 매일 실제 포털로 점검합니다.
 
 ```python
 from sejongpeia import authenticate, SejongAuthError, ErrorCode
@@ -31,14 +48,16 @@ except SejongAuthError as error:
 |---|---|
 | `authenticate(id, pw, include_raw=False, include_extra=False)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `None`, `include_raw=True` 면 `raw_html`·`raw_json` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지, `include_extra=True` 면 나머지 SIS 필드 `extra`. 학과 코드 `department_code` 등 SIS 코드 11개는 항상 포함) |
 | `authenticate_dhc(id, pw, include_raw=False)` | 학생 정보 + 고전독서 |
-| `fetch_sis_business_periods(id, pw, year, month="")` | SIS 학사 업무 기간 목록 (로그인 필요, 학교 공개 학사일정과 다른 자료, month 비우면 연간 전체) |
 | `authenticate_sis(id, pw, include_raw=False, include_extra=False)` | 학생 정보 + 이메일, 전화번호, 영문 이름 + 학교 제공 코드 11개 (`department_code` 등) |
+| `fetch_sis_business_periods(id, pw, year, month="")` | SIS 학사 업무 기간 목록 (로그인 필요, 학교 공개 학사일정과 다른 자료, month 비우면 연간 전체) |
 
-### 로그인 없이 쓰는 학교 데이터
+로그인 결과에는 고전독서 학기 3개(`completed_semesters`, `certified_semesters`, `certification_status`), 사용자 구분(`user_category`), 학과의 상위 소속 이름(`parent_unit_name`)도 포함됩니다.
 
-학번·비밀번호 없이 학교가 공개로 내려주는 정보를 받습니다. Java·Node 패키지와 같은 메서드, 같은 결과입니다.
+## 전부 지원합니다
 
-| 정보 | 메서드 |
+Java·Python·Node가 **같은 기능, 같은 결과**를 줍니다. 로그인 없이 쓰는 학교 공개 데이터까지 모두 이 패키지 하나로 됩니다. 한눈에 보는 [전체 기능표](https://github.com/Cassiiopeia/pro-sejongpeia#기능)는 루트 README에 있습니다.
+
+| 정보 (로그인 없음) | 메서드 |
 |---|---|
 | 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
 | 개설강좌 (학과·과목명·교수명으로 검색, 모두 비우면 그 학기 전체) | `lectures`, `course_types`, `selective_domains` |
@@ -63,9 +82,7 @@ courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0
 - **한 곳이 실패해도 나머지는 그대로**: 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (잘못된 입력값만 예외). 결과는 메모리에 24시간 캐시합니다.
 - 계약과 필드 대응: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
 
-로그인 결과에는 고전독서 학기 3개(`completed_semesters`, `certified_semesters`, `certification_status`), 사용자 구분(`user_category`), 학과의 상위 소속 이름(`parent_unit_name`)도 포함됩니다.
-
-### 대신 해결해 주는 것
+## 대신 해결해 주는 것
 
 직접 구현하려면 모두 풀어야 하는 부분입니다.
 

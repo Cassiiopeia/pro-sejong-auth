@@ -6,15 +6,12 @@
 
 # pro-sejongpeia
 
-**Pro Sejongpeia: a little utopia for Sejong developers.** Sejong University login and school data for Java, Python and Node.js in one place.
-
-> Formerly `pro-sejong-auth` (PyPI, npm) and `kr.suhsaechan:sejong-univ-auth` (Maven). The Python import name (`sejongpeia`), the Java package (`kr.suhsaechan.sejongpeia`) and the Spring property prefix (`sejongpeia.*`) changed with the name.
-
-**The Sejong University integrated library for Java, Python and Node.js: portal login (student verification) plus public school data without login (department codes, courses, academic calendar and more)**
+**Pro Sejongpeia: a little utopia for Sejong developers.**
+From student verification to departments, lectures, the academic calendar and cafeteria menus: one call in Java, Python or Node.js.
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 라이브러리 (Java · Python · Node)</sub>
 
-[한국어](README.md) | English
+[Site](https://cassiiopeia.github.io/pro-sejongpeia/) · [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [Quick start](#quick-start-java--spring-boot) · [Features](#features) · [Docs](#more-integration-examples-and-api-stability) · [한국어](README.md) | English
 
 [![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 [![PyPI](https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejongpeia/)
@@ -22,71 +19,117 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
-### [▶ Try it live in your browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
-
 </div>
 
 ---
 
-Verify a Sejong University student with just a student ID and password, and get their major, year,
-classic-reading certification and contact info. The library handles the portal login, SSO redirects,
-session cookies, legacy TLS and HTML/JSON parsing. Same features, same results in every language.
+## Try it now
 
-| Java / Spring Boot | Python | Node.js |
-|---|---|---|
-| `implementation "kr.suhsaechan:sejongpeia:<version>"` | `pip install pro-sejongpeia` | `npm install pro-sejongpeia` |
+No student ID, no password. This fetches the 2026 second-semester department list and the lectures of the Software department (3220). Same call and same result in all three languages.
 
-**One call, one portal login** (about 0.6 to 0.8 s) · **same typed result in all three languages** · **zero runtime dependencies** for Python and Node · **stops at the first wrong password** so accounts don't get locked · **checked against the live portal every day**
+**Python** · `pip install pro-sejongpeia`
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")
+lectures = public_data.lectures("20", "2026", "20", department_code="3220")
+print(len(departments), lectures[0].name)
+```
+
+**Node.js** · `npm install pro-sejongpeia`
+
+```js
+import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData();
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: '3220' });
+console.log(departments.length, lectures[0].name);
+```
+
+**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<version>"`
+
+```java
+SejongPublicData publicData = new SejongPublicData();   // a bean in Spring
+List<Department> departments = publicData.departments("20", "2026", "20");
+List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "");
+System.out.println(departments.size() + " " + lectures.get(0).getName());
+```
+
+The real output (Python, 2026-10-30, 3 calls to the school servers in 0.3 s). The school data itself is Korean.
+
+<p align="center">
+  <img src="docs/assets/demo/public-data-run.png" alt="Real output of SejongPublicData: 103 departments, Software department lectures and the academic calendar" width="760">
+</p>
+
+Student verification can be tried in the browser first. The code is in the [quick start](#quick-start-java--spring-boot).
 
 <p align="center">
   <a href="https://cassiiopeia.github.io/pro-sejongpeia/#demo">
-    <img src="docs/assets/demo-en-dark.png" alt="Live authentication demo on the project page" width="820">
+    <img src="docs/assets/demo-en-dark.png" alt="Live authentication demo on the project page" width="760">
   </a>
   <br>
-  <sub>Live demo on the project page. A real authentication result with personal fields replaced by sample values.</sub>
+  <sub>Live demo on the project page (click to try). A real authentication result with personal fields replaced by sample values.</sub>
 </p>
+
+## Features
+
+**Everything is supported in all three languages**, with the same features and the same result shape. Only the naming follows each language's convention (snake_case in Python).
+
+| Feature | Java | Python | Node |
+|---|---|---|---|
+| **Login (student ID + portal password)** | | | |
+| Integrated: student info + classic reading + contact (one portal login) | ✅ `authenticate` | ✅ `authenticate` | ✅ `authenticate` |
+| DHC: student info + classic-reading certification status | ✅ `authenticateWithDHC` | ✅ `authenticate_dhc` | ✅ `authenticateDhc` |
+| SIS: student info + email, phone, English name | ✅ `authenticateWithSIS` | ✅ `authenticate_sis` | ✅ `authenticateSis` |
+| SIS user codes (11, such as the department code) + the other fields as `extra` | ✅ `authenticate(id, pw, false, true)` | ✅ `include_extra=True` | ✅ `{ includeExtra: true }` |
+| Raw response (debugging) | ✅ `authenticateWithRaw` and more | ✅ `include_raw=True` | ✅ `{ includeRaw: true }` |
+| SIS business periods (which business is allowed in which period, such as course registration or certificate printing) | ✅ `fetchSisBusinessPeriods` | ✅ `fetch_sis_business_periods` | ✅ `fetchSisBusinessPeriods` |
+| **No login (public school data)** | | | |
+| College and department codes, terms (by category) | ✅ `departments` and more | ✅ `departments` and more | ✅ `departments` and more |
+| Lectures, the whole term (search by department, course name, instructor) | ✅ `lectures` | ✅ `lectures` | ✅ `lectures` |
+| Curriculum courses and course overview (suggested year and semester, credits) | ✅ `curriculumCourses` | ✅ `curriculum_courses` | ✅ `curriculumCourses` |
+| Academic calendar: undergraduate + graduate school | ✅ `calendar`, `graduateCalendar` | ✅ `calendar`, `graduate_calendar` | ✅ `calendar`, `graduateCalendar` |
+| Dormitory menu and notices | ✅ `dormitoryMenu`, `dormitoryNotices` | ✅ `dormitory_menu`, `dormitory_notices` | ✅ `dormitoryMenu`, `dormitoryNotices` |
+| Cafeteria list and menu | ✅ `cafeteriaPlaces`, `cafeteriaMenu` | ✅ `cafeteria_places`, `cafeteria_menu` | ✅ `cafeteriaPlaces`, `cafeteriaMenu` |
+| Campus places | ✅ `campusPlaces` | ✅ `campus_places` | ✅ `campusPlaces` |
+| Extracurricular program schedule | ✅ `extracurricularEvents` | ✅ `extracurricular_events` | ✅ `extracurricularEvents` |
+
+- The category, term and department methods are `organizationCategories`, `terms` and `departments`; the lecture helper codes are `courseTypes` and `selectiveDomains` (Python: `organization_categories`, `course_types`, `selective_domains`). The public-data contract is [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
+- In Java the raw-response variants are `authenticateWithRaw`, `authenticateWithDHCRaw` and `authenticateWithSISRaw`.
+- **Same results across languages** is enforced by keeping shared values in one place, [spec/contract.json](spec/contract.json), and failing each language's tests when they drift.
+- The integrated call logs in to the portal **once** and reads DHC and SIS with the same session. It still returns student info when the SIS (contact) lookup fails; contact fields are then null. Measured call time (2026-10-24, from Seoul, median of 5 calls): Java 0.57 s, Python 0.76 s, Node 0.69 s, mostly the portal's own response time.
+- SIS business periods are not the public academic calendar (`calendar`): they are the per-business allowed periods of the student's own SIS "학사일정조회" screen (`period`, `scheduleName`, `businessName`, `target`, `timeText` and more, school text as-is), queried by year and month (empty month = the whole year). The school ends the session on a malformed request, so the library sends the requests in the browser's exact order and stops without retry on a failure. Verified with one undergraduate account; other student types are not verified. The flow is step 2d of [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md).
+
+| Login data source | Domain | Data |
+|---|---|---|
+| **DHC** (Daeyang Humanity College) | classic.sejong.ac.kr | Student info + classic-reading certification |
+| **SIS** (Student Information System) | sjpt.sejong.ac.kr | Student info + email, phone, English name |
 
 ## Why this library
 
+The hard parts you would otherwise run into are already solved.
+
 | Doing it yourself | With this library |
 |---|---|
-| Reverse-engineer the portal login form and SSO redirects | `authenticate()` handles the login and SSO chain |
-| Keep session cookies across three Sejong domains | Cookies managed per call, nothing to store |
-| Get past the portal's legacy TLS cipher and firewall | Handled per language (see [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
 | Re-enable the only cipher the portal accepts (`TLS_RSA_WITH_AES_256_CBC_SHA`), which current JDK and OpenSSL defaults block, differently in each language | Handled in Java (JVM setting), Python and Node, and applied automatically at startup in Spring Boot |
 | Work around a firewall that blocks default library User-Agents (and sites that answer 404 without one) | Sends an identifying User-Agent automatically |
-| Avoid locking the account by retrying a wrong password | Wrong password and locked account fail immediately, with no retry |
-| Parse HTML tables (DHC) and a JSON API (SIS) | Typed results |
-| Read the portal's verdict from a 200 response (wrong password, locked account) | Fails fast with `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED` |
-| Log in once for student info, again for contacts | One portal login per call for both |
+| Portal login form, SSO redirects, session cookies across three Sejong domains | Handled per call, nothing to store (see [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
+| Read the portal's verdict from a 200 response (wrong password, locked account); a retried wrong password locks the account | Stops at the first failure with `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED` |
+| Parse HTML tables (DHC) and a JSON API (SIS); log in once for student info, again for contacts | Typed results, one portal login per call |
+| One school server failing shakes your whole app | Public data falls back to the last cached value or an empty list, with a 24-hour in-memory cache |
 | Find out the portal changed when your users complain | A daily workflow signs in to the live portal in all three languages and opens an issue when it fails |
-| Keep three implementations in sync | Shared values live in [spec/contract.json](spec/contract.json); each language's tests fail if they drift |
+| Keep three implementations in sync | Shared values live in [spec/contract.json](spec/contract.json); tests fail if they drift |
 
-## Contents
-
-- [Use cases](#use-cases)
-- [Quick start: Java / Spring Boot](#quick-start-java--spring-boot)
-- [Quick start: Python](#quick-start-python)
-- [Quick start: Node.js](#quick-start-nodejs)
-- [Operations](#operations)
-- [School data without login](#school-data-without-login)
-- [Result fields](#result-fields)
-- [Error codes](#error-codes)
-- [Configuration](#configuration)
-- [More: integration examples and API stability](#more-integration-examples-and-api-stability)
-- [FAQ](#faq)
-- [Contributing](#contributing)
+Python and Node have **zero runtime dependencies**.
 
 ## Use cases
 
 - **Verifying Sejong students** when they join a club, student council or campus community
-- Checking major or year for campus events
-- Study helpers that show classic-reading certification progress
-
-| Source | Domain | Data |
-|---|---|---|
-| **DHC** (Daeyang Humanity College) | classic.sejong.ac.kr | Student info + classic-reading certification |
-| **SIS** (Student Information System) | sjpt.sejong.ac.kr | Student info + email, phone, English name |
+- Checking major or year for campus events, study helpers that show classic-reading certification progress
+- Department and lecture search, academic calendar widgets, dormitory and cafeteria bots ([integration examples](docs/INTEGRATION_EXAMPLES.en.md))
 
 ## Quick start: Java / Spring Boot
 
@@ -156,6 +199,17 @@ SejongAuthResult result = engine.authenticate(studentId, password);
 
 </details>
 
+**Check classic reading (Java)**
+
+```java
+SejongDhcAuthResult result = sejongAuthEngine.authenticateWithDHC(studentId, password);
+
+for (ClassicCertification certification : result.getClassicReading().getCertifications()) {
+    System.out.println(certification.getArea() + " "
+        + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
+}
+```
+
 ## Quick start: Python
 
 Python 3.9+, no dependencies beyond the standard library.
@@ -200,48 +254,9 @@ try {
 }
 ```
 
-## Operations
-
-| Operation | Java | Python | Node |
-|---|---|---|---|
-| Integrated: student info + classic reading + contact | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
-| DHC: student info + classic reading | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
-| SIS: student info + contact | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
-| SIS business periods (login; which business is allowed in which period, such as course registration or certificate printing) | `fetchSisBusinessPeriods` | `fetch_sis_business_periods` | `fetchSisBusinessPeriods` |
-| With the other SIS fields | `authenticate(id, pw, false, true)` | `include_extra=True` | `{ includeExtra: true }` |
-| With raw response (debugging) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
-
-SIS business periods are not the public academic calendar (`calendar`): they are the per-business allowed periods of the student's own SIS "학사일정조회" screen (`period`, `scheduleName`, `businessName`, `target`, `timeText` and more, school text as-is), queried by year and month (empty month = the whole year). The school ends the session on a malformed request, so the library sends the requests in the browser's exact order and stops without retry on a failure. Verified with one undergraduate account; other student types are not verified. The flow is step 2d of [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md).
-
-The integrated call logs in to the portal **once** and reads DHC and SIS with the same session. It still returns student info when the SIS (contact) lookup fails; contact fields are then null.
-
-Measured integrated call time (2026-10-24, from Seoul, median of 5 calls): Java 0.57 s, Python 0.76 s, Node 0.69 s. Most of it is the portal's own response time.
-
-**Check classic reading (Java)**
-
-```java
-SejongDhcAuthResult result = sejongAuthEngine.authenticateWithDHC(studentId, password);
-
-for (ClassicCertification certification : result.getClassicReading().getCertifications()) {
-    System.out.println(certification.getArea() + " "
-        + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
-}
-```
-
 ## School data without login
 
-Public school data in the same shape, no student ID or password needed. The three languages share the same methods and results. The contract is [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
-
-| Data | Methods (Python names; Node and Java use camelCase) |
-|---|---|
-| College and department codes (by category and term) | `organization_categories`, `terms`, `departments` |
-| Lectures (search by department, course name, instructor; all empty lists the whole term) | `lectures`, `course_types`, `selective_domains` |
-| Department curriculum course (suggested year and semester, credits, course overview) | `curriculum_courses` |
-| Academic calendar | `calendar` |
-| Graduate school calendar (per site) | `graduate_calendar` |
-| Dormitory menu and notices | `dormitory_menu`, `dormitory_notices` |
-| Cafeteria list and menu, campus places | `cafeteria_places`, `cafeteria_menu`, `campus_places` |
-| Extracurricular program schedule | `extracurricular_events` |
+Public school data in the same shape, no student ID or password needed. For the method list see the [Features](#features) table above, and for the first call see [Try it now](#try-it-now). Here is an example that continues from a lecture to its curriculum (Node and Java use the same method names in camelCase).
 
 ```python
 from sejongpeia import SejongPublicData
@@ -253,20 +268,6 @@ lectures = public_data.lectures("20", "2026", "20", department_code=departments[
 courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
 ```
 
-```javascript
-import { SejongPublicData } from 'pro-sejongpeia';
-
-const publicData = new SejongPublicData();
-const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
-const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
-```
-
-```java
-SejongPublicData publicData = new SejongPublicData();   // a bean in Spring
-List<Department> departments = publicData.departments("20", "2026", "20");
-List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
-```
-
 - **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change. School fields that are not mapped land in `extra`.
 - **One source failing never breaks the rest.** On failure you get the last cached value or an empty list, not an exception (only invalid input raises).
 - Results are cached in memory for 24 hours and identical requests are sent once. Please be gentle with the school's servers.
@@ -274,6 +275,9 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 - The lecture search handles the awkward parts for you, such as the school requiring every filter key in the request. With department, course name and instructor all empty it returns the whole term in one call (about 2,800 undergraduate rows and 2.4 MB for 2026/2, so prefer one department at a time when you can).
 
 ## Result fields
+
+<details>
+<summary>Show all result fields</summary>
 
 Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number`, ...). Full schema: [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md).
 
@@ -302,6 +306,8 @@ Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number
 - SIS result: includes `userCategory`, no classic-reading field, `grade` and `status` are empty strings; `rawJson` with the raw option
 
 Text values come from the portal as-is (Korean).
+
+</details>
 
 ## Error codes
 
@@ -369,12 +375,6 @@ Please open an [issue](https://github.com/Cassiiopeia/pro-sejongpeia/issues) wit
 <summary><b>My portal account got locked</b></summary>
 
 The portal locks an account after repeated wrong passwords, and the library reports `ACCOUNT_LOCKED`. Reset the password at <https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp> (identity verification required). Waiting does not unlock it.
-</details>
-
-<details>
-<summary><b>I used the SUH Nexus repository before</b></summary>
-
-Older Java versions were published to `https://nexus.suhsaechan.kr/repository/maven-releases/`. New versions are on Maven Central (and still mirrored to Nexus for now), so you can drop the extra repository.
 </details>
 
 ## Contributing
