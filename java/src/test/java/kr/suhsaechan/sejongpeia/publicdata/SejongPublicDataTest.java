@@ -145,6 +145,28 @@ class SejongPublicDataTest {
   }
 
   @Test
+  void curriculum_courses_match_expected_and_follow_request_contract() {
+    assertMatches("curriculum_courses", publicData.curriculumCourses("9101", "900001"));
+    assertEquals("GET", caller.lastRequest().getHttpMethod());
+    assertEquals("https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=900001&deptNo=9101",
+        caller.lastRequest().getUrl());
+  }
+
+  @Test
+  void curriculum_courses_reject_blank_input_without_request_and_accept_empty_items() {
+    int callCountBefore = caller.callCount.get();
+    for (String[] blankPair : new String[][] {{"", "900001"}, {"9101", "  "}, {null, "900001"}}) {
+      SejongAuthException exception = assertThrows(SejongAuthException.class,
+          () -> publicData.curriculumCourses(blankPair[0], blankPair[1]));
+      assertEquals(SejongAuthErrorCode.INVALID_INPUT, exception.getErrorCode());
+    }
+    assertEquals(callCountBefore, caller.callCount.get());
+    // 그 학과 교육과정에 없는 과목은 빈 items 로 오며 정상 응답
+    caller.bodyOverride = "{\"success\":true,\"items\":[]}";
+    assertTrue(new SejongPublicData(caller, clock, CACHE_TIME_TO_LIVE).curriculumCourses("9101", "000000").isEmpty());
+  }
+
+  @Test
   void calendar_matches_expected() {
     assertMatches("calendar", publicData.calendar("2099-10-01", "2099-10-31"));
   }
@@ -430,6 +452,8 @@ class SejongPublicDataTest {
       return readFixture("reference_departments.json");
     } else if (url.endsWith("doList.do")) {
       return readFixture("lectures.json");
+    } else if (url.contains("getCurriculumOneKor.do")) {
+      return readFixture("curriculum_course.json");
     } else if (url.contains("academic-calendar.do")) {
       return readFixture("calendar.json");
     } else if (url.contains("calendar-graduate")) {

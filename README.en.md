@@ -222,6 +222,7 @@ Public school data in the same shape, no student ID or password needed. The thre
 |---|---|
 | College and department codes (by category and term) | `organization_categories`, `terms`, `departments` |
 | Lectures (search by department, course name, instructor) | `lectures`, `course_types`, `selective_domains` |
+| Department curriculum course (suggested year and semester, credits, course overview) | `curriculum_courses` |
 | Academic calendar | `calendar` |
 | Graduate school calendar (per site) | `graduate_calendar` |
 | Dormitory menu and notices | `dormitory_menu`, `dormitory_notices` |
@@ -234,6 +235,8 @@ from sejongpeia import SejongPublicData
 public_data = SejongPublicData()
 departments = public_data.departments("20", "2026", "20")          # undergraduate, 2026 second semester
 lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+# the course overview and suggested year/semester in that department's curriculum (empty list if not part of it)
+courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
 ```
 
 ```javascript

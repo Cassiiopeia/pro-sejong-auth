@@ -16,7 +16,7 @@ import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
 /**
- * 로그인 없는 학교 공개 데이터 조회 13종: 학사 코드, 강의, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
+ * 로그인 없는 학교 공개 데이터 조회 14종: 학사 코드, 강의, 학과 교육과정, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
  * 메서드당 요청 1건 > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 lectures 입력 검증뿐)
  */
 public class SejongPublicData {
@@ -26,6 +26,8 @@ public class SejongPublicData {
       "SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD");
 
   private static final String SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/";
+  // 학과 교육과정 과목 1건: deptNo 는 SIS 학과 코드(DEPT_CD)와 같은 값
+  private static final String CURRICULUM_COURSE_URL = "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do";
   private static final String ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do";
   // 대학원 사이트별 학사일정: siteId 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
   private static final String GRADUATE_CALENDAR_PATH = ".sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp";
@@ -109,6 +111,17 @@ public class SejongPublicData {
     search.put("EMP_NM", nullToEmpty(instructorName));
     search.put("LANG_CHK", "KOR");
     return sisDataset("doList.do", search, "dl_main", PublicDataMapper::toLecture);
+  }
+
+  /** 학과 교육과정의 과목 1건: 학과 코드·과목 번호 필수 (없으면 INVALID_INPUT), 그 학과 교육과정에 없으면 빈 목록 */
+  public List<CurriculumCourse> curriculumCourses(String departmentCode, String courseNumber) {
+    if (isBlank(departmentCode) || isBlank(courseNumber)) {
+      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT, "Department code and course number are required");
+    }
+    String query = queryOf("curiNo", courseNumber, "deptNo", departmentCode);
+    return fetcher.fetch(cacheKeyOf("curriculumCourses", departmentCode, courseNumber),
+        new PublicDataRequest("GET", CURRICULUM_COURSE_URL + "?" + query, null, null),
+        listOf("items", PublicDataMapper::toCurriculumCourse), List.of());
   }
 
   public List<CalendarEvent> calendar(String startDate, String endDate) {

@@ -25,6 +25,7 @@ const fixtureNameByUrlPrefix = {
   [`${SIS}doYearsmtlist.do`]: 'reference_terms.json',
   [`${SIS}doLesndeptgroup.do`]: 'reference_departments.json',
   [`${SIS}doList.do`]: 'lectures.json',
+  'https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do': 'curriculum_course.json',
   [`${HOMEPAGE}academics/academic-calendar.do`]: 'calendar.json',
   'https://graduate.sejong.ac.kr/': 'graduate_calendar.json',
   [`${DORMITORY}food/indexFoodList.do`]: 'dormitory_menu.json',
@@ -61,6 +62,7 @@ const callBySource = {
   courseTypes: (p) => p.courseTypes(),
   selectiveDomains: (p) => p.selectiveDomains(),
   lectures: (p) => p.lectures({ ...TERM, departmentCode: '9101' }),
+  curriculumCourses: (p) => p.curriculumCourses({ departmentCode: '9101', courseNumber: '900001' }),
   calendar: (p) => p.calendar({ start: '2099-10-01', end: '2099-10-31' }),
   graduateCalendar: (p) => p.graduateCalendar({ siteId: 'graduate', year: 2099, month: 10 }),
   dormitoryMenu: (p) => p.dormitoryMenu(),
@@ -86,6 +88,22 @@ test('extra never contains deny list fields', async () => {
   for (const row of results.flat()) for (const key of deniedKeys) assert.ok(!(key in row.extra), key);
   assert.deepEqual((await publicData.organizationCategories())[0].extra, { PRT_ORD: '1' });
   assert.equal(JSON.stringify(await publicData.dormitoryNotices()).includes('regname'), false);
+});
+
+test('curriculumCourses request shape and input check', async () => {
+  const { publicData, requests } = createPublicData();
+  await publicData.curriculumCourses({ departmentCode: '9101', courseNumber: '900001' });
+  assert.equal(requests[0].method, 'GET');
+  assert.equal(requests[0].url, 'https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=900001&deptNo=9101');
+  // Accept 가 없으면 학교가 404 를 돌려줌
+  assert.equal(requests[0].headers.Accept, 'application/json');
+  for (const query of [{ departmentCode: '', courseNumber: '900001' }, { departmentCode: '9101', courseNumber: '  ' }]) {
+    assert.throws(() => publicData.curriculumCourses(query), (error) => error instanceof SejongAuthError && error.code === ErrorCode.INVALID_INPUT);
+  }
+  assert.equal(requests.length, 1);
+  // 그 학과 교육과정에 없는 과목은 빈 items 로 오며 정상 응답
+  const empty = createPublicData({ outcome: { status: 200, body: '{"success":true,"items":[]}' } });
+  assert.deepEqual(await empty.publicData.curriculumCourses({ departmentCode: '9101', courseNumber: '000000' }), []);
 });
 
 test('request shapes follow the contract', async () => {

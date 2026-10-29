@@ -82,6 +82,27 @@ class Lecture:
 
 
 @dataclass(frozen=True)
+class CurriculumCourse:
+    department_code: str
+    department_name: str
+    category_code: str
+    year: str
+    course_number: str
+    name: str
+    course_type_code: str
+    course_type_name: str
+    credits: str
+    lecture_hours: str
+    practice_hours: str
+    total_hours: str
+    grade_level: str
+    semester_code: str
+    semester_name: str
+    overview: str
+    extra: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class CalendarEvent:
     year: str
     month: str

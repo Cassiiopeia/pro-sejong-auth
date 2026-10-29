@@ -1,0 +1,32 @@
+{
+  "authorization": true,
+  "redirectUrl": null,
+  "success": true,
+  "errorTrace": null,
+  "errorMsgCode": null,
+  "errorMsgTitle": null,
+  "authentication": true,
+  "items": [
+    {
+      "orgnClsfCd": "20",
+      "curiYear": "2099",
+      "year": "2099",
+      "studentYear": 1,
+      "stuYearCd": 1,
+      "deptNm": "예시학과",
+      "deptCd": "9101",
+      "smtDanNm": "1학기",
+      "smtDanCd": 1,
+      "curiTypeNm": "전공기초",
+      "curiTypeCd": "23",
+      "curiNm": "예시프로그래밍",
+      "curiNo": "900001",
+      "cdt": 3,
+      "exeTmNum": 2,
+      "lecTmNum": 2,
+      "curiTm": 4,
+      "remark": "예시 교과목 개요 본문입니다. 두 문장입니다.",
+      "sameSlcCnt": 1
+    }
+  ]
+}

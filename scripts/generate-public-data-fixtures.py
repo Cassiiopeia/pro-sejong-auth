@@ -99,6 +99,15 @@ FIXTURES = {
              "mealTypeId": None, "mealName": None, "menuName": "고정메뉴", "price": 4000},
         ],
     },
+    "curriculum_course.json": {
+        "authorization": True, "redirectUrl": None, "success": True, "errorTrace": None, "errorMsgCode": None, "errorMsgTitle": None,
+        "authentication": True,
+        "items": [
+            {"orgnClsfCd": "20", "curiYear": "2099", "year": "2099", "studentYear": 1, "stuYearCd": 1, "deptNm": "예시학과", "deptCd": "9101",
+             "smtDanNm": "1학기", "smtDanCd": 1, "curiTypeNm": "전공기초", "curiTypeCd": "23", "curiNm": "예시프로그래밍", "curiNo": "900001",
+             "cdt": 3, "exeTmNum": 2, "lecTmNum": 2, "curiTm": 4, "remark": "예시 교과목 개요 본문입니다. 두 문장입니다.", "sameSlcCnt": 1},
+        ],
+    },
     "campus_places.json": {
         "items": [
             {"id": 1, "placeName": "예시관", "placeNameEn": "Example Hall", "placeType": "BUILDING", "welfareCategory": None,
@@ -142,6 +151,14 @@ def map_all() -> dict:
                  "language_code": text(r["CURI_LANG_CD"]), "language_name": text(r["CURI_LANG_NM"]), "department_code": text(r["DEPT_CD"]),
                  "department_name": text(r["SCH_DEPT_ALIAS"]), "managing_department": text(r["MANAGE_DEPT_NM"]), "remark": text(r["REMARK"]),
                  "year": text(r["YEAR"]), "semester_code": text(r["SMT_CD"]), "extra": extra_of(r, lec_used)} for r in f["lectures.json"]["dl_main"]]
+    curriculum_used = {"deptCd", "deptNm", "orgnClsfCd", "year", "curiNo", "curiNm", "curiTypeCd", "curiTypeNm", "cdt", "lecTmNum", "exeTmNum",
+                       "curiTm", "stuYearCd", "smtDanCd", "smtDanNm", "remark"}
+    curriculum_courses = [{"department_code": text(r["deptCd"]), "department_name": text(r["deptNm"]), "category_code": text(r["orgnClsfCd"]),
+                           "year": text(r["year"]), "course_number": text(r["curiNo"]), "name": text(r["curiNm"]),
+                           "course_type_code": text(r["curiTypeCd"]), "course_type_name": text(r["curiTypeNm"]), "credits": text(r["cdt"]),
+                           "lecture_hours": text(r["lecTmNum"]), "practice_hours": text(r["exeTmNum"]), "total_hours": text(r["curiTm"]),
+                           "grade_level": text(r["stuYearCd"]), "semester_code": text(r["smtDanCd"]), "semester_name": text(r["smtDanNm"]),
+                           "overview": text(r["remark"]), "extra": extra_of(r, curriculum_used)} for r in f["curriculum_course.json"]["items"]]
     calendar = [{"year": text(r["scmYear"]), "month": text(r["scmMonth"]), "category_code": r["collDiv"], "category_name": text(r["collDivNm"]),
                  "title": text(r["scmSubject"]), "title_en": text(r["scmSubjectEng"]), "start_date": r["frDt"], "end_date": r["toDt"],
                  "extra": extra_of(r, {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"})}
@@ -168,7 +185,7 @@ def map_all() -> dict:
                "url": text(r["data"].get("url")), "description": text(r["data"].get("description")), "location": text(r["data"].get("location"))}
               for r in f["extracurricular_events.json"]["events"]]
     return {"organization_categories": orgn, "terms": terms, "departments": depts, "course_types": course_types, "selective_domains": domains,
-            "lectures": lectures, "calendar": calendar, "graduate_calendar": graduate_calendar, "dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices,
+            "lectures": lectures, "curriculum_courses": curriculum_courses, "calendar": calendar, "graduate_calendar": graduate_calendar, "dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices,
             "cafeteria_menu": cafeteria, "campus_places": places, "extracurricular_events": events}
 
 
