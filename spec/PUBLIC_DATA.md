@@ -22,7 +22,7 @@ The expected JSON uses `snake_case` keys; the Node and Java tests convert names 
 | `course_types()` | `doOnload.do`, dataset `dl_code_curiType` | list `course_types` |
 | `selective_domains()` | `doOnload.do`, dataset `dl_code_sltDomain` | list `selective_domains` |
 | `lectures(category_code, year, semester_code, department_code="", course_name="", instructor_name="")` | `doList.do`, `dm_search` with `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `YEAR_SMT`, `DEPT_CD`, `CURI_NM`, `EMP_NM`, `LANG_CHK="KOR"` and the other filters empty, dataset `dl_main`. At least one of department code, course name, instructor name is required, otherwise `INVALID_INPUT` | list `lectures` |
-| `calendar(category_code="0001", start, end)` | `GET https://www.sejong.ac.kr/kor/academics/academic-calendar.do?mode=getCalendarData&start=<yyyy-mm-dd>&end=<yyyy-mm-dd>&collDiv=<code>`, array `data` | list `calendar` |
+| `calendar(start, end, category_code="0001")` | `GET https://www.sejong.ac.kr/kor/academics/academic-calendar.do?mode=getCalendarData&start=<yyyy-mm-dd>&end=<yyyy-mm-dd>&collDiv=<code>`, array `data` | list `calendar` |
 | `dormitory_menu(location="SJ")` | `POST https://happydorm.sejong.ac.kr/food/indexFoodList.do` form `locgbn=<location>`, `root[0]` holds `fo_*1..7` | list `dormitory_menu` (7 days) |
 | `dormitory_notices(page=1, rows=10, keyword="", location="SJ")` | `POST https://happydorm.sejong.ac.kr/bbs/getBbsList.do` form `cPage`, `rows`, `bbs_locgbn`, `bbs_id=notice`, `sType=subject`, `sWord` | object `dormitory_notices` |
 | `cafeteria_menu(place_id)` | `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<id>`, array `items` | list `cafeteria_menu` |
