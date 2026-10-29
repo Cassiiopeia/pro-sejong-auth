@@ -1,0 +1,31 @@
+{
+  "dl_mainList": [
+    {
+      "ORGN_CLSF_CD": "20",
+      "START_DT": "20990301",
+      "TO_DT": "20990315",
+      "PERIOD": "2099-03-01 ∼ 2099-03-15",
+      "CORS_SCHE_GRP_CD_NM": "전체과정",
+      "YEAR_SMT": "2099/1학기",
+      "SCHEDULE": "[학생]예시 수강신청",
+      "TARGET_AUTH": "학생",
+      "SYS_NM": "수강",
+      "TMS": "매일 09:00:00 ∼ 18:00:00",
+      "PRT_ORD": "3",
+      "NEW_FIELD": "y"
+    },
+    {
+      "ORGN_CLSF_CD": "20",
+      "START_DT": "20990601",
+      "TO_DT": "29991231",
+      "PERIOD": "2099-06-01 ∼ 2999-12-31",
+      "CORS_SCHE_GRP_CD_NM": "전체과정",
+      "YEAR_SMT": "2099/1학기",
+      "SCHEDULE": "[학생]예시 증명서 출력",
+      "TARGET_AUTH": "학생",
+      "SYS_NM": "증명",
+      "TMS": null,
+      "PRT_ORD": 2
+    }
+  ]
+}

@@ -36,6 +36,14 @@ def test_classic_and_sis_values_match_contract():
     assert parsers.SIS_EXTRA_EXCLUDED_KEY_PATTERN == sis["extraExcludedKeyPattern"]
 
 
+def test_sis_schedule_values_match_contract():
+    schedule = CONTRACT["sisSchedule"]
+    assert (client.SIS_MENU_LIST_URL, client.SIS_USER_ROLE_URL, client.SIS_SCHEDULE_LIST_URL, client.SIS_SCHEDULE_PROGRAM_KEY,
+            client.SIS_SCHEDULE_SYSTEM_KEY, client.SIS_MENU_SYSTEM_DIV) \
+        == (schedule["menuListUrl"], schedule["userRoleUrl"], schedule["listUrl"], schedule["programKey"], schedule["systemKey"],
+            schedule["menuSystemDiv"])
+
+
 def test_tls_and_error_messages_match_contract():
     assert transport.PORTAL_CIPHERS == CONTRACT["opensslCiphers"]
     assert {code.value: message for code, message in DEFAULT_MESSAGE_BY_CODE.items()} == CONTRACT["errorMessageByCode"]

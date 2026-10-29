@@ -23,6 +23,7 @@ from .models import (  # noqa: E402
     SejongClassicReading,
     SejongDhcAuthResult,
     SejongSisAuthResult,
+    SisBusinessPeriod,
 )
 from .public_data import SejongPublicData  # noqa: E402
 from .public_data_models import (  # noqa: E402
@@ -39,6 +40,11 @@ def authenticate(student_id: str, password: str, include_raw: bool = False, incl
     return _default_client.authenticate(student_id, password, include_raw=include_raw, include_extra=include_extra)
 
 
+def fetch_sis_business_periods(student_id: str, password: str, year, month=""):
+    """SIS 학사 업무 기간 (로그인 필요, month 비우면 연간 전체)"""
+    return _default_client.fetch_sis_business_periods(student_id, password, year, month)
+
+
 def authenticate_dhc(student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:
     """DHC 인증: 학생 정보 + 고전독서"""
     return _default_client.authenticate_dhc(student_id, password, include_raw=include_raw)
@@ -50,7 +56,7 @@ def authenticate_sis(student_id: str, password: str, include_raw: bool = False, 
 
 
 __all__ = [
-    "authenticate", "authenticate_dhc", "authenticate_sis", "SejongAuthClient",
+    "authenticate", "authenticate_dhc", "authenticate_sis", "fetch_sis_business_periods", "SisBusinessPeriod", "SejongAuthClient",
     "SejongAuthError", "ErrorCode",
     "SejongAuthResult", "SejongDhcAuthResult", "SejongSisAuthResult", "SejongClassicReading",
     "ClassicCertification", "ClassicExamRecord", "ClassicSubjectRecord", "ClassicContestRecord",

@@ -24,9 +24,11 @@ class FakeSession:
     def __init__(self, responses_by_url_prefix):
         self.responses_by_url_prefix = {prefix: list(responses) for prefix, responses in responses_by_url_prefix.items()}
         self.requested_urls = []
+        self.requests = []  # (메서드, URL, 본문, 헤더)
 
     def request(self, method, url, *, data=None, headers=None):
         self.requested_urls.append(url)
+        self.requests.append((method, url, data, headers or {}))
         for prefix, responses in self.responses_by_url_prefix.items():
             if url.startswith(prefix):
                 outcome = responses.pop(0) if len(responses) > 1 else responses[0]

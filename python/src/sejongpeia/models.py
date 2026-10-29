@@ -102,6 +102,27 @@ class SejongSisUserInfo:
 
 
 @dataclass(frozen=True)
+class SisBusinessPeriod:
+    """SIS 학사일정조회 1행 (학사 업무별 허용 기간): 학교 원문, 없으면 빈 문자열, extra 는 이름 붙이지 않은 나머지 필드"""
+
+    period: str  # PERIOD, 예: "2026-03-01 ∼ 2026-03-15"
+    start_date: str  # START_DT, yyyyMMdd
+    end_date: str  # TO_DT, yyyyMMdd
+    schedule_name: str  # SCHEDULE
+    course_group_name: str  # CORS_SCHE_GRP_CD_NM
+    target: str  # TARGET_AUTH
+    business_name: str  # SYS_NM
+    year_semester: str  # YEAR_SMT
+    time_text: str  # TMS
+    category_code: str  # ORGN_CLSF_CD
+    sort_order: str  # PRT_ORD
+    extra: Dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class SejongAuthResult:
     """통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시, 상위 소속명은 포털 메인 조회 실패 시 None)"""
 

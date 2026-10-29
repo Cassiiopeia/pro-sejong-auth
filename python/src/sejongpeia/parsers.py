@@ -2,6 +2,7 @@
 
 import json
 import re
+from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Dict, List, Optional
 
@@ -13,6 +14,7 @@ from .models import (
     ClassicSubjectRecord,
     SejongClassicReading,
     SejongSisUserInfo,
+    SisBusinessPeriod,
     SejongStudentInfo,
 )
 
@@ -294,6 +296,78 @@ def _sis_code_values(root: dict) -> Dict[str, str]:
         code_by_field[field_name] = next(
             (value for key in keys for dataset in datasets if (value := _text(dataset, key).strip())), "")
     return code_by_field
+
+
+@dataclass(frozen=True)
+class SisRunValues:
+    """SIS 요청 실행 파라미터 원천값 (세션 식별자 포함이라 출력·로그·결과에 넣지 않음)"""
+
+    user_number: str = field(repr=False)  # dm_UserInfo.INTG_USR_NO > _runIntgUsrNo
+    login_date: str = field(repr=False)  # dm_UserInfoGam.LOGIN_DT (없으면 Sch) > _runPgLoginDt (화면 열기 전)
+    session_key: str = field(repr=False)  # dm_UserInfo.RUNNING_SEJONG > _runningSejong
+
+
+def parse_sis_run_values(json_text: str) -> SisRunValues:
+    """initUserInfo JSON > 실행 파라미터 원천값 3개 (하나라도 비면 PARSE_ERROR)"""
+    root = _read_sis_root(json_text)
+    user_info, gam, sch = root["dm_UserInfo"], root.get("dm_UserInfoGam") or {}, root.get("dm_UserInfoSch") or {}
+    run_values = SisRunValues(
+        user_number=_text(user_info, "INTG_USR_NO").strip(),
+        login_date=_text(gam, "LOGIN_DT").strip() or _text(sch, "LOGIN_DT").strip(),
+        session_key=_text(user_info, "RUNNING_SEJONG").strip(),
+    )
+    if not (run_values.user_number and run_values.login_date and run_values.session_key):
+        raise SejongAuthError(ErrorCode.PARSE_ERROR, "SIS run values not found")
+    return run_values
+
+
+def parse_sis_screen_login_date(json_text: str) -> str:
+    """initUserRole 응답 > 화면 로그인 일시 dm_UserRole.PG_LOGIN_DT (없으면 PARSE_ERROR)"""
+    try:
+        root = json.loads(json_text)
+    except (TypeError, ValueError) as error:
+        raise SejongAuthError(ErrorCode.PARSE_ERROR) from error
+    screen_login_date = _text(root.get("dm_UserRole") if isinstance(root, dict) else None, "PG_LOGIN_DT").strip()
+    if not screen_login_date:
+        raise SejongAuthError(ErrorCode.PARSE_ERROR, "dm_UserRole.PG_LOGIN_DT not found")
+    return screen_login_date
+
+
+# 학사일정 행에서 이름 붙여 읽는 필드 (나머지는 extra)
+SIS_BUSINESS_PERIOD_FIELD_NAMES = (
+    "PERIOD", "START_DT", "TO_DT", "SCHEDULE", "CORS_SCHE_GRP_CD_NM", "TARGET_AUTH", "SYS_NM", "YEAR_SMT", "TMS",
+    "ORGN_CLSF_CD", "PRT_ORD",
+)
+
+
+def parse_sis_business_periods(json_text: str) -> List[SisBusinessPeriod]:
+    """학사일정조회 doList 응답 > 업무 기간 목록 (오류 응답은 예외, dl_mainList 가 배열이 아니면 PARSE_ERROR, 이상한 행도 버리지 않음)"""
+    try:
+        root = json.loads(json_text)
+    except (TypeError, ValueError) as error:
+        raise SejongAuthError(ErrorCode.PARSE_ERROR) from error
+    rows = root.get("dl_mainList") if isinstance(root, dict) else None
+    if not isinstance(rows, list):
+        raise SejongAuthError(ErrorCode.PARSE_ERROR, "dl_mainList not found")
+    periods = []
+    for row in rows:
+        row = row if isinstance(row, dict) else {}
+        extra = {key: str(value) for key, value in row.items()
+                 if key not in SIS_BUSINESS_PERIOD_FIELD_NAMES and isinstance(value, (str, int, float))
+                 and not isinstance(value, bool) and not _SIS_EXTRA_EXCLUDED_KEY.search(key)}
+        periods.append(SisBusinessPeriod(*[_text(row, name) for name in SIS_BUSINESS_PERIOD_FIELD_NAMES], extra=extra))
+    return periods
+
+
+def _read_sis_root(json_text: str) -> dict:
+    """initUserInfo JSON > 루트 (dm_UserInfo 없으면 PARSE_ERROR)"""
+    try:
+        root = json.loads(json_text)
+    except (TypeError, ValueError) as error:
+        raise SejongAuthError(ErrorCode.PARSE_ERROR) from error
+    if not isinstance(root, dict) or not isinstance(root.get("dm_UserInfo"), dict):
+        raise SejongAuthError(ErrorCode.PARSE_ERROR, "dm_UserInfo field not found")
+    return root
 
 
 def parse_sis_user_info(json_text: str) -> SejongSisUserInfo:

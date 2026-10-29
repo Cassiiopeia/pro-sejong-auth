@@ -17,7 +17,8 @@
     "LOGIN_ID": "21011234",
     "DEPT_NO": "1234567",
     "ADDR1": "synthetic address",
-    "BANK_ACNT_NO": "000-000"
+    "BANK_ACNT_NO": "000-000",
+    "LOGIN_DT": "20991030120000"
   },
   "dm_UserInfoSch": {
     "NM": "홍길동",
@@ -43,6 +44,7 @@
     "PASS_VALID": "Y",
     "VALID_FLAG": "Y",
     "CD_ALIAS1": "synthetic staff name",
-    "RESI_NO": "000000-0000000"
+    "RESI_NO": "000000-0000000",
+    "LOGIN_DT": "20991030120000"
   }
 }

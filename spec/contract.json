@@ -31,6 +31,14 @@
     "loggedOutErrorType": "LOGOUT",
     "extraExcludedKeyPattern": "(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)"
   },
+  "sisSchedule": {
+    "menuListUrl": "https://sjpt.sejong.ac.kr/main/view/Menu/doListUserMenuListLeft.do",
+    "userRoleUrl": "https://sjpt.sejong.ac.kr/main/sys/UserRole/initUserRole.do",
+    "listUrl": "https://sjpt.sejong.ac.kr/sch/sch/sud/SudBaseScheSelfServQ/doList.do",
+    "programKey": "SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ",
+    "systemKey": "SCH",
+    "menuSystemDiv": "SCH"
+  },
   "opensslCiphers": "DEFAULT:AES256-SHA:@SECLEVEL=1",
   "errorMessageByCode": {
     "INVALID_INPUT": "Invalid input.",

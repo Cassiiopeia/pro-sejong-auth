@@ -79,6 +79,22 @@ export interface SejongSisUserInfo extends SejongSisSchoolCodes {
   extra: Record<string, string>;
 }
 
+/** SIS 학사일정조회 1행 (학사 업무별 허용 기간): 학교 원문, 없으면 빈 문자열, extra 는 이름 붙이지 않은 나머지 필드 */
+export interface SisBusinessPeriod {
+  period: string; // PERIOD, 예: "2026-03-01 ∼ 2026-03-15"
+  startDate: string; // START_DT, yyyyMMdd
+  endDate: string; // TO_DT, yyyyMMdd
+  scheduleName: string; // SCHEDULE
+  courseGroupName: string; // CORS_SCHE_GRP_CD_NM
+  target: string; // TARGET_AUTH
+  businessName: string; // SYS_NM
+  yearSemester: string; // YEAR_SMT
+  timeText: string; // TMS
+  categoryCode: string; // ORGN_CLSF_CD
+  sortOrder: string; // PRT_ORD
+  extra: Record<string, string>;
+}
+
 /** 통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시, 상위 소속명은 포털 메인 조회 실패 시 null) */
 export interface SejongAuthResult extends SejongStudentInfo, Partial<Record<keyof SejongSisSchoolCodes, string | null>> {
   success: true;

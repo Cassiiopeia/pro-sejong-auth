@@ -61,4 +61,4 @@ SIS requests: header `Content-Type: application/json; charset="UTF-8"`, `Accept:
 
 ## Not in scope here
 
-The graduate schools' calendar is also served by the homepage `calendar` with `category_code` `0002` to `0007` (`yyyy-MM-dd` dates, several months at once); `graduate_calendar` is the per-site source with the school's own site names. Login-required sources (SIS calendar, student record), HTML-only pages, faculty directories (personal data). See the issues linked from #41.
+The graduate schools' calendar is also served by the homepage `calendar` with `category_code` `0002` to `0007` (`yyyy-MM-dd` dates, several months at once); `graduate_calendar` is the per-site source with the school's own site names. Login-required sources (the SIS business periods are `fetchSisBusinessPeriods`, see `PORTAL_FLOW.md` step 2d; student record), HTML-only pages, faculty directories (personal data). See the issues linked from #41.

@@ -1,0 +1,32 @@
+[
+  {
+    "period": "2099-03-01 ∼ 2099-03-15",
+    "startDate": "20990301",
+    "endDate": "20990315",
+    "scheduleName": "[학생]예시 수강신청",
+    "courseGroupName": "전체과정",
+    "target": "학생",
+    "businessName": "수강",
+    "yearSemester": "2099/1학기",
+    "timeText": "매일 09:00:00 ∼ 18:00:00",
+    "categoryCode": "20",
+    "sortOrder": "3",
+    "extra": {
+      "NEW_FIELD": "y"
+    }
+  },
+  {
+    "period": "2099-06-01 ∼ 2999-12-31",
+    "startDate": "20990601",
+    "endDate": "29991231",
+    "scheduleName": "[학생]예시 증명서 출력",
+    "courseGroupName": "전체과정",
+    "target": "학생",
+    "businessName": "증명",
+    "yearSemester": "2099/1학기",
+    "timeText": "",
+    "categoryCode": "20",
+    "sortOrder": "2",
+    "extra": {}
+  }
+]

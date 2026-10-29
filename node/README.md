@@ -33,6 +33,7 @@ try {
 |---|---|
 | `authenticate(id, pw, { includeRaw, includeExtra })` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`, `includeRaw` 면 `rawHtml`·`rawJson` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지, `includeExtra` 면 나머지 SIS 필드 `extra`. 학과 코드 `departmentCode` 등 SIS 코드 11개는 항상 포함) |
 | `authenticateDhc(id, pw, { includeRaw })` | 학생 정보 + 고전독서 |
+| `fetchSisBusinessPeriods(id, pw, { year, month })` | SIS 학사 업무 기간 목록 (로그인 필요, 학교 공개 학사일정과 다른 자료, month 비우면 연간 전체) |
 | `authenticateSis(id, pw, { includeRaw, includeExtra })` | 학생 정보 + 이메일, 전화번호, 영문 이름 + 학교 제공 코드 11개 (`departmentCode` 등) |
 
 ### 로그인 없이 쓰는 학교 데이터

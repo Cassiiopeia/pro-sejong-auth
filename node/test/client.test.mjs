@@ -4,12 +4,21 @@ import assert from 'node:assert/strict';
 import { ErrorCode, SejongAuthClient, SejongAuthError } from '../dist/esm/index.js';
 import { TimeoutError } from '../dist/esm/transport.js';
 import {
-  CLASSIC_SSO, CLASSIC_STATUS, LOGIN, PORTAL_MAIN, SIS_SSO, SIS_USER_INFO, fakeSessionFactory, ok, readFixture, status,
+  CLASSIC_SSO, CLASSIC_STATUS, LOGIN, PORTAL_MAIN, SIS_SSO, SIS_USER_INFO, fakeSessionFactory, ok, readExpected, readFixture, status,
 } from './helpers.mjs';
 
 const dhcHtml = readFixture('dhc_status.html');
 const sisJson = readFixture('sis_user_info.json');
 const portalMainHtml = readFixture('portal_main.html');
+
+const SIS_MENU_LIST = 'https://sjpt.sejong.ac.kr/main/view/Menu/doListUserMenuListLeft.do';
+const SIS_USER_ROLE = 'https://sjpt.sejong.ac.kr/main/sys/UserRole/initUserRole.do';
+const SIS_SCHEDULE_LIST = 'https://sjpt.sejong.ac.kr/sch/sch/sud/SudBaseScheSelfServQ/doList.do';
+const decodeAddParam = (url) => JSON.parse(decodeURIComponent(Buffer.from(new URL(url).searchParams.get('addParam'), 'base64').toString('utf8').replaceAll('+', ' ')));
+const sisScheduleRoutes = (listResponse = ok(readFixture('sis_business_periods.json'))) => ({
+  [LOGIN]: [ok()], [SIS_SSO]: [ok()], [SIS_USER_INFO]: [ok(sisJson)], [SIS_MENU_LIST]: [ok('{"dl_UserMenuListLeft":[]}')],
+  [SIS_USER_ROLE]: [ok(readFixture('sis_user_role.json'))], [SIS_SCHEDULE_LIST]: [listResponse],
+});
 
 function clientWith(responsesByUrlPrefix, options = {}) {
   const { factory, sessions } = fakeSessionFactory(responsesByUrlPrefix);
@@ -110,6 +119,45 @@ test('integratedRawOnlyWhenRequested', async () => {
   assert.deepEqual([rawResult.rawHtml, rawResult.rawJson], [dhcHtml, sisJson]);
   // 켜도 기존 필드는 같음
   assert.deepEqual([rawResult.name, rawResult.email, rawResult.grade], [defaultResult.name, defaultResult.email, defaultResult.grade]);
+});
+
+test('sisBusinessPeriodsFollowBrowserRequestFlow', async () => {
+  const { client, sessions } = clientWith(sisScheduleRoutes());
+  const periods = await client.fetchSisBusinessPeriods('21011234', 'pw', { year: 2099, month: 3 });
+
+  // 로그인 > SSO > 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (포털 로그인 1회)
+  assert.deepEqual(sessions[0].requestedUrls.map((url) => url.split('?')[0]), [LOGIN, SIS_SSO, SIS_USER_INFO, SIS_MENU_LIST, SIS_USER_ROLE, SIS_SCHEDULE_LIST]);
+  const [menuRequest, roleRequest, listRequest] = sessions[0].requests.slice(3);
+  assert.deepEqual(JSON.parse(menuRequest.body), { dm_ReqLeftMenu: { MENU_SYS_ID: 'SYS1', SYSTEM_DIV: 'SCH', MENU_SYS_NM: '학사' } });
+  assert.deepEqual(Object.keys(decodeAddParam(menuRequest.url)), ['_runIntgUsrNo', '_runPgLoginDt', '_runningSejong']);
+  // 화면 열기: 본문과 addParam 이 같은 실행 파라미터 (사용자 정보 응답의 값)
+  const expectedRole = {
+    pbForceLog: 'false', _runPgmKey: 'SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ', _runSysKey: 'SCH',
+    _runIntgUsrNo: '21011234', _runPgLoginDt: '20991030120000', _runningSejong: 'synthetic-session-value',
+  };
+  assert.deepEqual(JSON.parse(roleRequest.body), expectedRole);
+  assert.deepEqual(decodeAddParam(roleRequest.url), expectedRole);
+  // 목록: 화면 로그인 일시(PG_LOGIN_DT), 조직·사용자 구분 코드는 SIS 사용자 정보에서
+  assert.deepEqual(Object.keys(decodeAddParam(listRequest.url)), ['_runPgmKey', '_runSysKey', '_runIntgUsrNo', '_runPgLoginDt', '_runningSejong']);
+  assert.equal(decodeAddParam(listRequest.url)._runPgLoginDt, '20991030120005');
+  assert.deepEqual(JSON.parse(listRequest.body), {
+    dm_search: { ORGN_CLSF_CD: '20', YEAR: '2099', SMT_CD: '', SMT_NM: '', USER_CLSFM_CD: '20', MONTH: '3' },
+  });
+  assert.deepEqual(periods, readExpected('expected_sis_business_periods.json'));
+});
+
+test('sisBusinessPeriodsStopWithoutRetryWhenSchoolEndsSession', async () => {
+  const { client, sessions } = clientWith(sisScheduleRoutes(ok(readFixture('sis_submit_error_logout.json'))));
+  await rejectsWithCode(client.fetchSisBusinessPeriods('21011234', 'pw', { year: 2099 }), ErrorCode.SESSION_ERROR);
+  assert.equal(sessions[0].requestedUrls.filter((url) => url.startsWith(SIS_SCHEDULE_LIST)).length, 1);
+});
+
+test('sisBusinessPeriodsInvalidFilterSendsNoRequest', async () => {
+  for (const [year, month] of [['', ''], ['26', ''], ['2099', '13'], ['2099', 'ab'], [undefined, '']]) {
+    const { client, sessions } = clientWith({});
+    await rejectsWithCode(client.fetchSisBusinessPeriods('21011234', 'pw', { year, month }), ErrorCode.INVALID_INPUT);
+    assert.equal(sessions.length, 0);
+  }
 });
 
 test('errorMessageNeverContainsPassword', async () => {

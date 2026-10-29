@@ -2,7 +2,7 @@
 import { ErrorCode, SejongAuthError } from './errors.js';
 import type {
   ClassicCertification, ClassicContestRecord, ClassicExamRecord, ClassicSubjectRecord,
-  SejongClassicReading, SejongSisSchoolCodes, SejongSisUserInfo, SejongStudentInfo,
+  SejongClassicReading, SejongSisSchoolCodes, SejongSisUserInfo, SejongStudentInfo, SisBusinessPeriod,
 } from './models.js';
 
 // 섹션 제목 (포털 화면 문구 그대로, 바꾸면 파싱 실패)
@@ -276,6 +276,80 @@ function sisCodeValues(root: JsonObject): SejongSisSchoolCodes {
     }
   }
   return codeByField;
+}
+
+/** SIS 요청 실행 파라미터 원천값 (세션 식별자 포함이라 출력·로그·결과에 넣지 않음) */
+export interface SisRunValues {
+  userNumber: string; // dm_UserInfo.INTG_USR_NO > _runIntgUsrNo
+  loginDate: string; // dm_UserInfoGam.LOGIN_DT (없으면 Sch) > _runPgLoginDt (화면 열기 전)
+  sessionKey: string; // dm_UserInfo.RUNNING_SEJONG > _runningSejong
+}
+
+/** initUserInfo JSON > 실행 파라미터 원천값 3개 (하나라도 비면 PARSE_ERROR) */
+export function parseSisRunValues(jsonText: string): SisRunValues {
+  const root = readSisRoot(jsonText);
+  const runValues = {
+    userNumber: textOf(root.dm_UserInfo, 'INTG_USR_NO').trim(),
+    loginDate: textOf(root.dm_UserInfoGam, 'LOGIN_DT').trim() || textOf(root.dm_UserInfoSch, 'LOGIN_DT').trim(),
+    sessionKey: textOf(root.dm_UserInfo, 'RUNNING_SEJONG').trim(),
+  };
+  if (!runValues.userNumber || !runValues.loginDate || !runValues.sessionKey) {
+    throw new SejongAuthError(ErrorCode.PARSE_ERROR, 'SIS run values not found');
+  }
+  return runValues;
+}
+
+/** initUserRole 응답 > 화면 로그인 일시 dm_UserRole.PG_LOGIN_DT (없으면 PARSE_ERROR) */
+export function parseSisScreenLoginDate(jsonText: string): string {
+  let root: unknown;
+  try {
+    root = JSON.parse(jsonText);
+  } catch (error) {
+    throw new SejongAuthError(ErrorCode.PARSE_ERROR, undefined, { cause: error });
+  }
+  const screenLoginDate = textOf(isObject(root) ? root.dm_UserRole : undefined, 'PG_LOGIN_DT').trim();
+  if (!screenLoginDate) throw new SejongAuthError(ErrorCode.PARSE_ERROR, 'dm_UserRole.PG_LOGIN_DT not found');
+  return screenLoginDate;
+}
+
+// 학사일정 행에서 이름 붙여 읽는 필드 (나머지는 extra)
+const SIS_BUSINESS_PERIOD_FIELD_NAMES = [
+  'PERIOD', 'START_DT', 'TO_DT', 'SCHEDULE', 'CORS_SCHE_GRP_CD_NM', 'TARGET_AUTH', 'SYS_NM', 'YEAR_SMT', 'TMS', 'ORGN_CLSF_CD', 'PRT_ORD',
+];
+
+/** 학사일정조회 doList 응답 > 업무 기간 목록 (dl_mainList 가 배열이 아니면 PARSE_ERROR, 이상한 행도 버리지 않음) */
+export function parseSisBusinessPeriods(jsonText: string): SisBusinessPeriod[] {
+  let root: unknown;
+  try {
+    root = JSON.parse(jsonText);
+  } catch (error) {
+    throw new SejongAuthError(ErrorCode.PARSE_ERROR, undefined, { cause: error });
+  }
+  const rows = isObject(root) ? root.dl_mainList : undefined;
+  if (!Array.isArray(rows)) throw new SejongAuthError(ErrorCode.PARSE_ERROR, 'dl_mainList not found');
+  return rows.map((rawRow) => {
+    const row: JsonObject = isObject(rawRow) ? rawRow : {};
+    const extra: Record<string, string> = {};
+    for (const [key, value] of Object.entries(row)) {
+      const isScalar = typeof value === 'string' || typeof value === 'number';
+      if (!SIS_BUSINESS_PERIOD_FIELD_NAMES.includes(key) && isScalar && !SIS_EXTRA_EXCLUDED_KEY.test(key)) extra[key] = String(value);
+    }
+    const [period, startDate, endDate, scheduleName, courseGroupName, target, businessName, yearSemester, timeText, categoryCode, sortOrder] =
+      SIS_BUSINESS_PERIOD_FIELD_NAMES.map((name) => textOf(row, name));
+    return { period, startDate, endDate, scheduleName, courseGroupName, target, businessName, yearSemester, timeText, categoryCode, sortOrder, extra };
+  });
+}
+
+/** initUserInfo JSON > 루트 (dm_UserInfo 없으면 PARSE_ERROR) */
+function readSisRoot(jsonText: string): JsonObject {
+  let root: unknown;
+  try {
+    root = JSON.parse(jsonText);
+  } catch (error) {
+    throw new SejongAuthError(ErrorCode.PARSE_ERROR, undefined, { cause: error });
+  }
+  if (!isObject(root) || !isObject(root.dm_UserInfo)) throw new SejongAuthError(ErrorCode.PARSE_ERROR, 'dm_UserInfo field not found');
+  return root;
 }
 
 /** initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분, 학교 제공 코드, extra (dm_UserInfo 없으면 PARSE_ERROR) */

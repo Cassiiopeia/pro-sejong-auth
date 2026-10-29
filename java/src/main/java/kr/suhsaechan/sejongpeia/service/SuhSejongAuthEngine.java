@@ -1,6 +1,8 @@
 package kr.suhsaechan.sejongpeia.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.regex.Pattern;
 import kr.suhsaechan.sejongpeia.client.SejongPortalClient;
 import kr.suhsaechan.sejongpeia.client.SejongPortalSession;
 import kr.suhsaechan.sejongpeia.client.SejongSisClient;
@@ -11,6 +13,8 @@ import kr.suhsaechan.sejongpeia.model.SejongDhcAuthResult;
 import kr.suhsaechan.sejongpeia.model.SejongSisAuthResult;
 import kr.suhsaechan.sejongpeia.model.SejongSisSchoolFields;
 import kr.suhsaechan.sejongpeia.model.SejongStudentInfo;
+import kr.suhsaechan.sejongpeia.model.SisBusinessPeriod;
+import kr.suhsaechan.sejongpeia.model.SisRunValues;
 import kr.suhsaechan.sejongpeia.parser.SejongClassicReadingParser;
 import kr.suhsaechan.sejongpeia.parser.SejongPortalMainParser;
 import kr.suhsaechan.sejongpeia.parser.SejongSisParser;
@@ -158,6 +162,41 @@ public class SuhSejongAuthEngine {
         .menuSystemName(fields.menuSystemName())
         .locale(fields.locale())
         .extra(shouldIncludeExtra ? fields.extra() : null);
+  }
+
+  // 연도 4자리, 월 1~12 또는 빈 값(연간 전체)
+  private static final Pattern BUSINESS_PERIOD_YEAR = Pattern.compile("\\d{4}");
+  private static final Pattern BUSINESS_PERIOD_MONTH = Pattern.compile("(0?[1-9]|1[0-2])?");
+
+  /**
+   * SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (month 비우면 연간 전체, 요청 실패 시 재시도 없이 중단)
+   *
+   * @param year 연도 4자리 (예: 2026)
+   * @param month 1~12 또는 빈 문자열
+   * @throws SejongAuthException 입력 오류(INVALID_INPUT)·인증 실패·세션 종료·조회 실패
+   */
+  public List<SisBusinessPeriod> fetchSisBusinessPeriods(String studentId, String password, String year, String month) {
+    validateCredentials(studentId, password);
+    String yearText = year == null ? "" : year.trim();
+    String monthText = month == null ? "" : month.trim();
+    if (!BUSINESS_PERIOD_YEAR.matcher(yearText).matches() || !BUSINESS_PERIOD_MONTH.matcher(monthText).matches()) {
+      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT, "Year must be 4 digits and month 1-12 or empty");
+    }
+    log.info("[sejong auth] SIS business periods started : studentId={}", studentId);
+
+    SejongPortalSession session = sisClient.openSession(studentId, password);
+    String userInfoJson = sisClient.fetchInitUserInfoJson(session);
+    sisParser.ensureLoggedIn(userInfoJson);
+    SisRunValues runValues = sisParser.parseRunValues(userInfoJson);
+    SejongSisSchoolFields schoolFields = sisParser.parseSchoolFields(userInfoJson);
+    if (CommonUtil.isBlank(schoolFields.organizationClassificationCode()) || CommonUtil.isBlank(schoolFields.userClassificationMiddleCode())
+        || CommonUtil.isBlank(schoolFields.menuSystemId()) || CommonUtil.isBlank(schoolFields.menuSystemName())) {
+      throw new SejongAuthException(SejongAuthErrorCode.DATA_FETCH_FAILED,
+          "SIS organization, user classification or menu code is missing");
+    }
+    String listJson = sisClient.fetchBusinessPeriodsJson(session, runValues, schoolFields, yearText,
+        monthText.replaceFirst("^0+", ""));
+    return sisParser.parseBusinessPeriods(listJson);
   }
 
   /**

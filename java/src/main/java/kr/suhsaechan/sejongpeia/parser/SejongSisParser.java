@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.model.SejongSisSchoolFields;
+import kr.suhsaechan.sejongpeia.model.SisBusinessPeriod;
+import kr.suhsaechan.sejongpeia.model.SisRunValues;
 import kr.suhsaechan.sejongpeia.util.CommonUtil;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,6 +58,67 @@ public class SejongSisParser {
         findCode(root, List.of("RPSN_ROLE_CD")), findCode(root, List.of("RPSN_ROLE_CD_NM")),
         findCode(root, List.of("MENU_SYS_ID")), findCode(root, List.of("MENU_SYS_NM")), findCode(root, List.of("INTG_LOCALE")),
         collectExtra(root));
+  }
+
+  /**
+   * JSON에서 요청 실행 파라미터 원천값 파싱 (하나라도 비면 PARSE_ERROR)
+   */
+  public SisRunValues parseRunValues(String json) {
+    JsonNode root = readRoot(json);
+    JsonNode userInfo = root.path("dm_UserInfo");
+    if (userInfo.isMissingNode()) {
+      throw new SejongAuthException(SejongAuthErrorCode.PARSE_ERROR, "dm_UserInfo field not found");
+    }
+    String loginDate = getTextValue(root.path("dm_UserInfoGam"), "LOGIN_DT").trim();
+    if (loginDate.isEmpty()) {
+      loginDate = getTextValue(root.path("dm_UserInfoSch"), "LOGIN_DT").trim();
+    }
+    SisRunValues runValues = new SisRunValues(getTextValue(userInfo, "INTG_USR_NO").trim(), loginDate,
+        getTextValue(userInfo, "RUNNING_SEJONG").trim());
+    if (runValues.userNumber().isEmpty() || runValues.loginDate().isEmpty() || runValues.sessionKey().isEmpty()) {
+      throw new SejongAuthException(SejongAuthErrorCode.PARSE_ERROR, "SIS run values not found");
+    }
+    return runValues;
+  }
+
+  /**
+   * initUserRole 응답에서 화면 로그인 일시 dm_UserRole.PG_LOGIN_DT 파싱 (없으면 PARSE_ERROR)
+   */
+  public String parseScreenLoginDate(String json) {
+    String screenLoginDate = getTextValue(readRoot(json).path("dm_UserRole"), "PG_LOGIN_DT").trim();
+    if (screenLoginDate.isEmpty()) {
+      throw new SejongAuthException(SejongAuthErrorCode.PARSE_ERROR, "dm_UserRole.PG_LOGIN_DT not found");
+    }
+    return screenLoginDate;
+  }
+
+  // 학사일정 행에서 이름 붙여 읽는 필드 (나머지는 extra)
+  private static final Set<String> BUSINESS_PERIOD_FIELD_KEYS = Set.of(
+      "PERIOD", "START_DT", "TO_DT", "SCHEDULE", "CORS_SCHE_GRP_CD_NM", "TARGET_AUTH", "SYS_NM", "YEAR_SMT", "TMS", "ORGN_CLSF_CD", "PRT_ORD");
+
+  /**
+   * 학사일정조회 doList 응답 > 업무 기간 목록 (dl_mainList 가 배열이 아니면 PARSE_ERROR, 이상한 행도 버리지 않음)
+   */
+  public List<SisBusinessPeriod> parseBusinessPeriods(String json) {
+    JsonNode rows = readRoot(json).path("dl_mainList");
+    if (!rows.isArray()) {
+      throw new SejongAuthException(SejongAuthErrorCode.PARSE_ERROR, "dl_mainList not found");
+    }
+    List<SisBusinessPeriod> periods = new java.util.ArrayList<>();
+    for (JsonNode row : rows) {
+      Map<String, String> extra = new LinkedHashMap<>();
+      row.fields().forEachRemaining(entry -> {
+        boolean isScalar = entry.getValue().isTextual() || entry.getValue().isNumber();
+        if (isScalar && !BUSINESS_PERIOD_FIELD_KEYS.contains(entry.getKey()) && !EXTRA_EXCLUDED_KEY.matcher(entry.getKey()).find()) {
+          extra.put(entry.getKey(), entry.getValue().asText());
+        }
+      });
+      periods.add(new SisBusinessPeriod(getTextValue(row, "PERIOD"), getTextValue(row, "START_DT"), getTextValue(row, "TO_DT"),
+          getTextValue(row, "SCHEDULE"), getTextValue(row, "CORS_SCHE_GRP_CD_NM"), getTextValue(row, "TARGET_AUTH"),
+          getTextValue(row, "SYS_NM"), getTextValue(row, "YEAR_SMT"), getTextValue(row, "TMS"), getTextValue(row, "ORGN_CLSF_CD"),
+          getTextValue(row, "PRT_ORD"), Map.copyOf(extra)));
+    }
+    return List.copyOf(periods);
   }
 
   /**
