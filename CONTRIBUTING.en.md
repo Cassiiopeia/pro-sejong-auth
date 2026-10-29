@@ -75,12 +75,12 @@ Live tests log in to the real Sejong portal, so they only run when you provide a
 
 How to add new data the school serves (course lists, menus, other public data). Sources are independent and share only the common layer (`transport`, `errors`), so you can build yours without touching the others.
 
-1. **Propose it in an issue**: where it is served, whether login is needed, the request form (JSON or HTML), the fields, and whether it contains personal data. Information that exists only as HTML is not used as a primary source.
+1. **Propose it in an issue** (use the `새 정보 출처 제안` template): where it is served, whether login is needed, the request form (JSON or HTML), the fields, and whether it contains personal data. Information that exists only as HTML is not used as a primary source.
 2. **Write the contract first**: add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used.
 3. **Create synthetic fixtures and expected results**: add them to `FIXTURES` and `map_all()` in `scripts/generate-public-data-fixtures.py` and run it. Never copy a real response, and never put in values that identify a person, such as a staff name.
 4. **Implement Java, Python and Node in the same PR.** Reuse the common helpers of `SejongPublicData` for requests, cache and failure isolation, and follow the contract's value rules (empty string when missing, `extra`).
 5. **Write only the tests you need**: one test that the fixture result equals the expected result is enough. Do not add tests that call the school's servers.
-6. **Add a shape check** (`scripts/probe-reference-data.py` style, runs without an account).
+6. **Add a shape check** (add a row to `SOURCES` in `scripts/probe-public-data.py`, runs without an account).
 7. Go through the exposure list in `When you add a feature` below.
 
 Tests enforce the dependency rule: authentication code and public data do not import each other (`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). If a rule fails, move what needs sharing into `transport` or `errors`.
