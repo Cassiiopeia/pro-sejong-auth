@@ -47,8 +47,9 @@ print(len(departments), lectures[0].name)
 import { SejongPublicData } from 'pro-sejongpeia';
 
 const publicData = new SejongPublicData();
-const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
-const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: '3220' });
+const term = { categoryCode: '20', year: '2026', semesterCode: '20' };
+const departments = await publicData.departments(term);
+const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
@@ -84,22 +85,24 @@ System.out.println(departments.size() + " " + lectures.get(0).getName());
 | 기능 | Java | Python | Node |
 |---|---|---|---|
 | **로그인 (학번 + 포털 비밀번호)** | | | |
-| 통합 인증: 학생 정보 + 고전독서 + 연락처 (포털 로그인 1번) | ✅ `authenticate` | ✅ `authenticate` | ✅ `authenticate` |
-| DHC 인증: 학생 정보 + 고전독서 인증 현황 | ✅ `authenticateWithDHC` | ✅ `authenticate_dhc` | ✅ `authenticateDhc` |
-| SIS 인증: 학생 정보 + 이메일, 전화번호, 영문 이름 | ✅ `authenticateWithSIS` | ✅ `authenticate_sis` | ✅ `authenticateSis` |
-| SIS 사용자 코드 (학과 코드 등 11개) + 나머지 필드 `extra` | ✅ `authenticate(id, pw, false, true)` | ✅ `include_extra=True` | ✅ `{ includeExtra: true }` |
-| 원본 응답 포함 (디버깅) | ✅ `authenticateWithRaw` 외 | ✅ `include_raw=True` | ✅ `{ includeRaw: true }` |
-| SIS 학사 업무 기간 (수강신청·증명서 출력 등 업무별 허용 기간) | ✅ `fetchSisBusinessPeriods` | ✅ `fetch_sis_business_periods` | ✅ `fetchSisBusinessPeriods` |
+| 통합 인증 | ✅ `authenticate` | ✅ `authenticate` | ✅ `authenticate` |
+| DHC 인증 | ✅ `authenticateWithDHC` | ✅ `authenticate_dhc` | ✅ `authenticateDhc` |
+| SIS 인증 | ✅ `authenticateWithSIS` | ✅ `authenticate_sis` | ✅ `authenticateSis` |
+| SIS 코드, `extra` | ✅ `authenticate(id, pw, false, true)` | ✅ `include_extra=True` | ✅ `{ includeExtra: true }` |
+| 원본 응답 | ✅ `authenticateWithRaw` 외 | ✅ `include_raw=True` | ✅ `{ includeRaw: true }` |
+| SIS 학사 업무 기간 | ✅ `fetchSisBusinessPeriods` | ✅ `fetch_sis_business_periods` | ✅ `fetchSisBusinessPeriods` |
 | **로그인 없이 (학교 공개 데이터)** | | | |
-| 단과대·학과 코드, 학기 (소속 분류별) | ✅ `departments` 외 | ✅ `departments` 외 | ✅ `departments` 외 |
-| 개설강좌, 학기 전체 (학과·과목명·교수명 검색) | ✅ `lectures` | ✅ `lectures` | ✅ `lectures` |
-| 교육과정 과목과 교과목 개요 (권장 학년·학기, 학점) | ✅ `curriculumCourses` | ✅ `curriculum_courses` | ✅ `curriculumCourses` |
-| 학사일정: 학부 + 대학원 | ✅ `calendar`, `graduateCalendar` | ✅ `calendar`, `graduate_calendar` | ✅ `calendar`, `graduateCalendar` |
+| 학과·학기 코드 | ✅ `departments` 외 | ✅ `departments` 외 | ✅ `departments` 외 |
+| 개설강좌 | ✅ `lectures` | ✅ `lectures` | ✅ `lectures` |
+| 교육과정·개요 | ✅ `curriculumCourses` | ✅ `curriculum_courses` | ✅ `curriculumCourses` |
+| 학사일정 (학부, 대학원) | ✅ `calendar`, `graduateCalendar` | ✅ `calendar`, `graduate_calendar` | ✅ `calendar`, `graduateCalendar` |
 | 기숙사 식단·공지 | ✅ `dormitoryMenu`, `dormitoryNotices` | ✅ `dormitory_menu`, `dormitory_notices` | ✅ `dormitoryMenu`, `dormitoryNotices` |
-| 학식 식당 목록·메뉴 | ✅ `cafeteriaPlaces`, `cafeteriaMenu` | ✅ `cafeteria_places`, `cafeteria_menu` | ✅ `cafeteriaPlaces`, `cafeteriaMenu` |
+| 학식 식당·메뉴 | ✅ `cafeteriaPlaces`, `cafeteriaMenu` | ✅ `cafeteria_places`, `cafeteria_menu` | ✅ `cafeteriaPlaces`, `cafeteriaMenu` |
 | 캠퍼스 장소 | ✅ `campusPlaces` | ✅ `campus_places` | ✅ `campusPlaces` |
-| 비교과 프로그램 일정 | ✅ `extracurricularEvents` | ✅ `extracurricular_events` | ✅ `extracurricularEvents` |
+| 비교과 일정 | ✅ `extracurricularEvents` | ✅ `extracurricular_events` | ✅ `extracurricularEvents` |
 
+- **통합 인증**은 학생 정보 + 고전독서 + 연락처, **DHC**는 학생 정보 + 고전독서 인증 현황, **SIS**는 학생 정보 + 이메일·전화번호·영문 이름입니다. **SIS 코드**는 학과 코드 등 학교 제공 코드 11개이고 `extra`는 나머지 SIS 필드입니다. **SIS 학사 업무 기간**은 수강신청·증명서 출력 등 업무별 허용 기간입니다.
+- **개설강좌**는 학과·과목명·교수명으로 검색하고 모두 비우면 그 학기 전체입니다. **교육과정·개요**는 권장 학년·학기, 학점, 교과목 개요입니다.
 - 학과 분류·학기·학과는 `organizationCategories`, `terms`, `departments`, 개설강좌 보조 코드는 `courseTypes`, `selectiveDomains`입니다 (Python은 `organization_categories`, `course_types`, `selective_domains`). 공개 데이터 계약은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
 - 원본 응답 옵션은 Java에서 `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw`입니다.
 - **언어 간 같은 결과**는 공통 값을 [spec/contract.json](spec/contract.json) 한 곳에 두고, 어긋나면 언어별 테스트가 실패하게 해서 지킵니다.
