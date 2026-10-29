@@ -8,7 +8,7 @@ How to add new data the school serves publicly (course lists, menus, other publi
 ## Procedure
 
 1. **Propose it in an issue.** Use the `새 정보 출처 제안` (new data source proposal) issue template. Describe where it is served, whether login is needed, the request form (JSON or HTML), the fields, and whether it contains personal data. Information that exists only as HTML is not used as a primary source.
-2. **Write the contract first.** Add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used.
+2. **Write the contract first.** Add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used. Add the same method to the agent-facing method list `spec/api-index.json` too (parameters, return model, Java signatures). `python3 scripts/check-api-index.py` fails if it drifts from the three implementations.
 3. **Create synthetic fixtures and expected results.** Add them to `FIXTURES` and `map_all()` in `scripts/generate-public-data-fixtures.py` and run it. Never copy a real response, and never put in values that identify a person, such as a staff name.
 4. **Implement Java, Python and Node in the same PR.** Reuse the common helpers of `SejongPublicData` for requests, cache and failure isolation, and follow the contract's value rules (empty string when missing, `extra`).
 5. **Write only the tests you need.** One test that the fixture result equals the expected result is enough. Do not add tests that call the school's servers.

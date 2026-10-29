@@ -1,0 +1,417 @@
+{
+  "$comment": "공개 메서드 목록의 단일 원본 (손으로 관리). 사이트 api.json 은 이 파일에서 빌드 때 생성하고, scripts/check-api-index.py 가 Python·Node·Java 구현과 spec/PUBLIC_DATA.md 와 어긋나지 않는지 검사한다. 메서드를 더하거나 바꾸면 이 파일도 같은 PR 에서 고친다.",
+  "schemaVersion": 1,
+  "packages": {
+    "java": { "groupId": "kr.suhsaechan", "artifactId": "sejongpeia", "requires": "Java 17+, Spring Boot 3.x (Spring auto-configuration registers the beans)" },
+    "python": { "package": "pro-sejongpeia", "import": "sejongpeia", "requires": "Python 3.9+, standard library only" },
+    "node": { "package": "pro-sejongpeia", "requires": "Node 18+, zero dependencies, ESM and CommonJS, server only" },
+    "versionPolicy": { "ko": "하위 호환을 보장하지 않으니 버전을 정확히 고정하고 릴리스 노트를 읽고 올림", "en": "No backward-compatibility promise: pin the exact version and read the release notes before upgrading" }
+  },
+  "clients": {
+    "publicData": {
+      "python": "from sejongpeia import SejongPublicData\npublic_data = SejongPublicData()",
+      "node": "import { SejongPublicData } from 'pro-sejongpeia';\nconst publicData = new SejongPublicData();",
+      "java": "@Autowired SejongPublicData publicData; // or new SejongPublicData() without Spring"
+    },
+    "auth": {
+      "python": "from sejongpeia import authenticate  # module functions; SejongAuthClient(...) to change settings",
+      "node": "import { authenticate } from 'pro-sejongpeia';  // module functions; new SejongAuthClient({...}) to change settings",
+      "java": "@Autowired SuhSejongAuthEngine authEngine; // Spring bean"
+    }
+  },
+  "behavior": {
+    "publicData": {
+      "requiresLogin": false,
+      "emptyValue": {
+        "ko": "상류(학교) 실패 시 마지막 캐시 값, 없으면 빈 목록 (dormitory_notices 는 total 0 과 빈 목록의 객체). 예외를 던지지 않음",
+        "en": "On upstream failure: the last cached value, else an empty list (dormitory_notices: an object with total 0 and empty lists). Never raises for upstream problems"
+      },
+      "invalidInput": {
+        "ko": "잘못된 입력만 INVALID_INPUT 예외 (요청 없음)",
+        "en": "Only invalid input raises INVALID_INPUT (no request is sent)"
+      },
+      "cache": {
+        "ko": "메서드·인자별 메모리 캐시, 기본 86400초 (cache_ttl_seconds). 같은 인자의 동시 호출은 요청 1건을 공유. 실패 후 캐시가 없으면 60초(failure_cache_seconds) 동안 요청 없이 빈 값. 최대 500항목",
+        "en": "In-memory cache per method and arguments, 86400 seconds by default (cache_ttl_seconds). Concurrent calls with the same arguments share one request. After a failure with no cached value, the empty value is returned for 60 seconds (failure_cache_seconds) without a request. At most 500 entries"
+      },
+      "valueRules": {
+        "ko": "학교 원문 문자열 그대로, 값이 없으면 빈 문자열 (null 없음). views·total 은 정수, latitude·longitude 는 숫자. 쓰지 않은 학교 필드는 extra (문자열 맵)",
+        "en": "Raw school strings as they are; missing values are empty strings (never null). views and total are integers, latitude and longitude are numbers. Unused school fields land in extra (string map)"
+      }
+    },
+    "auth": {
+      "requiresLogin": true,
+      "failure": {
+        "ko": "실패 시 SejongAuthError(ErrorCode) 예외 (자바는 SejongAuthException). 틀린 비밀번호는 재시도 없이 즉시 실패",
+        "en": "Raises SejongAuthError(ErrorCode) on failure (Java: SejongAuthException). A wrong password fails at once without retry"
+      },
+      "securityNote": {
+        "ko": "서버에서만 호출. 학번·비밀번호를 저장하거나 로그에 남기지 않음",
+        "en": "Call from a server only. Never store or log the student id or password"
+      }
+    }
+  },
+  "methods": [
+    {
+      "id": "organization_categories",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "organization_categories", "node": "organizationCategories", "java": ["organizationCategories"] },
+      "nodeStyle": "none",
+      "javaSignatures": ["organizationCategories()"],
+      "summary": { "ko": "기관 구분 목록 (학부 20, 대학원 30 등)", "en": "Organization categories (undergraduate 20, graduate 30 and so on)" },
+      "parameters": [],
+      "returns": { "model": "OrganizationCategory", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/codes/"
+    },
+    {
+      "id": "terms",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "terms", "node": "terms", "java": ["terms"] },
+      "nodeStyle": "positional",
+      "javaSignatures": ["terms(String categoryCode)"],
+      "summary": { "ko": "기관 구분의 학기 목록", "en": "Terms of one organization category" },
+      "parameters": [
+        { "name": "category_code", "type": "string", "required": true, "description": { "ko": "기관 구분 코드 (organization_categories 결과의 code, 예: 20 학부)", "en": "Organization category code (code from organization_categories, for example 20 for undergraduate)" } }
+      ],
+      "returns": { "model": "Term", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/codes/"
+    },
+    {
+      "id": "departments",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "departments", "node": "departments", "java": ["departments"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["departments(String categoryCode, String year, String semesterCode)"],
+      "summary": { "ko": "학기의 학과 목록", "en": "Departments of one term" },
+      "parameters": [
+        { "name": "category_code", "type": "string", "required": true, "description": { "ko": "기관 구분 코드", "en": "Organization category code" } },
+        { "name": "year", "type": "string", "required": true, "description": { "ko": "연도 4자리 (예: 2026)", "en": "Four-digit year (for example 2026)" } },
+        { "name": "semester_code", "type": "string", "required": true, "description": { "ko": "학기 코드 (10 1학기, 11 하계, 20 2학기, 21 동계)", "en": "Semester code (10 first, 11 summer, 20 second, 21 winter)" } }
+      ],
+      "returns": { "model": "Department", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/codes/"
+    },
+    {
+      "id": "course_types",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "course_types", "node": "courseTypes", "java": ["courseTypes"] },
+      "nodeStyle": "none",
+      "javaSignatures": ["courseTypes()"],
+      "summary": { "ko": "이수 구분 목록 (공필, 전필 등)", "en": "Course types (required, major required and so on)" },
+      "parameters": [],
+      "returns": { "model": "CourseType", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/codes/"
+    },
+    {
+      "id": "selective_domains",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "selective_domains", "node": "selectiveDomains", "java": ["selectiveDomains"] },
+      "nodeStyle": "none",
+      "javaSignatures": ["selectiveDomains()"],
+      "summary": { "ko": "선택 교양 영역 목록", "en": "Elective liberal-arts domains" },
+      "parameters": [],
+      "returns": { "model": "SelectiveDomain", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/codes/"
+    },
+    {
+      "id": "lectures",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "lectures", "node": "lectures", "java": ["lectures"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["lectures(String categoryCode, String year, String semesterCode, String departmentCode, String courseName, String instructorName)"],
+      "summary": { "ko": "개설 강좌 검색 (학과·과목명·교수명은 선택, 모두 비우면 그 학기 전체)", "en": "Search offered lectures (department, course name and instructor are optional; all empty returns the whole term)" },
+      "parameters": [
+        { "name": "category_code", "type": "string", "required": true, "description": { "ko": "기관 구분 코드", "en": "Organization category code" } },
+        { "name": "year", "type": "string", "required": true, "description": { "ko": "연도 4자리", "en": "Four-digit year" } },
+        { "name": "semester_code", "type": "string", "required": true, "description": { "ko": "학기 코드 (10, 11, 20, 21)", "en": "Semester code (10, 11, 20, 21)" } },
+        { "name": "department_code", "type": "string", "required": false, "default": "", "description": { "ko": "학과 코드 (departments 결과의 code), 비우면 전체", "en": "Department code (code from departments); empty means all" } },
+        { "name": "course_name", "type": "string", "required": false, "default": "", "description": { "ko": "과목명 검색어 (앞뒤 공백 제거)", "en": "Course name search text (trimmed)" } },
+        { "name": "instructor_name", "type": "string", "required": false, "default": "", "description": { "ko": "교수명 검색어 (앞뒤 공백 제거)", "en": "Instructor name search text (trimmed)" } }
+      ],
+      "returns": { "model": "Lecture", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "notes": {
+        "ko": "필터를 모두 비우면 학부 한 학기가 약 2,800행·2.4MB라서 학과 하나씩 받기를 권장. Java 는 인자 6개를 모두 넘김 (빈 값은 빈 문자열)",
+        "en": "With all filters empty an undergraduate term is about 2,800 rows and 2.4 MB, so prefer one department at a time. Java takes all six arguments (use an empty string for empty)"
+      },
+      "docs": "data/lectures/"
+    },
+    {
+      "id": "curriculum_courses",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "curriculum_courses", "node": "curriculumCourses", "java": ["curriculumCourses"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["curriculumCourses(String departmentCode, String courseNumber)"],
+      "summary": { "ko": "학과 교육과정의 과목 1건 (학년, 학기, 이수구분, 학점, 교과목 개요)", "en": "One course of a department curriculum (grade, semester, course type, credits, overview)" },
+      "parameters": [
+        { "name": "department_code", "type": "string", "required": true, "description": { "ko": "학과 코드 (departments 결과의 code)", "en": "Department code (code from departments)" } },
+        { "name": "course_number", "type": "string", "required": true, "description": { "ko": "학수번호 (lectures 결과의 course_number)", "en": "Course number (course_number from lectures)" } }
+      ],
+      "returns": { "model": "CurriculumCourse", "isList": true },
+      "invalidInput": { "ko": "학과 코드나 학수번호가 비면 INVALID_INPUT (요청 없음). 그 학과 교육과정에 없는 과목은 빈 목록 (정상)", "en": "INVALID_INPUT when the department code or course number is blank (no request). A course not in that curriculum gives an empty list (valid)" },
+      "requestCount": "1",
+      "docs": "data/curriculum/"
+    },
+    {
+      "id": "calendar",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "calendar", "node": "calendar", "java": ["calendar"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["calendar(String startDate, String endDate)", "calendar(String startDate, String endDate, String categoryCode)"],
+      "summary": { "ko": "학사일정 (기간, 분류)", "en": "Academic calendar events (date range, category)" },
+      "parameters": [
+        { "name": "start", "type": "string", "required": true, "description": { "ko": "시작일 yyyy-MM-dd", "en": "Start date yyyy-MM-dd" } },
+        { "name": "end", "type": "string", "required": true, "description": { "ko": "종료일 yyyy-MM-dd", "en": "End date yyyy-MM-dd" } },
+        { "name": "category_code", "type": "string", "required": false, "default": "0001", "description": { "ko": "일정 분류 (0001 학부, 0002~0007 대학원 계열)", "en": "Calendar category (0001 undergraduate, 0002 to 0007 graduate schools)" } }
+      ],
+      "returns": { "model": "CalendarEvent", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/calendar/"
+    },
+    {
+      "id": "graduate_calendar",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "graduate_calendar", "node": "graduateCalendar", "java": ["graduateCalendar"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["graduateCalendar(String siteId, int year, int month)"],
+      "summary": { "ko": "대학원 사이트별 한 달 학사일정", "en": "One month of a graduate school site calendar" },
+      "parameters": [
+        { "name": "site_id", "type": "string", "required": true, "description": { "ko": "학교의 대학원 사이트 이름 (graduate, gsi, mba, pub, tourgrad, edu, arts 등), 소문자·숫자·하이픈만", "en": "The school's graduate site name (graduate, gsi, mba, pub, tourgrad, edu, arts and so on); lowercase letters, digits and hyphens only" } },
+        { "name": "year", "type": "integer", "required": true, "description": { "ko": "연도 (예: 2026)", "en": "Year (for example 2026)" } },
+        { "name": "month", "type": "integer", "required": true, "description": { "ko": "월 1~12", "en": "Month 1 to 12" } }
+      ],
+      "returns": { "model": "CalendarEvent", "isList": true },
+      "invalidInput": { "ko": "site_id 형태가 틀리면 INVALID_INPUT (요청 없음)", "en": "INVALID_INPUT when site_id has the wrong form (no request)" },
+      "requestCount": "1",
+      "notes": {
+        "ko": "start_date·end_date 는 MM.dd 형태 (calendar 는 yyyy-MM-dd)",
+        "en": "start_date and end_date are MM.dd here (calendar gives yyyy-MM-dd)"
+      },
+      "docs": "data/calendar/"
+    },
+    {
+      "id": "dormitory_menu",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "dormitory_menu", "node": "dormitoryMenu", "java": ["dormitoryMenu"] },
+      "nodeStyle": "positional",
+      "javaSignatures": ["dormitoryMenu()", "dormitoryMenu(String location)"],
+      "summary": { "ko": "기숙사 일주일 식단 (7일, 조식·중식·석식·대체)", "en": "Dormitory weekly menu (7 days: breakfast, lunch, dinner, alternative)" },
+      "parameters": [
+        { "name": "location", "type": "string", "required": false, "default": "SJ", "description": { "ko": "기숙사 위치 코드 (기본 SJ, 다른 값은 확인하지 않음)", "en": "Dormitory location code (default SJ; other values are unverified)" } }
+      ],
+      "returns": { "model": "DormitoryMenuDay", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/dormitory/"
+    },
+    {
+      "id": "dormitory_notices",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "dormitory_notices", "node": "dormitoryNotices", "java": ["dormitoryNotices"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["dormitoryNotices()", "dormitoryNotices(int page, int rows, String keyword, String location)"],
+      "summary": { "ko": "기숙사 공지 목록 (고정 공지와 일반 공지, 전체 건수)", "en": "Dormitory notices (pinned and regular, with total count)" },
+      "parameters": [
+        { "name": "page", "type": "integer", "required": false, "default": 1, "description": { "ko": "쪽 번호 (1부터)", "en": "Page number (from 1)" } },
+        { "name": "rows", "type": "integer", "required": false, "default": 10, "description": { "ko": "쪽당 건수", "en": "Rows per page" } },
+        { "name": "keyword", "type": "string", "required": false, "default": "", "description": { "ko": "제목 검색어", "en": "Title search text" } },
+        { "name": "location", "type": "string", "required": false, "default": "SJ", "description": { "ko": "기숙사 위치 코드", "en": "Dormitory location code" } }
+      ],
+      "returns": { "model": "DormitoryNotices", "isList": false },
+      "invalidInput": null,
+      "requestCount": "1",
+      "notes": {
+        "ko": "작성자 정보는 반환하지 않음. 결과 없음은 장애가 아니라 total 0",
+        "en": "Author fields are not returned. No results is total 0, not an outage"
+      },
+      "docs": "data/dormitory/"
+    },
+    {
+      "id": "cafeteria_menu",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "cafeteria_menu", "node": "cafeteriaMenu", "java": ["cafeteriaMenu"] },
+      "nodeStyle": "positional",
+      "javaSignatures": ["cafeteriaMenu(String placeId)"],
+      "summary": { "ko": "학생식당 한 곳의 메뉴", "en": "Menu of one student cafeteria" },
+      "parameters": [
+        { "name": "place_id", "type": "string", "required": true, "description": { "ko": "학교의 식당 번호 (cafeteria_places 결과의 place_id). 빈 목록이 번호가 틀렸다는 증거는 아님", "en": "The school's cafeteria number (place_id from cafeteria_places). An empty list does not prove the number is wrong" } }
+      ],
+      "returns": { "model": "CafeteriaMenuItem", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/cafeteria/"
+    },
+    {
+      "id": "cafeteria_places",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "cafeteria_places", "node": "cafeteriaPlaces", "java": ["cafeteriaPlaces"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["cafeteriaPlaces()", "cafeteriaPlaces(int maxPlaceId)"],
+      "summary": { "ko": "학식 식당 목록 (번호 1부터 상한까지 메뉴를 조회해 모음)", "en": "Cafeteria list (built by asking menus for number 1 up to the limit)" },
+      "parameters": [
+        { "name": "max_place_id", "type": "integer", "required": false, "default": 10, "description": { "ko": "조회할 식당 번호 상한 (1~50, 기본 10)", "en": "Highest cafeteria number to ask (1 to 50, default 10)" } }
+      ],
+      "returns": { "model": "CafeteriaPlace", "isList": true },
+      "invalidInput": { "ko": "max_place_id 가 1~50 밖이거나 정수가 아니면 INVALID_INPUT (요청 없음)", "en": "INVALID_INPUT when max_place_id is outside 1 to 50 or not an integer (no request)" },
+      "requestCount": "1 to max_place_id",
+      "notes": {
+        "ko": "요청을 번호만큼 차례로 보내는 유일한 메서드. 하나라도 실패하면 목록 전체가 실패(마지막 캐시 또는 빈 목록). 메뉴가 없는 식당은 목록에서 빠짐",
+        "en": "The only method that sends several requests, one after the other. One failure fails the whole list (last cache or empty list). A cafeteria with no menu is missing"
+      },
+      "docs": "data/cafeteria/"
+    },
+    {
+      "id": "campus_places",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "campus_places", "node": "campusPlaces", "java": ["campusPlaces"] },
+      "nodeStyle": "positional",
+      "javaSignatures": ["campusPlaces()", "campusPlaces(String placeType)"],
+      "summary": { "ko": "캠퍼스 지도의 장소 (위도·경도 포함)", "en": "Campus map places (with latitude and longitude)" },
+      "parameters": [
+        { "name": "place_type", "type": "string", "required": false, "default": "", "description": { "ko": "장소 종류 (학교 값 그대로), 비우면 전체", "en": "Place type (the school's value); empty means all" } }
+      ],
+      "returns": { "model": "CampusPlace", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/campus-places/"
+    },
+    {
+      "id": "extracurricular_events",
+      "group": "public_data",
+      "requiresLogin": false,
+      "names": { "python": "extracurricular_events", "node": "extracurricularEvents", "java": ["extracurricularEvents"] },
+      "nodeStyle": "options",
+      "javaSignatures": ["extracurricularEvents(String startDate, String endDate)", "extracurricularEvents(String startDate, String endDate, String category)"],
+      "summary": { "ko": "비교과 프로그램 일정", "en": "Extracurricular program events" },
+      "parameters": [
+        { "name": "start", "type": "string", "required": true, "description": { "ko": "시작일 yyyy-MM-dd", "en": "Start date yyyy-MM-dd" } },
+        { "name": "end", "type": "string", "required": true, "description": { "ko": "종료일 yyyy-MM-dd", "en": "End date yyyy-MM-dd" } },
+        { "name": "category", "type": "string", "required": false, "default": "", "description": { "ko": "비교과 분류 (학교 값 그대로), 비우면 전체", "en": "Event category (the school's value); empty means all" } }
+      ],
+      "returns": { "model": "ExtracurricularEvent", "isList": true },
+      "invalidInput": null,
+      "requestCount": "1",
+      "docs": "data/extracurricular/"
+    },
+    {
+      "id": "authenticate",
+      "group": "auth",
+      "requiresLogin": true,
+      "names": { "python": "authenticate", "node": "authenticate", "java": ["authenticate", "authenticateWithRaw"] },
+      "nodeStyle": "credentials-then-options",
+      "javaSignatures": [
+        "authenticate(String studentId, String password)",
+        "authenticateWithRaw(String studentId, String password)",
+        "authenticate(String studentId, String password, boolean shouldIncludeRaw, boolean shouldIncludeExtra)"
+      ],
+      "summary": { "ko": "통합 인증: 학번·비밀번호 확인 + 학생 정보 + 고전독서 + 연락처 (포털 로그인 1회)", "en": "Combined login: verifies student id and password, returns student info, classic reading and contact data (one portal login)" },
+      "parameters": [
+        { "name": "student_id", "type": "string", "required": true, "description": { "ko": "학번", "en": "Student id" } },
+        { "name": "password", "type": "string", "required": true, "description": { "ko": "포털 비밀번호 (저장·로그 금지)", "en": "Portal password (never store or log)" } },
+        { "name": "include_raw", "type": "boolean", "required": false, "default": false, "description": { "ko": "학교가 준 원문 포함 (디버깅용)", "en": "Include the raw school response (debugging)" } },
+        { "name": "include_extra", "type": "boolean", "required": false, "default": false, "description": { "ko": "SIS 나머지 필드를 extra 로 포함", "en": "Include remaining SIS fields as extra" } }
+      ],
+      "returns": { "model": "SejongAuthResult", "isList": false },
+      "invalidInput": { "ko": "빈 학번이나 빈 비밀번호는 네트워크 호출 전에 INVALID_INPUT", "en": "A blank student id or password gives INVALID_INPUT before any network call" },
+      "requestCount": "portal login once, then one request per step",
+      "notes": {
+        "ko": "SIS 연락처·포털 메인 단계가 실패해도 호출은 성공하고 그 필드만 null",
+        "en": "If the SIS contact or portal main step fails the call still succeeds and only those fields are null"
+      },
+      "docs": "auth/methods/"
+    },
+    {
+      "id": "authenticate_dhc",
+      "group": "auth",
+      "requiresLogin": true,
+      "names": { "python": "authenticate_dhc", "node": "authenticateDhc", "java": ["authenticateWithDHC", "authenticateWithDHCRaw"] },
+      "nodeStyle": "credentials-then-options",
+      "javaSignatures": [
+        "authenticateWithDHC(String studentId, String password)",
+        "authenticateWithDHCRaw(String studentId, String password)"
+      ],
+      "summary": { "ko": "DHC 인증: 학생 정보 + 고전독서", "en": "DHC login: student info and classic reading" },
+      "parameters": [
+        { "name": "student_id", "type": "string", "required": true, "description": { "ko": "학번", "en": "Student id" } },
+        { "name": "password", "type": "string", "required": true, "description": { "ko": "포털 비밀번호 (저장·로그 금지)", "en": "Portal password (never store or log)" } },
+        { "name": "include_raw", "type": "boolean", "required": false, "default": false, "description": { "ko": "원본 HTML 포함 (디버깅용)", "en": "Include the raw HTML (debugging)" } }
+      ],
+      "returns": { "model": "SejongDhcAuthResult", "isList": false },
+      "invalidInput": { "ko": "빈 학번이나 빈 비밀번호는 INVALID_INPUT", "en": "A blank student id or password gives INVALID_INPUT" },
+      "requestCount": "portal login once, then one request per step",
+      "docs": "auth/methods/"
+    },
+    {
+      "id": "authenticate_sis",
+      "group": "auth",
+      "requiresLogin": true,
+      "names": { "python": "authenticate_sis", "node": "authenticateSis", "java": ["authenticateWithSIS", "authenticateWithSISRaw"] },
+      "nodeStyle": "credentials-then-options",
+      "javaSignatures": [
+        "authenticateWithSIS(String studentId, String password)",
+        "authenticateWithSIS(String studentId, String password, boolean shouldIncludeRaw, boolean shouldIncludeExtra)",
+        "authenticateWithSISRaw(String studentId, String password)"
+      ],
+      "summary": { "ko": "SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (학년·상태는 빈 문자열)", "en": "SIS login: student info, contact data and school codes (grade and status are empty strings)" },
+      "parameters": [
+        { "name": "student_id", "type": "string", "required": true, "description": { "ko": "학번", "en": "Student id" } },
+        { "name": "password", "type": "string", "required": true, "description": { "ko": "포털 비밀번호 (저장·로그 금지)", "en": "Portal password (never store or log)" } },
+        { "name": "include_raw", "type": "boolean", "required": false, "default": false, "description": { "ko": "원본 JSON 포함 (디버깅용)", "en": "Include the raw JSON (debugging)" } },
+        { "name": "include_extra", "type": "boolean", "required": false, "default": false, "description": { "ko": "나머지 필드를 extra 로 포함", "en": "Include remaining fields as extra" } }
+      ],
+      "returns": { "model": "SejongSisAuthResult", "isList": false },
+      "invalidInput": { "ko": "빈 학번이나 빈 비밀번호는 INVALID_INPUT", "en": "A blank student id or password gives INVALID_INPUT" },
+      "requestCount": "portal login once, then one request per step",
+      "docs": "auth/methods/"
+    },
+    {
+      "id": "fetch_sis_business_periods",
+      "group": "auth",
+      "requiresLogin": true,
+      "names": { "python": "fetch_sis_business_periods", "node": "fetchSisBusinessPeriods", "java": ["fetchSisBusinessPeriods"] },
+      "nodeStyle": "credentials-then-options",
+      "javaSignatures": ["fetchSisBusinessPeriods(String studentId, String password, String year, String month)"],
+      "summary": { "ko": "SIS 학사 업무 기간 (수강신청 등 업무별 허용 기간)", "en": "SIS business periods (allowed periods per task such as course registration)" },
+      "parameters": [
+        { "name": "student_id", "type": "string", "required": true, "description": { "ko": "학번", "en": "Student id" } },
+        { "name": "password", "type": "string", "required": true, "description": { "ko": "포털 비밀번호 (저장·로그 금지)", "en": "Portal password (never store or log)" } },
+        { "name": "year", "type": "string", "required": true, "description": { "ko": "연도 4자리 (숫자도 가능)", "en": "Four-digit year (a number is accepted)" } },
+        { "name": "month", "type": "string", "required": false, "default": "", "description": { "ko": "월 1~12, 비우면 연간 전체", "en": "Month 1 to 12; empty means the whole year" } }
+      ],
+      "returns": { "model": "SisBusinessPeriod", "isList": true },
+      "invalidInput": { "ko": "연도가 4자리 숫자가 아니거나 월이 1~12·빈 값이 아니면 INVALID_INPUT", "en": "INVALID_INPUT when the year is not 4 digits or the month is not 1 to 12 or empty" },
+      "requestCount": "portal login once, then one request per step",
+      "notes": {
+        "ko": "요청 실패 시 재시도 없이 예외",
+        "en": "A failed request raises without retry"
+      },
+      "docs": "auth/business-periods/"
+    }
+  ]
+}
