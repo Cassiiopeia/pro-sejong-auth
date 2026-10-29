@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T18:44:48Z",
-    "currentVersion": "1.2.46",
+    "lastUpdated": "2026-10-29T19:16:36Z",
+    "currentVersion": "1.2.49",
     "projectType": "spring",
-    "totalReleases": 21,
+    "totalReleases": 22,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,27 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.49",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 101,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * 빌드 도구(Gradle 9)와 자동화 단계(GitHub Actions) 버전 업데이트",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "빌드 도구(Gradle 9)와 자동화 단계(GitHub Actions) 버전 업데이트"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.46",
       "project_type": "spring",
