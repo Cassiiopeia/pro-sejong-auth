@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T18:21:15Z",
-    "currentVersion": "1.2.45",
+    "lastUpdated": "2026-10-29T18:44:48Z",
+    "currentVersion": "1.2.46",
     "projectType": "spring",
-    "totalReleases": 20,
+    "totalReleases": 21,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,33 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.46",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-29",
+      "pr_number": 99,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **버그 수정**\n  * Java 라이브러리의 Maven Central 게시가 문서 생성 오류로 중단되던 문제 수정\n\n* **개선**\n  * Java CI 빌드에 문서 생성 확인 추가",
+      "parsed_changes": {
+        "버그_수정": {
+          "title": "버그 수정",
+          "items": [
+            "Java 라이브러리의 Maven Central 게시가 문서 생성 오류로 중단되던 문제 수정"
+          ]
+        },
+        "개선": {
+          "title": "개선",
+          "items": [
+            "Java CI 빌드에 문서 생성 확인 추가"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.45",
       "project_type": "spring",
