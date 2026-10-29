@@ -71,6 +71,20 @@ cd node && npm ci && npm test                     # Node 18+
 - `README.md`의 `## 최신 버전 :` 줄은 릴리스 워크플로우가 갱신하므로 직접 고치지 않습니다.
 - 확인: `python3 scripts/check-docs.py` (깨진 상대 링크, 언어 전환 링크 누락). PR에서도 `PROJECT-SEJONG-DOCS-CHECK`가 실행됩니다.
 
+## 새 정보 출처 추가하기
+
+학교가 주는 새 정보(개설강좌, 식단 같은 공개 데이터)를 추가하는 방법입니다. 소스는 서로 독립적이고, 공통 계층(`transport`, `errors`)만 함께 씁니다. 그래서 내 소스만 만들면 다른 소스를 건드릴 필요가 없습니다.
+
+1. **이슈로 제안**합니다. 출처 위치, 로그인 필요 여부, 요청 형태(JSON 또는 HTML), 필드, 개인정보 포함 여부를 적어 주세요. JSON이 아니고 HTML만 있는 정보는 기본 원본으로 삼지 않습니다.
+2. **계약을 먼저** 씁니다: `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다.
+3. **합성 fixture와 기대 결과**를 만듭니다: `scripts/generate-public-data-fixtures.py`의 `FIXTURES`와 `map_all()`에 추가하고 실행합니다. 실제 응답을 복사하지 않고, 교직원 이름 같은 개인 식별 값은 넣지 않습니다.
+4. **Java, Python, Node를 한 PR에서** 구현합니다. 요청, 캐시, 실패 격리는 `SejongPublicData`의 공통 헬퍼를 그대로 씁니다. 값 규칙(없으면 빈 문자열, `extra`)은 계약을 따릅니다.
+5. **테스트는 필요한 만큼만**: fixture 결과가 기대 결과와 같은지 하나면 충분합니다. 학교 서버를 부르는 테스트는 넣지 않습니다.
+6. **형태 점검**에 항목을 추가합니다 (`scripts/probe-reference-data.py` 방식, 계정 없이 도는 점검).
+7. 아래 `새 기능을 추가했다면` 노출 체크를 확인합니다.
+
+의존 규칙은 테스트가 지킵니다: 인증 코드와 공개 데이터는 서로 임포트하지 않습니다(`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). 규칙에 걸리면 공유가 필요한 부분을 `transport`나 `errors`로 옮기세요.
+
 ## 새 기능을 추가했다면
 
 기능은 만들었다고 끝이 아닙니다. 사용하는 사람이 보는 모든 곳에 드러나야 합니다. PR을 올리기 전에 확인하세요 (PR 템플릿에도 같은 체크리스트가 있습니다).
