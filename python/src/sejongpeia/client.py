@@ -3,15 +3,19 @@
 import base64
 import json
 import logging
+import re
 import ssl
 import urllib.parse
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Union
 
 from . import __version__
 from .errors import ErrorCode, SejongAuthError
-from .models import SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult
-from .parsers import SIS_CODE_KEYS_BY_FIELD, ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading, parse_sis_user_info, parse_student_info
+from .models import SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult, SisBusinessPeriod
+from .parsers import (
+    SIS_CODE_KEYS_BY_FIELD, ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading,
+    parse_sis_business_periods, parse_sis_run_values, parse_sis_screen_login_date, parse_sis_user_info, parse_student_info,
+)
 from .portal_main_parser import parse_parent_unit_name
 from .transport import USER_AGENT, HttpResponse, UrllibSession, create_ssl_context
 
@@ -40,7 +44,24 @@ SIS_EMPTY_ADD_PARAM = base64.b64encode(
     urllib.parse.quote_plus('{"_runIntgUsrNo":"","_runPgLoginDt":"","_runningSejong":""}').encode("utf-8")
 ).decode("ascii")
 
+# SIS 학사일정조회 화면 (브라우저가 화면을 열 때 보내는 실행 파라미터와 같은 값): 화면 열기(initUserRole) > 목록(doList)
+SIS_USER_ROLE_URL = "https://sjpt.sejong.ac.kr/main/sys/UserRole/initUserRole.do"
+SIS_SCHEDULE_LIST_URL = "https://sjpt.sejong.ac.kr/sch/sch/sud/SudBaseScheSelfServQ/doList.do"
+SIS_MENU_LIST_URL = "https://sjpt.sejong.ac.kr/main/view/Menu/doListUserMenuListLeft.do"
+SIS_MENU_SYSTEM_DIV = "SCH"
+SIS_SCHEDULE_PROGRAM_KEY = "SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ"
+SIS_SCHEDULE_SYSTEM_KEY = "SCH"
+SIS_JSON_CONTENT_TYPE = 'application/json; charset="UTF-8"'
+SIS_YEAR_PATTERN = re.compile(r"\d{4}")
+SIS_MONTH_PATTERN = re.compile(r"(0?[1-9]|1[0-2])?")  # 빈 문자열은 연간 전체
+
 HTTP_UNAUTHORIZED = 401
+
+
+def _encode_sis_add_param(values: dict) -> str:
+    """실행 파라미터 > addParam (JSON > URL 폼 인코딩 > Base64)"""
+    compact_json = json.dumps(values, separators=(",", ":"), ensure_ascii=False)
+    return base64.b64encode(urllib.parse.quote_plus(compact_json).encode("utf-8")).decode("ascii")
 
 
 def _sis_code_values_of(user_info, include_extra: bool) -> dict:
@@ -105,6 +126,59 @@ class SejongAuthClient:
             english_name=user_info.english_name, user_category=user_info.user_category, authenticated_at=datetime.now(),
             raw_json=json_text if include_raw else None, **_sis_code_values_of(user_info, include_extra),
         )
+
+    def fetch_sis_business_periods(self, student_id: str, password: str, year: Union[int, str],
+                                   month: Union[int, str] = "") -> List[SisBusinessPeriod]:
+        """SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (month 비우면 연간 전체, 요청 실패 시 재시도 없이 중단)"""
+        self._validate_credentials(student_id, password)
+        year_text, month_text = self._validate_business_period_filter(year, month)
+        session = self._session_factory()
+        self._login(session, student_id, password, SIS_RETURN_URL)
+        user_info_json = self._fetch_sis_json_with_session(session)
+        user_info, run_values = parse_sis_user_info(user_info_json), parse_sis_run_values(user_info_json)
+        if not (user_info.organization_classification_code and user_info.user_classification_middle_code
+                and user_info.menu_system_id and user_info.menu_system_name):
+            raise SejongAuthError(ErrorCode.DATA_FETCH_FAILED, "SIS organization, user classification or menu code is missing")
+
+        # 메뉴 목록 (서버 세션에 메뉴 권한을 올림, 없으면 화면 열기가 시스템 에러)
+        base_values = {"_runIntgUsrNo": run_values.user_number, "_runPgLoginDt": run_values.login_date,
+                       "_runningSejong": run_values.session_key}
+        menu_request = {"dm_ReqLeftMenu": {"MENU_SYS_ID": user_info.menu_system_id, "SYSTEM_DIV": SIS_MENU_SYSTEM_DIV,
+                                           "MENU_SYS_NM": user_info.menu_system_name}}
+        self._post_sis_json(session, SIS_MENU_LIST_URL, base_values, menu_request, "SIS menu list")
+
+        screen_values = {"_runPgmKey": SIS_SCHEDULE_PROGRAM_KEY, "_runSysKey": SIS_SCHEDULE_SYSTEM_KEY, **base_values}
+        # 화면 열기 (본문 = 실행 파라미터 + pbForceLog) > 응답의 화면 로그인 일시를 목록 요청에 사용
+        role_values = {"pbForceLog": "false", **screen_values}
+        role_json = self._post_sis_json(session, SIS_USER_ROLE_URL, role_values, role_values, "SIS screen open")
+        screen_values["_runPgLoginDt"] = parse_sis_screen_login_date(role_json)
+        search = {"ORGN_CLSF_CD": user_info.organization_classification_code, "YEAR": year_text, "SMT_CD": "", "SMT_NM": "",
+                  "USER_CLSFM_CD": user_info.user_classification_middle_code, "MONTH": month_text}
+        list_json = self._post_sis_json(session, SIS_SCHEDULE_LIST_URL, screen_values, {"dm_search": search}, "SIS schedule list")
+        return parse_sis_business_periods(list_json)
+
+    def _post_sis_json(self, session, url: str, add_param_values: dict, body: dict, step_name: str) -> str:
+        """SIS JSON 요청 1건 (addParam = 실행 파라미터), 세션 종료 응답은 SESSION_ERROR 로 즉시 중단"""
+        add_param = _encode_sis_add_param(add_param_values)
+        response = self._call(session, "POST", f"{url}?addParam={add_param}", data=json.dumps(body, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
+                              headers={"Accept": "application/json", "Content-Type": SIS_JSON_CONTENT_TYPE,
+                                       "Referer": SIS_SSO_URL, "Origin": SIS_ORIGIN})
+        json_text = self._expect_data(response, f"{step_name} request failed")
+        try:
+            ensure_sis_logged_in(json_text)
+        except SejongAuthError as error:
+            if error.code == ErrorCode.AUTHENTICATION_FAILED:
+                raise SejongAuthError(ErrorCode.SESSION_ERROR, f"{step_name} : SIS ended the session") from error
+            raise SejongAuthError(ErrorCode.DATA_FETCH_FAILED, f"{step_name} : SIS returned an error") from error
+        return json_text
+
+    @staticmethod
+    def _validate_business_period_filter(year, month) -> tuple:
+        """연도 4자리, 월 1~12 또는 빈 값 (틀리면 요청 없이 INVALID_INPUT)"""
+        year_text, month_text = str(year or "").strip(), str(month if month is not None else "").strip()
+        if not SIS_YEAR_PATTERN.fullmatch(year_text) or not SIS_MONTH_PATTERN.fullmatch(month_text):
+            raise SejongAuthError(ErrorCode.INVALID_INPUT, "Year must be 4 digits and month 1-12 or empty")
+        return year_text, month_text.lstrip("0")
 
     def _fetch_dhc(self, student_id: str, password: str, should_include_raw_html: bool) -> SejongDhcAuthResult:
         """포털 로그인 > DHC 조회"""

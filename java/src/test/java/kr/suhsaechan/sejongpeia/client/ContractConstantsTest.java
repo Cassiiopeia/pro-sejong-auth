@@ -56,6 +56,18 @@ class ContractConstantsTest {
   }
 
   @Test
+  void SIS_학사일정_값이_contract와_같다() {
+    JsonNode schedule = contract.get("sisSchedule");
+
+    assertEquals(schedule.get("menuListUrl").asText(), SejongSisClient.SJPT_MENU_LIST_URL);
+    assertEquals(schedule.get("userRoleUrl").asText(), SejongSisClient.SJPT_USER_ROLE_URL);
+    assertEquals(schedule.get("listUrl").asText(), SejongSisClient.SJPT_SCHEDULE_LIST_URL);
+    assertEquals(schedule.get("programKey").asText(), SejongSisClient.SCHEDULE_PROGRAM_KEY);
+    assertEquals(schedule.get("systemKey").asText(), SejongSisClient.SCHEDULE_SYSTEM_KEY);
+    assertEquals(schedule.get("menuSystemDiv").asText(), SejongSisClient.MENU_SYSTEM_DIV);
+  }
+
+  @Test
   void 에러_메시지가_contract와_같다() {
     // Java 전용 deprecated 코드(INVALID_CREDENTIALS)는 contract 밖
     contract.get("errorMessageByCode").fields().forEachRemaining(entry ->

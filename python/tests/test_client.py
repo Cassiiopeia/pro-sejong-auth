@@ -1,5 +1,9 @@
 """클라이언트 흐름: 입력 검증, 401, SIS 실패 무시, 타임아웃, 재시도 (네트워크 없음)"""
 
+import base64
+import json
+import urllib.parse
+
 import pytest
 from conftest import FakeSession, ok, status
 
@@ -141,6 +145,74 @@ def test_integrated_raw_only_when_requested(dhc_html, sis_json):
     assert (raw_result.raw_html, raw_result.raw_json) == (dhc_html, sis_json)
     # 켜도 기존 필드는 같음
     assert (raw_result.name, raw_result.email, raw_result.grade) == (default_result.name, default_result.email, default_result.grade)
+
+
+SIS_MENU_LIST = "https://sjpt.sejong.ac.kr/main/view/Menu/doListUserMenuListLeft.do"
+SIS_MENU_LIST_BODY = '{"dl_UserMenuListLeft": []}'
+SIS_USER_ROLE = "https://sjpt.sejong.ac.kr/main/sys/UserRole/initUserRole.do"
+SIS_SCHEDULE_LIST = "https://sjpt.sejong.ac.kr/sch/sch/sud/SudBaseScheSelfServQ/doList.do"
+
+
+def decode_add_param(url):
+    add_param = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["addParam"][0]
+    return json.loads(urllib.parse.unquote_plus(base64.b64decode(add_param).decode("utf-8")))
+
+
+def test_sis_business_periods_follow_browser_request_flow(sis_json):
+    from conftest import read_expected, read_fixture
+    client, sessions = client_with({
+        LOGIN: [ok()], SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)], SIS_MENU_LIST: [ok(SIS_MENU_LIST_BODY)],
+        SIS_USER_ROLE: [ok(read_fixture("sis_user_role.json"))], SIS_SCHEDULE_LIST: [ok(read_fixture("sis_business_periods.json"))],
+    })
+
+    periods = client.fetch_sis_business_periods("21011234", "pw", 2099, 3)
+
+    # 로그인 > SSO > 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (포털 로그인 1회)
+    assert [url.split("?")[0] for url in sessions[0].requested_urls] == [
+        LOGIN, SIS_SSO, SIS_USER_INFO, SIS_MENU_LIST, SIS_USER_ROLE, SIS_SCHEDULE_LIST]
+    menu_request, role_request, list_request = sessions[0].requests[3], sessions[0].requests[4], sessions[0].requests[5]
+    assert json.loads(menu_request[2]) == {"dm_ReqLeftMenu": {"MENU_SYS_ID": "SYS1", "SYSTEM_DIV": "SCH", "MENU_SYS_NM": "학사"}}
+    assert list(decode_add_param(menu_request[1])) == ["_runIntgUsrNo", "_runPgLoginDt", "_runningSejong"]
+    # 화면 열기: 본문과 addParam 이 같은 실행 파라미터 (사용자 정보 응답의 값)
+    expected_role = {"pbForceLog": "false", "_runPgmKey": "SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ", "_runSysKey": "SCH",
+                     "_runIntgUsrNo": "21011234", "_runPgLoginDt": "20991030120000", "_runningSejong": "synthetic-session-value"}
+    assert json.loads(role_request[2]) == decode_add_param(role_request[1]) == expected_role
+    # 목록: 화면 로그인 일시(PG_LOGIN_DT), 조직·사용자 구분 코드는 SIS 사용자 정보에서
+    assert list(decode_add_param(list_request[1])) == ["_runPgmKey", "_runSysKey", "_runIntgUsrNo", "_runPgLoginDt", "_runningSejong"]
+    assert decode_add_param(list_request[1])["_runPgLoginDt"] == "20991030120005"
+    assert json.loads(list_request[2]) == {"dm_search": {"ORGN_CLSF_CD": "20", "YEAR": "2099", "SMT_CD": "", "SMT_NM": "",
+                                                         "USER_CLSFM_CD": "20", "MONTH": "3"}}
+    assert [period.to_dict() for period in periods] == [
+        {"period": item["period"], "start_date": item["startDate"], "end_date": item["endDate"], "schedule_name": item["scheduleName"],
+         "course_group_name": item["courseGroupName"], "target": item["target"], "business_name": item["businessName"],
+         "year_semester": item["yearSemester"], "time_text": item["timeText"], "category_code": item["categoryCode"],
+         "sort_order": item["sortOrder"], "extra": item["extra"]} for item in read_expected("expected_sis_business_periods.json")]
+
+
+def test_sis_business_periods_stop_without_retry_when_school_ends_session(sis_json):
+    from conftest import read_fixture
+    logout = ok(read_fixture("sis_submit_error_logout.json"))
+    client, sessions = client_with({
+        LOGIN: [ok()], SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)], SIS_MENU_LIST: [ok(SIS_MENU_LIST_BODY)],
+        SIS_USER_ROLE: [ok(read_fixture("sis_user_role.json"))], SIS_SCHEDULE_LIST: [logout],
+    })
+
+    with pytest.raises(SejongAuthError) as error:
+        client.fetch_sis_business_periods("21011234", "pw", 2099)
+
+    assert error.value.code == ErrorCode.SESSION_ERROR
+    assert len([url for url in sessions[0].requested_urls if url.startswith(SIS_SCHEDULE_LIST)]) == 1  # 재시도 없음
+
+
+@pytest.mark.parametrize("year,month", [("", ""), ("26", ""), ("2099", "13"), ("2099", "ab"), (None, "")])
+def test_sis_business_periods_invalid_filter_sends_no_request(year, month):
+    client, sessions = client_with({})
+
+    with pytest.raises(SejongAuthError) as error:
+        client.fetch_sis_business_periods("21011234", "pw", year, month)
+
+    assert error.value.code == ErrorCode.INVALID_INPUT
+    assert sessions == []
 
 
 def test_error_message_never_contains_password():

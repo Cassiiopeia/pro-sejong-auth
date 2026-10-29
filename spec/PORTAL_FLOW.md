@@ -67,6 +67,52 @@ Expected mapping for tests: `fixtures/expected_portal_login.json`. The portal so
    - `401`: `AUTHENTICATION_FAILED`; other non-200 or empty body: `DATA_FETCH_FAILED`
    - `200` with `{"_SUBMIT_ERROR_": {"ERRTYPE": "LOGOUT", ...}}`: `AUTHENTICATION_FAILED` (a wrong password leaves no session, the API answers 200 with this error; sample `fixtures/sis_submit_error_logout.json`). Any other `_SUBMIT_ERROR_`: `DATA_FETCH_FAILED`
 
+## Step 2d: SIS business periods (login required, separate operation)
+
+`fetchSisBusinessPeriods(id, pw, year, month)` (Java `fetchSisBusinessPeriods`, Python `fetch_sis_business_periods`, Node `fetchSisBusinessPeriods(id, pw, { year, month })`): the school's business-period calendar of the student's own SIS ("학사일정조회": which business is allowed in which period). It is a different data set from the public academic calendar (`calendar`). Verified on 2026-10-30 with an undergraduate account against the browser's own request flow (2026 October 53 rows, whole year 160 rows). Other student types are not verified.
+
+Input check first: `year` is 4 digits, `month` is 1-12 or empty (empty = the whole year), otherwise `INVALID_INPUT` without any request.
+
+Every request of this operation is a `POST` with the headers of step 2b (`Content-Type: application/json; charset="UTF-8"`). **A malformed request makes the school end the session, so the order and the values below are exact and a failed step is never retried.** Same session, one login: portal login with `rtUrl` of step 2b, SSO, `initUserInfo` of step 2b, then
+
+| # | Request | `addParam` keys (in this order) | Body |
+|---|---|---|---|
+| 1 | `main/view/Menu/doListUserMenuListLeft.do` (puts the menu permission into the server session; without it step 2 answers a system error) | `_runIntgUsrNo`, `_runPgLoginDt`, `_runningSejong` | `{"dm_ReqLeftMenu":{"MENU_SYS_ID":<menuSystemId>,"SYSTEM_DIV":"SCH","MENU_SYS_NM":<menuSystemName>}}` |
+| 2 | `main/sys/UserRole/initUserRole.do` (opens the screen) | `pbForceLog` (`"false"`), `_runPgmKey`, `_runSysKey`, `_runIntgUsrNo`, `_runPgLoginDt`, `_runningSejong` | the same keys and values as the `addParam` |
+| 3 | `sch/sch/sud/SudBaseScheSelfServQ/doList.do` | `_runPgmKey`, `_runSysKey`, `_runIntgUsrNo`, `_runPgLoginDt`, `_runningSejong` | `{"dm_search":{"ORGN_CLSF_CD":<organizationClassificationCode>,"YEAR":"<year>","SMT_CD":"","SMT_NM":"","USER_CLSFM_CD":<userClassificationMiddleCode>,"MONTH":"<month without leading zero or empty>"}}` |
+
+`addParam` = Base64( URL-form-encode( compact JSON of the keys ) ). Values:
+
+| Key | Value |
+|---|---|
+| `_runPgmKey` | `SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ` (the menu code of "학사일정조회", fixed) |
+| `_runSysKey` | `SCH` |
+| `_runIntgUsrNo` | `dm_UserInfo.INTG_USR_NO` of `initUserInfo` |
+| `_runningSejong` | `dm_UserInfo.RUNNING_SEJONG` of `initUserInfo` |
+| `_runPgLoginDt` | steps 1 and 2: `dm_UserInfoGam.LOGIN_DT` (fallback `dm_UserInfoSch.LOGIN_DT`) of `initUserInfo`. Step 3: `dm_UserRole.PG_LOGIN_DT` of the step 2 answer |
+
+The session values (`INTG_USR_NO`, `RUNNING_SEJONG`, `LOGIN_DT`) are never part of a result, a log line or an error message. `ORGN_CLSF_CD`, `USER_CLSFM_CD`, `MENU_SYS_ID` and `MENU_SYS_NM` are the user's own school codes (`organizationClassificationCode`, `userClassificationMiddleCode`, `menuSystemId`, `menuSystemName`); one of them empty: `DATA_FETCH_FAILED` without further requests.
+
+Errors (no retry): non-200 or empty body `DATA_FETCH_FAILED`; `401` `AUTHENTICATION_FAILED`; `_SUBMIT_ERROR_` with `ERRTYPE` `LOGOUT` `SESSION_ERROR`, any other `_SUBMIT_ERROR_` `DATA_FETCH_FAILED` (only the step name in the message, the school's text never); missing `dm_UserRole.PG_LOGIN_DT` or `dl_mainList` that is not an array `PARSE_ERROR`.
+
+Result: a list, one item per `dl_mainList` row. Samples: `fixtures/sis_business_periods.json`, `fixtures/sis_user_role.json`, expected `fixtures/expected_sis_business_periods.json`.
+
+| Field (Python) | `dl_mainList` key | Note |
+|---|---|---|
+| period | `PERIOD` | text, for example `2026-03-01 ∼ 2026-03-15` |
+| startDate (start_date), endDate (end_date) | `START_DT`, `TO_DT` | `yyyyMMdd` as-is (open ended periods end `29991231`) |
+| scheduleName | `SCHEDULE` | |
+| courseGroupName | `CORS_SCHE_GRP_CD_NM` | |
+| target | `TARGET_AUTH` | |
+| businessName | `SYS_NM` | |
+| yearSemester | `YEAR_SMT` | |
+| timeText | `TMS` | |
+| categoryCode | `ORGN_CLSF_CD` | |
+| sortOrder | `PRT_ORD` | string |
+| extra | other scalar keys | same exclusion pattern as the SIS `extra` |
+
+Missing or null values are `""`; one odd row never fails the list. An empty list is a valid answer.
+
 ## Step 2c: portal main (portal.sejong.ac.kr), integrated call only
 
 1. `GET https://portal.sejong.ac.kr/user/index.do` with `Referer: https://portal.sejong.ac.kr`, same session, one attempt, the normal timeout, no retry

@@ -35,6 +35,13 @@ test('classicAndSisValuesMatchContract', () => {
   assert.equal(parsers.SIS_EXTRA_EXCLUDED_KEY_PATTERN, contract.sis.extraExcludedKeyPattern);
 });
 
+test('sisScheduleValuesMatchContract', () => {
+  const schedule = contract.sisSchedule;
+  assert.deepEqual(
+    [client.SIS_MENU_LIST_URL, client.SIS_USER_ROLE_URL, client.SIS_SCHEDULE_LIST_URL, client.SIS_SCHEDULE_PROGRAM_KEY, client.SIS_SCHEDULE_SYSTEM_KEY, client.SIS_MENU_SYSTEM_DIV],
+    [schedule.menuListUrl, schedule.userRoleUrl, schedule.listUrl, schedule.programKey, schedule.systemKey, schedule.menuSystemDiv]);
+});
+
 test('tlsAndErrorMessagesMatchContract', () => {
   assert.equal(transport.PORTAL_CIPHERS, contract.opensslCiphers);
   assert.deepEqual({ ...DEFAULT_MESSAGE_BY_CODE }, contract.errorMessageByCode);

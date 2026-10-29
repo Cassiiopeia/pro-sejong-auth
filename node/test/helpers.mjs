@@ -23,8 +23,10 @@ export function fakeSessionFactory(responsesByUrlPrefix) {
     const queues = Object.fromEntries(Object.entries(responsesByUrlPrefix).map(([prefix, list]) => [prefix, [...list]]));
     const session = {
       requestedUrls: [],
-      async request(method, url) {
+      requests: [], // { method, url, body }
+      async request(method, url, options = {}) {
         session.requestedUrls.push(url);
+        session.requests.push({ method, url, body: options.body });
         const prefix = Object.keys(queues).find((candidate) => url.startsWith(candidate));
         if (!prefix) throw new Error(`unexpected request: ${method} ${url}`);
         const queue = queues[prefix];

@@ -2,7 +2,7 @@
 //   import { authenticate } from 'pro-sejongpeia';
 //   const result = await authenticate('21011234', 'password');
 import { SejongAuthClient } from './client.js';
-import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
+import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult, SisBusinessPeriod } from './models.js';
 
 export { SejongAuthClient, type SejongAuthClientOptions } from './client.js';
 export { ErrorCode, SejongAuthError } from './errors.js';
@@ -16,6 +16,11 @@ const defaultClient = new SejongAuthClient();
 /** 통합 인증 (기본 설정: 10초, 재시도 3회, 인증서 검증) */
 export const authenticate = (studentId: string, password: string, options?: RawOption): Promise<SejongAuthResult> =>
   defaultClient.authenticate(studentId, password, options);
+
+/** SIS 학사 업무 기간 (로그인 필요, month 비우면 연간 전체) */
+export const fetchSisBusinessPeriods = (
+  studentId: string, password: string, query: { year: number | string; month?: number | string },
+): Promise<SisBusinessPeriod[]> => defaultClient.fetchSisBusinessPeriods(studentId, password, query);
 
 /** DHC 인증: 학생 정보 + 고전독서 */
 export const authenticateDhc = (studentId: string, password: string, options?: RawOption): Promise<SejongDhcAuthResult> =>

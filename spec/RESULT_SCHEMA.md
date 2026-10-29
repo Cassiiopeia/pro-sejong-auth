@@ -10,6 +10,10 @@ Java is the reference. Python uses snake_case, Node uses camelCase (same as Java
 | DHC | `authenticateWithDHC` / `authenticateWithDHCRaw` | `authenticate_dhc(id, pw, include_raw=False)` | `authenticateDhc(id, pw, { includeRaw })` |
 | SIS | `authenticateWithSIS` / `authenticateWithSISRaw` / `authenticateWithSIS(id, pw, raw, extra)` | `authenticate_sis(id, pw, include_raw=False, include_extra=False)` | `authenticateSis(id, pw, { includeRaw, includeExtra })` |
 
+| SIS business periods (login) | `fetchSisBusinessPeriods(id, pw, year, month)` | `fetch_sis_business_periods(id, pw, year, month="")` | `fetchSisBusinessPeriods(id, pw, { year, month })` |
+
+The business periods operation returns a list, see `PORTAL_FLOW.md` step 2d for the flow and the item fields.
+
 Input check first: blank student id or password raises `INVALID_INPUT` before any network call.
 
 ## Integrated result

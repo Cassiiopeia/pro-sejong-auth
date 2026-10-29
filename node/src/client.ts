@@ -1,7 +1,8 @@
 // 세종대 포털 인증 클라이언트: 입력 검증 > 포털 로그인(재시도) > SSO > 데이터 조회 > 파싱 (흐름: spec/PORTAL_FLOW.md)
 import { ErrorCode, SejongAuthError } from './errors.js';
-import type { RawOption, SejongAuthResult, SejongSisSchoolCodes, SejongSisUserInfo, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
-import { SIS_CODE_KEYS_BY_FIELD, ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
+import type { RawOption, SejongAuthResult, SejongSisSchoolCodes, SejongSisUserInfo, SisBusinessPeriod, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
+import {
+  SIS_CODE_KEYS_BY_FIELD, parseSisBusinessPeriods, parseSisRunValues, parseSisScreenLoginDate, ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
 import { parseParentUnitName } from './portalMainParser.js';
 import { NodeHttpsSession, TimeoutError, USER_AGENT, type HttpResponse, type RequestOptions, type Session } from './transport.js';
 
@@ -27,6 +28,17 @@ const SIS_EMPTY_ADD_PARAM = Buffer.from(
   new URLSearchParams({ value: '{"_runIntgUsrNo":"","_runPgLoginDt":"","_runningSejong":""}' }).toString().slice('value='.length),
   'utf8',
 ).toString('base64');
+
+// SIS 학사일정조회 화면 (브라우저가 화면을 열 때 보내는 실행 파라미터와 같은 값): 메뉴 목록 > 화면 열기(initUserRole) > 목록(doList)
+export const SIS_MENU_LIST_URL = 'https://sjpt.sejong.ac.kr/main/view/Menu/doListUserMenuListLeft.do';
+export const SIS_USER_ROLE_URL = 'https://sjpt.sejong.ac.kr/main/sys/UserRole/initUserRole.do';
+export const SIS_SCHEDULE_LIST_URL = 'https://sjpt.sejong.ac.kr/sch/sch/sud/SudBaseScheSelfServQ/doList.do';
+export const SIS_SCHEDULE_PROGRAM_KEY = 'SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ';
+export const SIS_SCHEDULE_SYSTEM_KEY = 'SCH';
+export const SIS_MENU_SYSTEM_DIV = 'SCH';
+const SIS_JSON_CONTENT_TYPE = 'application/json; charset="UTF-8"';
+const SIS_YEAR_PATTERN = /^\d{4}$/;
+const SIS_MONTH_PATTERN = /^(0?[1-9]|1[0-2])?$/; // 빈 문자열은 연간 전체
 
 export { USER_AGENT };
 const HTTP_UNAUTHORIZED = 401;
@@ -114,6 +126,43 @@ export class SejongAuthClient {
     };
   }
 
+  /** SIS 학사 업무 기간 조회: 포털 로그인 > SIS 사용자 정보 > 메뉴 목록 > 화면 열기 > 목록 (month 비우면 연간 전체, 요청 실패 시 재시도 없이 중단) */
+  async fetchSisBusinessPeriods(
+    studentId: string, password: string, { year, month = '' }: { year: number | string; month?: number | string },
+  ): Promise<SisBusinessPeriod[]> {
+    validateCredentials(studentId, password);
+    const yearText = String(year ?? '').trim();
+    const monthText = String(month ?? '').trim();
+    if (!SIS_YEAR_PATTERN.test(yearText) || !SIS_MONTH_PATTERN.test(monthText)) {
+      throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Year must be 4 digits and month 1-12 or empty');
+    }
+    const session = this.sessionFactory();
+    await this.login(session, studentId, password, SIS_RETURN_URL);
+    const userInfoJson = await this.fetchSisJsonWithSession(session);
+    const userInfo = parseSisUserInfo(userInfoJson);
+    const runValues = parseSisRunValues(userInfoJson);
+    if (!userInfo.organizationClassificationCode || !userInfo.userClassificationMiddleCode || !userInfo.menuSystemId || !userInfo.menuSystemName) {
+      throw new SejongAuthError(ErrorCode.DATA_FETCH_FAILED, 'SIS organization, user classification or menu code is missing');
+    }
+
+    // 메뉴 목록 (서버 세션에 메뉴 권한을 올림, 없으면 화면 열기가 시스템 에러)
+    const baseValues = { _runIntgUsrNo: runValues.userNumber, _runPgLoginDt: runValues.loginDate, _runningSejong: runValues.sessionKey };
+    const menuRequest = { dm_ReqLeftMenu: { MENU_SYS_ID: userInfo.menuSystemId, SYSTEM_DIV: SIS_MENU_SYSTEM_DIV, MENU_SYS_NM: userInfo.menuSystemName } };
+    await postSisJson(session, SIS_MENU_LIST_URL, baseValues, menuRequest, 'SIS menu list');
+
+    // 화면 열기 (본문 = 실행 파라미터 + pbForceLog) > 응답의 화면 로그인 일시를 목록 요청에 사용
+    const screenValues = { _runPgmKey: SIS_SCHEDULE_PROGRAM_KEY, _runSysKey: SIS_SCHEDULE_SYSTEM_KEY, ...baseValues };
+    const roleValues = { pbForceLog: 'false', ...screenValues };
+    const roleJson = await postSisJson(session, SIS_USER_ROLE_URL, roleValues, roleValues, 'SIS screen open');
+    const search = {
+      ORGN_CLSF_CD: userInfo.organizationClassificationCode, YEAR: yearText, SMT_CD: '', SMT_NM: '',
+      USER_CLSFM_CD: userInfo.userClassificationMiddleCode, MONTH: monthText.replace(/^0+/, ''),
+    };
+    const listJson = await postSisJson(
+      session, SIS_SCHEDULE_LIST_URL, { ...screenValues, _runPgLoginDt: parseSisScreenLoginDate(roleJson) }, { dm_search: search }, 'SIS schedule list');
+    return parseSisBusinessPeriods(listJson);
+  }
+
   /** 포털 로그인 > DHC 조회 */
   private async fetchDhc(studentId: string, password: string, shouldIncludeRawHtml: boolean): Promise<SejongDhcAuthResult> {
     const session = this.sessionFactory();
@@ -187,6 +236,32 @@ export class SejongAuthClient {
     }
     throw new SejongAuthError(ErrorCode.CONNECTION_FAILED, `Max retry count exceeded : ${this.maxRetry}`);
   }
+}
+
+/** 실행 파라미터 > addParam (JSON > URL 폼 인코딩 > Base64) */
+function encodeSisAddParam(values: Record<string, string>): string {
+  const encodedJson = new URLSearchParams({ value: JSON.stringify(values) }).toString().slice('value='.length);
+  return Buffer.from(encodedJson, 'utf8').toString('base64');
+}
+
+/** SIS JSON 요청 1건 (addParam = 실행 파라미터), 세션 종료 응답은 SESSION_ERROR 로 즉시 중단 */
+async function postSisJson(
+  session: Session, url: string, addParamValues: Record<string, string>, body: unknown, stepName: string,
+): Promise<string> {
+  const response = await call(session, 'POST', `${url}?addParam=${encodeSisAddParam(addParamValues)}`, {
+    body: JSON.stringify(body),
+    headers: { Accept: 'application/json', 'Content-Type': SIS_JSON_CONTENT_TYPE, Referer: SIS_SSO_URL, Origin: SIS_ORIGIN },
+  });
+  const jsonText = expectData(response, `${stepName} request failed`);
+  try {
+    ensureSisLoggedIn(jsonText);
+  } catch (error) {
+    if (error instanceof SejongAuthError && error.code === ErrorCode.AUTHENTICATION_FAILED) {
+      throw new SejongAuthError(ErrorCode.SESSION_ERROR, `${stepName} : SIS ended the session`, { cause: error });
+    }
+    throw new SejongAuthError(ErrorCode.DATA_FETCH_FAILED, `${stepName} : SIS returned an error`, { cause: error });
+  }
+  return jsonText;
 }
 
 /** 요청 (TimeoutError 는 그대로, 그 외 네트워크·TLS 오류 > CONNECTION_FAILED) */

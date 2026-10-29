@@ -193,8 +193,11 @@ try {
 | Integrated: student info + classic reading + contact | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: student info + classic reading | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: student info + contact | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
+| SIS business periods (login; which business is allowed in which period, such as course registration or certificate printing) | `fetchSisBusinessPeriods` | `fetch_sis_business_periods` | `fetchSisBusinessPeriods` |
 | With the other SIS fields | `authenticate(id, pw, false, true)` | `include_extra=True` | `{ includeExtra: true }` |
 | With raw response (debugging) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
+
+SIS business periods are not the public academic calendar (`calendar`): they are the per-business allowed periods of the student's own SIS "학사일정조회" screen (`period`, `scheduleName`, `businessName`, `target`, `timeText` and more, school text as-is), queried by year and month (empty month = the whole year). The school ends the session on a malformed request, so the library sends the requests in the browser's exact order and stops without retry on a failure. Verified with one undergraduate account; other student types are not verified. The flow is step 2d of [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md).
 
 The integrated call logs in to the portal **once** and reads DHC and SIS with the same session. It still returns student info when the SIS (contact) lookup fails; contact fields are then null.
 
