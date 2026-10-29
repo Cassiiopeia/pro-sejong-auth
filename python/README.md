@@ -31,6 +31,16 @@ except SejongAuthError as error:
 | `authenticate_dhc(id, pw, include_raw=False)` | 학생 정보 + 고전독서 |
 | `authenticate_sis(id, pw, include_raw=False)` | 학생 정보 + 이메일, 전화번호, 영문 이름 |
 
+### 대신 해결해 주는 것
+
+직접 구현하려면 모두 풀어야 하는 부분입니다.
+
+- 최신 환경의 기본 설정이 막는, 포털이 유일하게 허용하는 암호(`TLS_RSA_WITH_AES_256_CBC_SHA`)를 Python `ssl` 설정으로 자동 허용
+- 방화벽이 막는 기본 User-Agent 대신 식별 가능한 User-Agent 전송
+- 여러 세종대 도메인에 걸친 SSO 쿠키와 리다이렉트 처리
+- 200 응답 안의 판정으로 비밀번호 오류, 계정 잠금, 이용 불가를 즉시 구분 (틀린 비밀번호는 재시도하지 않음)
+- DHC의 HTML 표와 SIS의 JSON을 타입이 있는 결과로 변환
+
 설정: `SejongAuthClient(timeout_seconds=10, max_retry=3, ssl_verification=True)`.
 
 에러 코드(`error.code`): `AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, `ACCOUNT_UNAVAILABLE`, `INVALID_INPUT`, `CONNECTION_FAILED`, `CONNECTION_TIMEOUT`, `SESSION_ERROR`, `DATA_FETCH_FAILED`, `PARSE_ERROR`, `SSL_CONFIGURATION_ERROR`. 메시지가 아니라 코드로 분기하세요.
