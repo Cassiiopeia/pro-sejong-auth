@@ -1,0 +1,258 @@
+---
+// 실시간 체험: 학번·비밀번호를 데모 서버에 보내 라이브러리가 돌려주는 인증 결과를 표/JSON 으로 보여 줌
+import { DEMO_SERVER_HOME_URL, LANDING_COPY, type LandingLocale } from '../i18n/landing';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].demo;
+
+// 클라이언트 스크립트가 읽는 화면 문구 (서버 주소는 스크립트가 직접 가져옴)
+const demoConfiguration = JSON.stringify({ messages: copy });
+const authTypeOptions = [
+  { value: 'INTEGRATED', title: copy.authIntegrated, description: copy.authIntegratedDescription, isDefault: true },
+  { value: 'DHC', title: copy.authDhc, description: copy.authDhcDescription, isDefault: false },
+  { value: 'SIS', title: copy.authSis, description: copy.authSisDescription, isDefault: false },
+];
+---
+
+<section class="landing-section" id="demo" data-demo-root data-demo-configuration={demoConfiguration}>
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <div class="landing-demo">
+    <form class="landing-panel" data-demo-form novalidate>
+      <label class="landing-field">
+        <span class="landing-field__label">{copy.studentIdLabel}</span>
+        <input
+          class="landing-input"
+          name="studentId"
+          inputmode="numeric"
+          autocomplete="username"
+          placeholder={copy.studentIdPlaceholder}
+          required
+        />
+      </label>
+      <label class="landing-field">
+        <span class="landing-field__label">{copy.passwordLabel}</span>
+        <input
+          class="landing-input"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder={copy.passwordPlaceholder}
+          required
+        />
+      </label>
+      <span class="landing-field__label">{copy.authTypeLabel}</span>
+      <div class="landing-auth-types">
+        {
+          authTypeOptions.map((option) => (
+            <label class="landing-auth-type">
+              <input type="radio" name="authType" value={option.value} checked={option.isDefault} />
+              <span>
+                <strong>{option.title}</strong>
+                <small>{option.description}</small>
+              </span>
+            </label>
+          ))
+        }
+      </div>
+      <button class="landing-button landing-button--primary landing-button--block" type="submit" data-demo-submit>
+        {copy.submit}
+      </button>
+      <p class="landing-privacy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>
+          {copy.privacyBefore}<a href={DEMO_SERVER_HOME_URL}>{copy.privacyServerName}</a>{copy.privacyAfter}
+        </span>
+      </p>
+    </form>
+
+    <div class="landing-panel" aria-live="polite">
+      <div class="landing-result-header">
+        <h3>{copy.resultTitle}</h3>
+        <div class="landing-result-tools">
+          <label class="landing-mask-toggle">
+            <input type="checkbox" data-demo-mask-toggle checked />
+            <span>{copy.maskToggle}</span>
+          </label>
+          <div class="landing-tabs" role="tablist">
+            <button class="landing-tab" type="button" role="tab" aria-selected="true" data-demo-tab="table">{copy.tabTable}</button>
+            <button class="landing-tab" type="button" role="tab" aria-selected="false" data-demo-tab="json">{copy.tabJson}</button>
+          </div>
+        </div>
+      </div>
+      <div data-demo-result>
+        <div class="landing-result-empty">{copy.resultEmpty}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // 체험 폼 동작: 입력 검증 > multipart POST(제한 시간) > 결과 렌더 > 비밀번호 칸 비우기
+  import { DEMO_AUTH_API_URL, DEMO_ERROR_CODES, DEMO_REQUEST_TIMEOUT_MILLISECONDS } from '../i18n/landing';
+
+  type DemoResponse = Record<string, any>;
+
+  const demoRoot = document.querySelector<HTMLElement>('[data-demo-root]');
+  if (demoRoot) {
+    const configuration = JSON.parse(demoRoot.dataset.demoConfiguration ?? '{}');
+    const messages = configuration.messages;
+    const errorCodes: string[] = [...DEMO_ERROR_CODES];
+
+    const demoForm = demoRoot.querySelector<HTMLFormElement>('[data-demo-form]')!;
+    const submitButton = demoRoot.querySelector<HTMLButtonElement>('[data-demo-submit]')!;
+    const resultArea = demoRoot.querySelector<HTMLElement>('[data-demo-result]')!;
+    const maskToggle = demoRoot.querySelector<HTMLInputElement>('[data-demo-mask-toggle]')!;
+    const tabButtons = demoRoot.querySelectorAll<HTMLButtonElement>('[data-demo-tab]');
+
+    let lastDemoResponse: DemoResponse | null = null;
+    let activeResultTab = 'table';
+
+    const escapeHtml = (text: unknown) =>
+      String(text).replace(/[&<>"']/g, (character) => {
+        const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return entities[character];
+      });
+
+    // 개인정보 가리기: 이름 가운데, 학번·전화 뒷자리, 이메일 아이디 일부 > *
+    const maskPersonalValue = (fieldName: string, value: any) => {
+      if (!maskToggle.checked || value == null || value === '') return value;
+      const text = String(value);
+      switch (fieldName) {
+        case 'name':
+          return text.length <= 1
+            ? '*'
+            : text[0] + '*'.repeat(Math.max(1, text.length - 2)) + (text.length > 2 ? text[text.length - 1] : '');
+        case 'englishName':
+          return text
+            .split(' ')
+            .map((word) => word[0] + '*'.repeat(Math.max(0, word.length - 1)))
+            .join(' ');
+        case 'studentId':
+          return text.slice(0, 4) + '*'.repeat(Math.max(0, text.length - 4));
+        case 'phoneNumber':
+          return text.replace(/\d{4}$/, '****').replace(/-(\d{3,4})-/, '-****-');
+        case 'email':
+          return text.replace(/^(.{2})[^@]*/, '$1***');
+        default:
+          return text;
+      }
+    };
+
+    const buildResultRow = (fieldName: string, value: any) => {
+      if (value == null || value === '') return '';
+      return `<tr><th>${escapeHtml(messages.rowLabels[fieldName])}</th><td>${escapeHtml(maskPersonalValue(fieldName, value))}</td></tr>`;
+    };
+
+    const buildClassicReadingTable = (classicReading: any) => {
+      const certifications = classicReading && Array.isArray(classicReading.certifications) ? classicReading.certifications : [];
+      if (certifications.length === 0) return '';
+      const rows = certifications
+        .map(
+          (certification: any) =>
+            `<tr><th>${escapeHtml(certification.area)}</th><td>${escapeHtml(certification.certifiedCount)} / ${escapeHtml(certification.requiredCount)}</td></tr>`,
+        )
+        .join('');
+      return `<h4 class="landing-subheading">${escapeHtml(messages.classicTitle)}</h4><table class="landing-result-table">${rows}</table>`;
+    };
+
+    // JSON 탭용: 가리기가 켜져 있으면 개인정보 필드도 가림
+    const toMaskedResponse = (response: DemoResponse) => {
+      const maskedResponse = { ...response };
+      ['name', 'englishName', 'studentId', 'phoneNumber', 'email'].forEach((fieldName) => {
+        if (maskedResponse[fieldName] != null) maskedResponse[fieldName] = maskPersonalValue(fieldName, maskedResponse[fieldName]);
+      });
+      return maskedResponse;
+    };
+
+    // 결과 렌더: 성공 > 표·고전독서 / 실패 > 에러 코드 의미 / JSON 탭은 원문(가리기 적용)
+    const renderDemoResponse = (response: DemoResponse) => {
+      if (activeResultTab === 'json') {
+        resultArea.innerHTML = `<pre class="landing-json">${escapeHtml(JSON.stringify(toMaskedResponse(response), null, 2))}</pre>`;
+        return;
+      }
+      if (!response.isSuccess) {
+        const knownMeaning = errorCodes.includes(response.errorCode)
+          ? messages.errorMeanings[response.errorCode]
+          : response.errorMessage || '';
+        resultArea.innerHTML = `<div class="landing-error-box"><strong>${escapeHtml(messages.failure)}</strong>${escapeHtml(knownMeaning)}${
+          response.errorCode ? ` <code>${escapeHtml(response.errorCode)}</code>` : ''
+        }</div>`;
+        return;
+      }
+      resultArea.innerHTML = `
+        <span class="landing-status-chip">✓ ${escapeHtml(messages.success)}</span>
+        <table class="landing-result-table">
+          ${buildResultRow('authType', response.authType)}
+          ${buildResultRow('studentId', response.studentId)}
+          ${buildResultRow('name', response.name)}
+          ${buildResultRow('major', response.major)}
+          ${buildResultRow('grade', response.grade)}
+          ${buildResultRow('status', response.status)}
+          ${buildResultRow('email', response.email)}
+          ${buildResultRow('phoneNumber', response.phoneNumber)}
+          ${buildResultRow('englishName', response.englishName)}
+          ${buildResultRow('authenticatedAt', response.authenticatedAt)}
+        </table>
+        ${buildClassicReadingTable(response.classicReading)}`;
+    };
+
+    const renderDemoMessage = (message: string) => {
+      lastDemoResponse = null;
+      resultArea.innerHTML = `<div class="landing-error-box">${escapeHtml(message)}</div>`;
+    };
+
+    const submitDemoAuthentication = async (event: SubmitEvent) => {
+      event.preventDefault();
+      const studentIdInput = demoForm.elements.namedItem('studentId') as HTMLInputElement;
+      const passwordInput = demoForm.elements.namedItem('password') as HTMLInputElement;
+      const studentId = studentIdInput.value.trim();
+      const password = passwordInput.value;
+      if (!studentId || !password) {
+        renderDemoMessage(messages.inputRequired);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('studentId', studentId);
+      formData.append('password', password);
+      formData.append('authType', (demoForm.querySelector('input[name="authType"]:checked') as HTMLInputElement).value);
+
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), DEMO_REQUEST_TIMEOUT_MILLISECONDS);
+      submitButton.disabled = true;
+      submitButton.textContent = messages.submitting;
+      try {
+        const httpResponse = await fetch(DEMO_AUTH_API_URL, { method: 'POST', body: formData, signal: abortController.signal });
+        if (!httpResponse.ok) throw new Error('HTTP ' + httpResponse.status);
+        lastDemoResponse = await httpResponse.json();
+        renderDemoResponse(lastDemoResponse!);
+      } catch (error) {
+        renderDemoMessage((error as Error).name === 'AbortError' ? messages.timeoutError : messages.networkError);
+      } finally {
+        // 성공·실패 공통
+        clearTimeout(timeoutId);
+        passwordInput.value = '';
+        submitButton.disabled = false;
+        submitButton.textContent = messages.submit;
+      }
+    };
+
+    demoForm.addEventListener('submit', submitDemoAuthentication);
+    maskToggle.addEventListener('change', () => {
+      if (lastDemoResponse) renderDemoResponse(lastDemoResponse);
+    });
+    tabButtons.forEach((tabButton) => {
+      tabButton.addEventListener('click', () => {
+        activeResultTab = tabButton.dataset.demoTab ?? 'table';
+        tabButtons.forEach((otherButton) => otherButton.setAttribute('aria-selected', String(otherButton === tabButton)));
+        if (lastDemoResponse) renderDemoResponse(lastDemoResponse);
+      });
+    });
+  }
+</script>

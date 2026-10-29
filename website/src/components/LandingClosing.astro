@@ -1,0 +1,23 @@
+---
+// 랜딩 마무리: 다음에 읽을 문서 링크와 면책 문구
+import { LANDING_COPY, REPOSITORY_URL, type LandingLocale } from '../i18n/landing';
+import { documentUrl } from '../i18n/links';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].closing;
+---
+
+<section class="landing-section landing-closing" id="read-on">
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <div class="landing-hero__actions">
+    <a class="landing-button landing-button--primary" href={documentUrl(locale, 'start/introduction/')}>{copy.docs}</a>
+    <a class="landing-button" href={documentUrl(locale, 'api-stability/')}>{copy.stability}</a>
+    <a class="landing-button" href={documentUrl(locale, 'contribute/issues-and-prs/')}>{copy.contribute}</a>
+    <a class="landing-button" href={REPOSITORY_URL}>GitHub</a>
+  </div>
+  <p class="landing-disclaimer">{copy.disclaimer}</p>
+</section>

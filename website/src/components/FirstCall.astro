@@ -1,0 +1,65 @@
+---
+// "30초 첫 호출": 언어별 설치 + 학번 인증 + 로그인 없이 학과 코드 받기
+import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
+import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].firstCall;
+
+// 코드 예시: docs/INTEGRATION_EXAMPLES, README 의 검증된 호출 형태 (코드 주석만 언어별)
+const termComment = locale === 'ko' ? '학부, 2026년 2학기' : 'undergraduate, 2026 2nd semester';
+const springComment = locale === 'ko' ? 'Spring 에서는 빈으로 주입' : 'inject it as a bean in Spring';
+const javaAuth = `// build.gradle: implementation "kr.suhsaechan:sejongpeia:<version>"
+SejongAuthResult result = sejongAuthEngine.authenticate("21011234", "${copy.passwordPlaceholder}");
+result.getName();    // "홍길동"
+result.getMajor();   // "컴퓨터공학과"`;
+const javaPublic = `SejongPublicData publicData = new SejongPublicData();   // ${springComment}
+List<Department> departments = publicData.departments("20", "2026", "20");   // ${termComment}`;
+
+const pythonAuth = `# pip install pro-sejongpeia
+from sejongpeia import authenticate
+
+result = authenticate("21011234", "${copy.passwordPlaceholder}")
+print(result.name, result.major)`;
+const pythonPublic = `from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")   # ${termComment}`;
+
+const nodeAuth = `// npm install pro-sejongpeia
+import { authenticate } from 'pro-sejongpeia';
+
+const result = await authenticate('21011234', '${copy.passwordPlaceholder}');
+console.log(result.name, result.major);`;
+const nodePublic = `import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData();
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });`;
+
+const snippets = [
+  { label: 'Java', lang: 'java', auth: javaAuth, publicCode: javaPublic },
+  { label: 'Python', lang: 'python', auth: pythonAuth, publicCode: pythonPublic },
+  { label: 'Node.js', lang: 'js', auth: nodeAuth, publicCode: nodePublic },
+];
+---
+
+<section class="landing-section" id="first-call">
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <Tabs syncKey="language">
+    {
+      snippets.map((snippet) => (
+        <TabItem label={snippet.label}>
+          <p class="landing-code-label">{copy.authLabel}</p>
+          <Code code={snippet.auth} lang={snippet.lang} />
+          <p class="landing-code-label">{copy.publicLabel}</p>
+          <Code code={snippet.publicCode} lang={snippet.lang} />
+        </TabItem>
+      ))
+    }
+  </Tabs>
+  <p class="landing-note">{copy.note}</p>
+</section>

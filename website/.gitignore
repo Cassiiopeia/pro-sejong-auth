@@ -1,0 +1,4 @@
+# 빌드 결과와 설치물은 추적하지 않음
+node_modules/
+dist/
+.astro/

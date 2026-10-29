@@ -1,0 +1,29 @@
+---
+// 받을 수 있는 정보 8종: 카드마다 메서드 이름과 레퍼런스 링크
+import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
+import { documentUrl } from '../i18n/links';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].features;
+---
+
+<section class="landing-section" id="features">
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <ul class="landing-grid landing-grid--four">
+    {
+      copy.cards.map((card) => (
+        <li>
+          <a class="landing-card" href={documentUrl(locale, card.link)}>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+            <span class="landing-card__methods">{card.methods.split(' · ').map((methodName) => <code>{methodName}</code>)}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
