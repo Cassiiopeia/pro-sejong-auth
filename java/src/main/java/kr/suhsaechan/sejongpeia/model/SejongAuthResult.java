@@ -54,8 +54,11 @@ public class SejongAuthResult {
   /** 인증 시간 */
   private final LocalDateTime authenticatedAt;
 
-  /** 원본 HTML (디버깅용, 기본 null) */
+  /** DHC 원본 HTML (원본 옵션일 때만, 기본 null) */
   private final String rawHtml;
+
+  /** SIS 원본 JSON (원본 옵션일 때만, SIS 조회 실패 시 null): 세션값·접속 IP 포함이라 외부 전달 금지 */
+  private final String rawJson;
 
   @Override
   public String toString() {

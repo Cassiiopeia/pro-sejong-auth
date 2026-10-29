@@ -193,7 +193,7 @@ try {
 | 통합: 학생 정보 + 고전독서 + 연락처 | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: 학생 정보 + 고전독서 | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: 학생 정보 + 연락처 | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
-| 원본 응답 포함 (디버깅) | `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
+| 원본 응답 포함 (디버깅) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
 
 통합 인증은 포털에 **한 번만** 로그인하고 같은 세션으로 DHC와 SIS를 조회합니다. SIS(연락처) 조회가 실패해도 학생 정보는 돌려주고, 연락처 칸만 null이 됩니다.
 
@@ -269,7 +269,10 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 | `userCategory` | string 또는 null | 사용자 구분, 예: `학부생` (SIS 실패 시 null) |
 | `parentUnitName` | string 또는 null | 학과의 상위 소속 이름(단과대학 또는 학부), 포털 메인 화면 표기에서 추출 (호출 실패 시 null, 값이 없으면 빈 문자열). 학년도마다 바뀌는 포털 표기 원문이라 값 목록으로 분기하거나 인증 판정에 쓰지 마세요 |
 | `authenticatedAt` | 날짜·시간 | 인증 시각 |
+| `rawHtml` | string 또는 null | DHC 원문 HTML (원본 옵션일 때만) |
+| `rawJson` | string 또는 null | SIS 원문 JSON (원본 옵션일 때만, SIS 실패 시 null) |
 
+- 원본 옵션은 추가 요청 없이 이미 받은 응답만 담습니다. SIS 원문에는 세션 식별자로 보이는 값, 접속 IP, 접속 시각이 들어 있으니 외부 클라이언트에 그대로 내려주지 마세요. 원문의 키와 구조는 학교가 바꾸면 달라질 수 있어 호환성 보장 범위 밖입니다.
 - DHC 결과: 연락처 필드 없음, 원본 옵션 사용 시 `rawHtml` 포함
 - SIS 결과: `userCategory` 포함, 고전독서 필드 없음, `grade`·`status`는 빈 문자열, 원본 옵션 사용 시 `rawJson` 포함
 

@@ -58,17 +58,19 @@ export class SejongAuthClient {
     this.sessionFactory = _sessionFactory ?? (() => new NodeHttpsSession(this.timeoutSeconds, this.sslVerification, USER_AGENT));
   }
 
-  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 null) */
-  async authenticate(studentId: string, password: string): Promise<SejongAuthResult> {
+  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 null, includeRaw 면 받은 원문만 담음) */
+  async authenticate(studentId: string, password: string, { includeRaw = false }: RawOption = {}): Promise<SejongAuthResult> {
     validateCredentials(studentId, password);
     const session = this.sessionFactory();
     await this.login(session, studentId, password, CLASSIC_RETURN_URL);
-    const dhcResult = await this.fetchDhcWithSession(session, false);
+    const dhcResult = await this.fetchDhcWithSession(session, includeRaw);
 
     let contact: { email: string | null; phoneNumber: string | null; englishName: string | null; userCategory: string | null } =
       { email: null, phoneNumber: null, englishName: null, userCategory: null };
+    let sisJson: string | null = null;
     try {
-      const sisUserInfo = parseSisUserInfo(await this.fetchSisJsonWithSession(session));
+      sisJson = await this.fetchSisJsonWithSession(session);
+      const sisUserInfo = parseSisUserInfo(sisJson);
       contact = {
         email: sisUserInfo.email, phoneNumber: sisUserInfo.phoneNumber, englishName: sisUserInfo.englishName,
         userCategory: sisUserInfo.userCategory,
@@ -80,7 +82,10 @@ export class SejongAuthClient {
     const parentUnitName = await this.fetchParentUnitName(session, dhcResult.major);
 
     const { rawHtml, ...dhcFields } = dhcResult;
-    return { ...dhcFields, ...contact, parentUnitName, authenticatedAt: new Date() };
+    return {
+      ...dhcFields, ...contact, parentUnitName, authenticatedAt: new Date(),
+      rawHtml, rawJson: includeRaw ? sisJson : null,
+    };
   }
 
   /** DHC 인증: 학생 정보 + 고전독서 (includeRaw 면 원본 HTML 포함) */
