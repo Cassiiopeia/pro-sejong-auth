@@ -2,6 +2,8 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
+<img src="docs/assets/banner/banner-a-crimson.ko.svg" alt="pro-sejong-auth: 세종대학교 포털 로그인과 학생 정보를 한 번에" width="880">
+
 # pro-sejong-auth
 
 **세종대 로그인 API: 세종대학교 포털 인증을 Java·Python·Node에서 한 번에**
@@ -18,6 +20,21 @@
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejong-auth/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejong-auth/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ### [▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejong-auth/#demo)
+
+<!-- TODO(#50): 시안을 고르면 이 블록 삭제 -->
+<details>
+<summary>배너 시안 6종 (선택 전 임시)</summary>
+
+이슈 #50에서 시안을 고르면 이 영역은 삭제합니다. 위쪽 배너는 시안 A입니다.
+
+<img src="docs/assets/banner/banner-a-crimson.ko.svg" alt="a-crimson" width="720"><br>
+<img src="docs/assets/banner/banner-b-terminal.ko.svg" alt="b-terminal" width="720"><br>
+<img src="docs/assets/banner/banner-c-flow.ko.svg" alt="c-flow" width="720"><br>
+<img src="docs/assets/banner/banner-d-checklist.ko.svg" alt="d-checklist" width="720"><br>
+<img src="docs/assets/banner/banner-e-languages.ko.svg" alt="e-languages" width="720"><br>
+<img src="docs/assets/banner/banner-f-minimal.ko.svg" alt="f-minimal" width="720"><br>
+
+</details>
 
 </div>
 
