@@ -33,3 +33,23 @@
 - name: 취소
   color: f28b25
   description: 작업 취소됨
+
+- name: bug
+  color: B60205
+  description: 동작 오류 제보 (버그)
+
+- name: feature
+  color: 1D76DB
+  description: 새 기능 제안
+
+- name: good first issue
+  color: 7057FF
+  description: 처음 기여하기 좋은 작은 이슈
+
+- name: help wanted
+  color: 008672
+  description: 기여 도움을 기다리는 이슈
+
+- name: data-source
+  color: 0E8A16
+  description: 새 학교 정보 출처 제안
