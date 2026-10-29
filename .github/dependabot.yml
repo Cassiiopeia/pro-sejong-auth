@@ -1,0 +1,31 @@
+# 의존성 업데이트 알림: 생태계마다 월 1회, 묶어서 PR 1개 (포털 비밀번호를 다루므로 보안 업데이트 누락 방지)
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      gradle:
+        patterns: ["*"]
+  - package-ecosystem: pip
+    directory: "/python"
+    schedule:
+      interval: monthly
+    groups:
+      pip:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: "/node"
+    schedule:
+      interval: monthly
+    groups:
+      npm:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]

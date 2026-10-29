@@ -1,0 +1,36 @@
+# GitHub Release 생성: deploy 푸시 시 version.yml 버전 > CHANGELOG.md 의 같은 버전 절을 본문으로 (이미 있으면 건너뜀)
+name: PROJECT-SEJONG-GITHUB-RELEASE
+
+on:
+  push:
+    branches: ["deploy"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(sed -n 's/^version: *"\([0-9.]*\)".*/\1/p' version.yml)
+          TAG="v${VERSION}"
+          if [ -z "$VERSION" ]; then echo "[github release] version not found in version.yml"; exit 1; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then echo "[github release] skipped : $TAG exists"; exit 0; fi
+
+          # 본문: "## [버전]" 다음 줄부터 다음 "---" 전까지
+          awk -v header="## [${VERSION}]" '
+            index($0, header) == 1 { found = 1; next }
+            found && /^---/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then echo "[github release] CHANGELOG section missing for $VERSION"; exit 1; fi
+
+          # 태그는 버전 워크플로우가 main 에 만든 것을 사용, 없으면 현재 커밋에 생성
+          gh release create "$TAG" --title "$TAG" --notes-file release-notes.md --latest --target "$GITHUB_SHA"
+          echo "[github release] created : $TAG"
