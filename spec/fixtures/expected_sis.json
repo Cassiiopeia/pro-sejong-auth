@@ -5,5 +5,23 @@
   "email": "student@example.com",
   "phoneNumber": "010-1234-5678",
   "englishName": "Hong Gildong",
-  "userCategory": "학부생"
+  "userCategory": "학부생",
+  "departmentCode": "1234567",
+  "organizationClassificationCode": "20",
+  "enrollmentStatusCode": "10",
+  "userClassificationCode": "20",
+  "userClassificationLargeCode": "10",
+  "userClassificationMiddleCode": "20",
+  "roleCode": "R01",
+  "roleName": "학생",
+  "menuSystemId": "SYS1",
+  "menuSystemName": "학사",
+  "locale": "ko",
+  "extra": {
+    "dm_UserInfoSch.NM": "홍길동",
+    "dm_UserInfoSch.USER_ID": "21011234",
+    "dm_UserInfoSch.GRADE_SCOPE_CD": "S1",
+    "dm_UserInfoGam.USER_NM": "홍길동",
+    "dm_UserInfo.INTG_KOR_NM": "홍길동"
+  }
 }

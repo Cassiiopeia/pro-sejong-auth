@@ -22,6 +22,22 @@ class SejongSisParserTest {
   }
 
   @Test
+  void 학과_코드는_DEPT_CD_우선_없으면_DEPT_NO_이고_민감_필드는_extra에_없다() {
+    String json = """
+        {"dm_UserInfo": {"INTG_USR_NO": "1", "RUNNING_SEJONG": "synthetic-session-value"},
+         "dm_UserInfoGam": {"DEPT_NO": "OTHER", "ADDR1": "synthetic address"},
+         "dm_UserInfoSch": {"DEPT_CD": "1234567", "GRADE_SCOPE_CD": "S1", "IP": "203.0.113.1", "PWD_YN": "N",
+                            "CD_ALIAS1": "synthetic staff name", "RESI_NO": "000000-0000000"}}
+        """;
+
+    var fields = parser.parseSchoolFields(json);
+    assertEquals("1234567", fields.departmentCode());
+    assertEquals(java.util.Map.of("dm_UserInfoSch.GRADE_SCOPE_CD", "S1"), fields.extra());
+
+    assertEquals("OTHER", parser.parseSchoolFields(json.replace("\"DEPT_CD\": \"1234567\", ", "")).departmentCode());
+  }
+
+  @Test
   void 학생정보_파싱_성공() {
     log.info("============ 학생정보 파싱 성공 테스트 ============");
 

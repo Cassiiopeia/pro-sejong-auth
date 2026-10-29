@@ -18,5 +18,6 @@ class SisContractConstantsTest {
 
     assertEquals(sis.get("submitErrorKey").asText(), SejongSisParser.SUBMIT_ERROR_KEY);
     assertEquals(sis.get("loggedOutErrorType").asText(), SejongSisParser.LOGGED_OUT_ERROR_TYPE);
+    assertEquals(sis.get("extraExcludedKeyPattern").asText(), SejongSisParser.EXTRA_EXCLUDED_KEY_PATTERN);
   }
 }

@@ -11,7 +11,7 @@ from typing import Callable, Optional
 from . import __version__
 from .errors import ErrorCode, SejongAuthError
 from .models import SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult
-from .parsers import ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading, parse_sis_user_info, parse_student_info
+from .parsers import SIS_CODE_KEYS_BY_FIELD, ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading, parse_sis_user_info, parse_student_info
 from .portal_main_parser import parse_parent_unit_name
 from .transport import USER_AGENT, HttpResponse, UrllibSession, create_ssl_context
 
@@ -43,6 +43,13 @@ SIS_EMPTY_ADD_PARAM = base64.b64encode(
 HTTP_UNAUTHORIZED = 401
 
 
+def _sis_code_values_of(user_info, include_extra: bool) -> dict:
+    """SIS 사용자 정보 > 결과에 붙일 코드 필드 (extra 는 요청했을 때만)"""
+    code_values = {field_name: getattr(user_info, field_name) for field_name in SIS_CODE_KEYS_BY_FIELD}
+    code_values["extra"] = dict(user_info.extra) if include_extra else None
+    return code_values
+
+
 class SejongAuthClient:
     """세종대 포털 인증 (설정: 제한 시간 초, 로그인 재시도 횟수, 인증서 검증)"""
 
@@ -53,19 +60,22 @@ class SejongAuthClient:
         self.ssl_verification = ssl_verification
         self._session_factory = _session_factory or self._create_session
 
-    def authenticate(self, student_id: str, password: str, include_raw: bool = False) -> SejongAuthResult:
-        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 None, include_raw=True 면 받은 원문만 담음)"""
+    def authenticate(self, student_id: str, password: str, include_raw: bool = False,
+                     include_extra: bool = False) -> SejongAuthResult:
+        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 None, include_raw=True 면 받은 원문, include_extra=True 면 SIS 나머지 필드 extra)"""
         self._validate_credentials(student_id, password)
         session = self._session_factory()
         self._login(session, student_id, password, CLASSIC_RETURN_URL)
         dhc_result = self._fetch_dhc_with_session(session, should_include_raw_html=include_raw)
 
         email = phone_number = english_name = user_category = sis_json = None
+        sis_code_values: dict = {}
         try:
             sis_json = self._fetch_sis_json_with_session(session)
             sis_user_info = parse_sis_user_info(sis_json)
             email, phone_number, english_name = sis_user_info.email, sis_user_info.phone_number, sis_user_info.english_name
             user_category = sis_user_info.user_category
+            sis_code_values = _sis_code_values_of(sis_user_info, include_extra)
         except Exception as error:  # SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
             LOGGER.warning("[sejong auth] SIS contact lookup failed (ignored) : %s", type(error).__name__)
         parent_unit_name = self._fetch_parent_unit_name(session, dhc_result.major)
@@ -75,7 +85,7 @@ class SejongAuthClient:
             grade=dhc_result.grade, status=dhc_result.status, classic_reading=dhc_result.classic_reading,
             email=email, phone_number=phone_number, english_name=english_name, user_category=user_category,
             parent_unit_name=parent_unit_name, authenticated_at=datetime.now(),
-            raw_html=dhc_result.raw_html, raw_json=sis_json if include_raw else None,
+            raw_html=dhc_result.raw_html, raw_json=sis_json if include_raw else None, **sis_code_values,
         )
 
     def authenticate_dhc(self, student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:
@@ -83,8 +93,9 @@ class SejongAuthClient:
         self._validate_credentials(student_id, password)
         return self._fetch_dhc(student_id, password, should_include_raw_html=include_raw)
 
-    def authenticate_sis(self, student_id: str, password: str, include_raw: bool = False) -> SejongSisAuthResult:
-        """SIS 인증: 학생 정보 + 연락처 (학년·상태 빈 문자열, include_raw=True 면 원본 JSON 포함)"""
+    def authenticate_sis(self, student_id: str, password: str, include_raw: bool = False,
+                         include_extra: bool = False) -> SejongSisAuthResult:
+        """SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (학년·상태 빈 문자열, include_raw=True 면 원본 JSON, include_extra=True 면 나머지 필드 extra)"""
         self._validate_credentials(student_id, password)
         json_text = self._fetch_sis_json(student_id, password)
         user_info = parse_sis_user_info(json_text)
@@ -92,7 +103,7 @@ class SejongAuthClient:
             success=True, student_id=user_info.student_id, name=user_info.name, major=user_info.major,
             grade="", status="", email=user_info.email, phone_number=user_info.phone_number,
             english_name=user_info.english_name, user_category=user_info.user_category, authenticated_at=datetime.now(),
-            raw_json=json_text if include_raw else None,
+            raw_json=json_text if include_raw else None, **_sis_code_values_of(user_info, include_extra),
         )
 
     def _fetch_dhc(self, student_id: str, password: str, should_include_raw_html: bool) -> SejongDhcAuthResult:

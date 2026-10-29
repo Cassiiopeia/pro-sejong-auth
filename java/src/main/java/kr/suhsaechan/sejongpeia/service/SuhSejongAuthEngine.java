@@ -9,6 +9,7 @@ import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.model.SejongAuthResult;
 import kr.suhsaechan.sejongpeia.model.SejongDhcAuthResult;
 import kr.suhsaechan.sejongpeia.model.SejongSisAuthResult;
+import kr.suhsaechan.sejongpeia.model.SejongSisSchoolFields;
 import kr.suhsaechan.sejongpeia.model.SejongStudentInfo;
 import kr.suhsaechan.sejongpeia.parser.SejongClassicReadingParser;
 import kr.suhsaechan.sejongpeia.parser.SejongPortalMainParser;
@@ -64,17 +65,25 @@ public class SuhSejongAuthEngine {
    * @throws SejongAuthException 인증 실패 시
    */
   public SejongAuthResult authenticate(String studentId, String password) {
-    return authenticateIntegrated(studentId, password, false);
+    return authenticateIntegrated(studentId, password, false, false);
   }
 
   /**
    * 통합 인증 (받은 원문 포함): authenticate 와 같고 DHC 원본 HTML, SIS 원본 JSON 을 결과에 담음 (추가 요청 없음)
    */
   public SejongAuthResult authenticateWithRaw(String studentId, String password) {
-    return authenticateIntegrated(studentId, password, true);
+    return authenticateIntegrated(studentId, password, true, false);
   }
 
-  private SejongAuthResult authenticateIntegrated(String studentId, String password, boolean shouldIncludeRaw) {
+  /**
+   * 통합 인증 (선택 옵션): 원문(DHC HTML, SIS JSON)과 SIS 나머지 필드(extra)를 골라서 포함, 둘 다 추가 요청 없음
+   */
+  public SejongAuthResult authenticate(String studentId, String password, boolean shouldIncludeRaw, boolean shouldIncludeExtra) {
+    return authenticateIntegrated(studentId, password, shouldIncludeRaw, shouldIncludeExtra);
+  }
+
+  private SejongAuthResult authenticateIntegrated(String studentId, String password, boolean shouldIncludeRaw,
+      boolean shouldIncludeExtra) {
     validateCredentials(studentId, password);
     log.info("[sejong auth] integrated auth started : studentId={}", studentId);
 
@@ -88,6 +97,7 @@ public class SuhSejongAuthEngine {
     String englishName = null;
     String userCategory = null;
     String sisJson = null;
+    SejongSisSchoolFields schoolFields = null;
     try {
       String json = sisClient.fetchInitUserInfoJson(session);
       sisJson = json;
@@ -96,6 +106,7 @@ public class SuhSejongAuthEngine {
       phoneNumber = sisParser.parsePhoneNumber(json);
       englishName = sisParser.parseEnglishName(json);
       userCategory = sisParser.parseUserCategory(json);
+      schoolFields = sisParser.parseSchoolFields(json);
     } catch (Exception e) {
       log.warn("[sejong auth] SIS contact lookup failed (ignored) : {}", e.getMessage());
     }
@@ -104,7 +115,7 @@ public class SuhSejongAuthEngine {
     String parentUnitName = fetchParentUnitName(session, dhcResult.getMajor());
 
     // 4. 결과 합치기
-    SejongAuthResult integratedResult = SejongAuthResult.builder()
+    SejongAuthResult.SejongAuthResultBuilder integratedResult = SejongAuthResult.builder()
         .success(true)
         .major(dhcResult.getMajor())
         .studentId(dhcResult.getStudentId())
@@ -119,11 +130,34 @@ public class SuhSejongAuthEngine {
         .parentUnitName(parentUnitName)
         .authenticatedAt(LocalDateTime.now())
         .rawHtml(dhcResult.getRawHtml())
-        .rawJson(shouldIncludeRaw ? sisJson : null)
-        .build();
+        .rawJson(shouldIncludeRaw ? sisJson : null);
+    if (schoolFields != null) {
+      integratedResult = applySchoolFields(integratedResult, schoolFields, shouldIncludeExtra);
+    }
+    SejongAuthResult result = integratedResult.build();
 
     log.info("[sejong auth] integrated auth completed : studentId={}", studentId);
-    return integratedResult;
+    return result;
+  }
+
+  /**
+   * SIS 학교 제공 코드 > 통합 결과 빌더 (extra 는 요청했을 때만)
+   */
+  private SejongAuthResult.SejongAuthResultBuilder applySchoolFields(SejongAuthResult.SejongAuthResultBuilder builder,
+      SejongSisSchoolFields fields, boolean shouldIncludeExtra) {
+    return builder
+        .departmentCode(fields.departmentCode())
+        .organizationClassificationCode(fields.organizationClassificationCode())
+        .enrollmentStatusCode(fields.enrollmentStatusCode())
+        .userClassificationCode(fields.userClassificationCode())
+        .userClassificationLargeCode(fields.userClassificationLargeCode())
+        .userClassificationMiddleCode(fields.userClassificationMiddleCode())
+        .roleCode(fields.roleCode())
+        .roleName(fields.roleName())
+        .menuSystemId(fields.menuSystemId())
+        .menuSystemName(fields.menuSystemName())
+        .locale(fields.locale())
+        .extra(shouldIncludeExtra ? fields.extra() : null);
   }
 
   /**
@@ -159,7 +193,15 @@ public class SuhSejongAuthEngine {
    * @throws SejongAuthException 인증 실패 시
    */
   public SejongSisAuthResult authenticateWithSIS(String studentId, String password) {
-    return authenticateSis(studentId, password, false);
+    return authenticateSis(studentId, password, false, false);
+  }
+
+  /**
+   * 학사정보시스템(SIS) 인증 수행 (선택 옵션): 원본 JSON 과 나머지 학교 제공 필드(extra)를 골라서 포함
+   */
+  public SejongSisAuthResult authenticateWithSIS(String studentId, String password, boolean shouldIncludeRaw,
+      boolean shouldIncludeExtra) {
+    return authenticateSis(studentId, password, shouldIncludeRaw, shouldIncludeExtra);
   }
 
   /**
@@ -183,7 +225,7 @@ public class SuhSejongAuthEngine {
    * @throws SejongAuthException 인증 실패 시
    */
   public SejongSisAuthResult authenticateWithSISRaw(String studentId, String password) {
-    return authenticateSis(studentId, password, true);
+    return authenticateSis(studentId, password, true, false);
   }
 
   /**
@@ -202,14 +244,15 @@ public class SuhSejongAuthEngine {
   /**
    * SIS 인증: 입력 검증 > 포털 로그인·API 조회 > 결과 조립
    */
-  private SejongSisAuthResult authenticateSis(String studentId, String password, boolean shouldIncludeRawJson) {
+  private SejongSisAuthResult authenticateSis(String studentId, String password, boolean shouldIncludeRawJson,
+      boolean shouldIncludeExtra) {
     validateCredentials(studentId, password);
     log.info("[sejong auth] SIS auth started : studentId={}, raw={}", studentId, shouldIncludeRawJson);
 
     String json = sisClient.authenticateAndFetchJson(studentId, password);
     // 틀린 비밀번호는 401 이 아니라 200 + _SUBMIT_ERROR_(LOGOUT)
     sisParser.ensureLoggedIn(json);
-    SejongSisAuthResult sisResult = buildSisResult(json, shouldIncludeRawJson);
+    SejongSisAuthResult sisResult = buildSisResult(json, shouldIncludeRawJson, shouldIncludeExtra);
 
     log.info("[sejong auth] SIS auth completed : studentId={}", studentId);
     return sisResult;
@@ -236,7 +279,8 @@ public class SuhSejongAuthEngine {
   /**
    * initUserInfo JSON > SIS 결과 (학년·상태는 SIS 미제공 > 빈 문자열)
    */
-  private SejongSisAuthResult buildSisResult(String json, boolean shouldIncludeRawJson) {
+  private SejongSisAuthResult buildSisResult(String json, boolean shouldIncludeRawJson, boolean shouldIncludeExtra) {
+    SejongSisSchoolFields fields = sisParser.parseSchoolFields(json);
     return SejongSisAuthResult.builder()
         .success(true)
         .major(sisParser.parseMajor(json))
@@ -250,6 +294,18 @@ public class SuhSejongAuthEngine {
         .userCategory(sisParser.parseUserCategory(json))
         .authenticatedAt(LocalDateTime.now())
         .rawJson(shouldIncludeRawJson ? json : null)
+        .departmentCode(fields.departmentCode())
+        .organizationClassificationCode(fields.organizationClassificationCode())
+        .enrollmentStatusCode(fields.enrollmentStatusCode())
+        .userClassificationCode(fields.userClassificationCode())
+        .userClassificationLargeCode(fields.userClassificationLargeCode())
+        .userClassificationMiddleCode(fields.userClassificationMiddleCode())
+        .roleCode(fields.roleCode())
+        .roleName(fields.roleName())
+        .menuSystemId(fields.menuSystemId())
+        .menuSystemName(fields.menuSystemName())
+        .locale(fields.locale())
+        .extra(shouldIncludeExtra ? fields.extra() : null)
         .build();
   }
 
