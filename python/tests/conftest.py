@@ -52,3 +52,8 @@ def dhc_html() -> str:
 @pytest.fixture
 def sis_json() -> str:
     return read_fixture("sis_user_info.json")
+
+
+@pytest.fixture
+def portal_main_html() -> str:
+    return read_fixture("portal_main.html")

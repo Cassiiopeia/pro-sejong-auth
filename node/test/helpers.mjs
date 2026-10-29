@@ -14,6 +14,7 @@ export const CLASSIC_SSO = 'https://classic.sejong.ac.kr/_custom/sejong/sso/sso-
 export const CLASSIC_STATUS = 'https://classic.sejong.ac.kr/classic/reading/status.do';
 export const SIS_SSO = 'https://sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do';
 export const SIS_USER_INFO = 'https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do';
+export const PORTAL_MAIN = 'https://portal.sejong.ac.kr/user/index.do';
 
 // URL 앞부분 > 응답 목록(차례로 소비, 마지막은 반복). 값이 Error 면 reject
 export function fakeSessionFactory(responsesByUrlPrefix) {

@@ -3,6 +3,7 @@ package kr.suhsaechan.sejong.auth.config;
 import kr.suhsaechan.sejong.auth.client.SejongPortalClient;
 import kr.suhsaechan.sejong.auth.client.SejongSisClient;
 import kr.suhsaechan.sejong.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejong.auth.parser.SejongPortalMainParser;
 import kr.suhsaechan.sejong.auth.parser.SejongSisParser;
 import kr.suhsaechan.sejong.auth.parser.SejongStudentInfoParser;
 import kr.suhsaechan.sejong.auth.service.SuhSejongAuthEngine;
@@ -53,12 +54,19 @@ public class SejongAuthAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
+  public SejongPortalMainParser sejongPortalMainParser() {
+    return new SejongPortalMainParser();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
   public SuhSejongAuthEngine sejongAuthService(
       SejongPortalClient portalClient,
       SejongStudentInfoParser studentInfoParser,
       SejongClassicReadingParser classicReadingParser,
       SejongSisClient sisClient,
-      SejongSisParser sisParser) {
-    return new SuhSejongAuthEngine(portalClient, studentInfoParser, classicReadingParser, sisClient, sisParser);
+      SejongSisParser sisParser,
+      SejongPortalMainParser portalMainParser) {
+    return new SuhSejongAuthEngine(portalClient, studentInfoParser, classicReadingParser, sisClient, sisParser, portalMainParser);
   }
 }

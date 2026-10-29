@@ -444,6 +444,7 @@ String englishName = result.getEnglishName();
 // 통합 호출 (DHC + SIS 모두)
 SejongAuthResult result = authEngine.authenticate(studentId, password);
 // SIS 실패 시 email, phoneNumber, englishName은 null
+// parentUnitName(학과의 상위 소속)은 포털 메인 화면에서 가져오며 호출 실패 시 null
 ```
 
 ### 통합 인증에서 SIS 실패 처리

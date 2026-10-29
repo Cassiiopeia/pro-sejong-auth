@@ -11,6 +11,7 @@ import kr.suhsaechan.sejong.auth.model.SejongDhcAuthResult;
 import kr.suhsaechan.sejong.auth.model.SejongSisAuthResult;
 import kr.suhsaechan.sejong.auth.model.SejongStudentInfo;
 import kr.suhsaechan.sejong.auth.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejong.auth.parser.SejongPortalMainParser;
 import kr.suhsaechan.sejong.auth.parser.SejongSisParser;
 import kr.suhsaechan.sejong.auth.parser.SejongStudentInfoParser;
 import kr.suhsaechan.sejong.auth.util.CommonUtil;
@@ -30,6 +31,7 @@ public class SuhSejongAuthEngine {
   private final SejongClassicReadingParser classicReadingParser;
   private final SejongSisClient sisClient;
   private final SejongSisParser sisParser;
+  private final SejongPortalMainParser portalMainParser;
 
   public SuhSejongAuthEngine(
       SejongPortalClient portalClient,
@@ -37,15 +39,26 @@ public class SuhSejongAuthEngine {
       SejongClassicReadingParser classicReadingParser,
       SejongSisClient sisClient,
       SejongSisParser sisParser) {
+    this(portalClient, studentInfoParser, classicReadingParser, sisClient, sisParser, new SejongPortalMainParser());
+  }
+
+  public SuhSejongAuthEngine(
+      SejongPortalClient portalClient,
+      SejongStudentInfoParser studentInfoParser,
+      SejongClassicReadingParser classicReadingParser,
+      SejongSisClient sisClient,
+      SejongSisParser sisParser,
+      SejongPortalMainParser portalMainParser) {
     this.portalClient = portalClient;
     this.studentInfoParser = studentInfoParser;
     this.classicReadingParser = classicReadingParser;
     this.sisClient = sisClient;
     this.sisParser = sisParser;
+    this.portalMainParser = portalMainParser;
   }
 
   /**
-   * 세종대학교 통합 인증: 포털 로그인 1회 > DHC(학생 정보·고전독서) > 같은 세션으로 SIS(연락처)
+   * 세종대학교 통합 인증: 포털 로그인 1회 > DHC(학생 정보·고전독서) > 같은 세션으로 SIS(연락처), 포털 메인(상위 소속)
    *
    * @param studentId 학번
    * @param password 비밀번호
@@ -76,7 +89,10 @@ public class SuhSejongAuthEngine {
       log.warn("[sejong auth] SIS contact lookup failed (ignored) : {}", e.getMessage());
     }
 
-    // 3. 결과 합치기
+    // 3. 같은 세션으로 포털 메인 1회 (보조 조회: 실패 시 null)
+    String parentUnitName = fetchParentUnitName(session, dhcResult.getMajor());
+
+    // 4. 결과 합치기
     SejongAuthResult integratedResult = SejongAuthResult.builder()
         .success(true)
         .major(dhcResult.getMajor())
@@ -89,11 +105,24 @@ public class SuhSejongAuthEngine {
         .phoneNumber(phoneNumber)
         .englishName(englishName)
         .userCategory(userCategory)
+        .parentUnitName(parentUnitName)
         .authenticatedAt(LocalDateTime.now())
         .build();
 
     log.info("[sejong auth] integrated auth completed : studentId={}", studentId);
     return integratedResult;
+  }
+
+  /**
+   * 포털 메인 1회 조회 > 상위 소속명 (조회 실패 null, 표기 없음 빈 문자열, 통합 인증을 막지 않음)
+   */
+  private String fetchParentUnitName(SejongPortalSession session, String major) {
+    try {
+      return portalMainParser.parseParentUnitName(portalClient.fetchPortalMainHtml(session), major);
+    } catch (SejongAuthException e) {
+      log.warn("[portal main] skipped : {}", e.getDetail());
+      return null;
+    }
   }
 
   /**

@@ -10,6 +10,7 @@ CLASSIC_SSO = "https://classic.sejong.ac.kr/_custom/sejong/sso/sso-return.jsp"
 CLASSIC_STATUS = "https://classic.sejong.ac.kr/classic/reading/status.do"
 SIS_SSO = "https://sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do"
 SIS_USER_INFO = "https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do"
+PORTAL_MAIN = "https://portal.sejong.ac.kr/user/index.do"
 
 
 def client_with(responses_by_url_prefix, **options):
@@ -162,3 +163,49 @@ def test_locked_account_raises_account_locked_without_retry():
 
     assert error.value.code == ErrorCode.ACCOUNT_LOCKED
     assert sessions[0].requested_urls == [LOGIN]
+
+
+def test_integrated_includes_parent_unit_name_from_portal_main(dhc_html, sis_json, portal_main_html):
+    client, sessions = client_with({
+        LOGIN: [ok()], CLASSIC_SSO: [ok()], CLASSIC_STATUS: [ok(dhc_html)],
+        SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)], PORTAL_MAIN: [ok(portal_main_html)],
+    })
+
+    result = client.authenticate("21011234", "pw")
+
+    assert result.parent_unit_name == "공과대학"
+    assert sessions[0].requested_urls.count(PORTAL_MAIN) == 1
+    assert sessions[0].requested_urls.count(LOGIN) == 1
+
+
+@pytest.mark.parametrize("portal_main_outcome", [
+    TimeoutError("timed out"),
+    OSError("connection reset"),
+    status(500),
+    status(401),
+    ok(""),
+    ok("<html><form action='/jsp/login/login_action.jsp'>통합 로그인</form></html>"),
+], ids=["timeout", "network-error", "http-500", "http-401", "empty-body", "login-page-redirect"])
+def test_portal_main_call_failure_is_none_and_keeps_other_fields(dhc_html, sis_json, portal_main_outcome):
+    client, sessions = client_with({
+        LOGIN: [ok()], CLASSIC_SSO: [ok()], CLASSIC_STATUS: [ok(dhc_html)],
+        SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)], PORTAL_MAIN: [portal_main_outcome],
+    })
+
+    result = client.authenticate("21011234", "pw")
+
+    assert result.parent_unit_name is None
+    assert (result.email, result.user_category) == ("student@example.com", "학부생")
+    assert result.name == "홍길동"
+    assert result.classic_reading.completed_semesters == "6 학기"
+    # 보조 조회는 재시도 없이 1회
+    assert sessions[0].requested_urls.count(PORTAL_MAIN) == 1
+
+
+def test_portal_main_without_my_info_is_empty_string_not_none(dhc_html, sis_json):
+    client, _ = client_with({
+        LOGIN: [ok()], CLASSIC_SSO: [ok()], CLASSIC_STATUS: [ok(dhc_html)],
+        SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)], PORTAL_MAIN: [ok("<html><body>교직원 화면</body></html>")],
+    })
+
+    assert client.authenticate("21011234", "pw").parent_unit_name == ""

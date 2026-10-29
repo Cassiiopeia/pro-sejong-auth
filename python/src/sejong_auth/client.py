@@ -11,6 +11,7 @@ from . import __version__
 from .errors import ErrorCode, SejongAuthError
 from .models import SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult
 from .parsers import ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading, parse_sis_user_info, parse_student_info
+from .portal_main_parser import parse_parent_unit_name
 from .transport import HttpResponse, UrllibSession, create_ssl_context
 
 PORTAL_LOGIN_URL = "https://portal.sejong.ac.kr/jsp/login/login_action.jsp"
@@ -24,6 +25,9 @@ SIS_RETURN_URL = "sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do?p="
 
 CLASSIC_SSO_URL = "https://classic.sejong.ac.kr/_custom/sejong/sso/sso-return.jsp?returnUrl=https://classic.sejong.ac.kr/classic/index.do"
 CLASSIC_STATUS_URL = "https://classic.sejong.ac.kr/classic/reading/status.do"
+# 포털 메인 (소속 표기 조회), 세션 만료 시 돌아오는 로그인 페이지는 form 대상 문구로 판별
+PORTAL_MAIN_URL = "https://portal.sejong.ac.kr/user/index.do"
+PORTAL_LOGIN_PAGE_MARKER = "login_action.jsp"
 SIS_SSO_URL = "https://sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do?p="
 SIS_USER_INFO_URL = "https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do"
 SIS_ORIGIN = "https://sjpt.sejong.ac.kr"
@@ -47,7 +51,7 @@ class SejongAuthClient:
         self._session_factory = _session_factory or self._create_session
 
     def authenticate(self, student_id: str, password: str) -> SejongAuthResult:
-        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처 (SIS 실패는 무시하고 None)"""
+        """통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 None)"""
         self._validate_credentials(student_id, password)
         session = self._session_factory()
         self._login(session, student_id, password, CLASSIC_RETURN_URL)
@@ -60,12 +64,13 @@ class SejongAuthClient:
             user_category = sis_user_info.user_category
         except Exception:  # SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
             pass
+        parent_unit_name = self._fetch_parent_unit_name(session, dhc_result.major)
 
         return SejongAuthResult(
             success=True, student_id=dhc_result.student_id, name=dhc_result.name, major=dhc_result.major,
             grade=dhc_result.grade, status=dhc_result.status, classic_reading=dhc_result.classic_reading,
             email=email, phone_number=phone_number, english_name=english_name, user_category=user_category,
-            authenticated_at=datetime.now(),
+            parent_unit_name=parent_unit_name, authenticated_at=datetime.now(),
         )
 
     def authenticate_dhc(self, student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:
@@ -122,6 +127,19 @@ class SejongAuthClient:
         # 틀린 비밀번호는 401 이 아니라 200 + _SUBMIT_ERROR_(LOGOUT)
         ensure_sis_logged_in(json_text)
         return json_text
+
+    def _fetch_parent_unit_name(self, session, major: str) -> Optional[str]:
+        """같은 세션으로 포털 메인 1회 조회 > 상위 소속명 (재시도 없음, 호출 실패·세션 만료·빈 본문은 None, 요소 없음은 빈 문자열)"""
+        try:
+            response = self._call(session, "GET", PORTAL_MAIN_URL, headers={"Referer": PORTAL_REFERER})
+            if not response.is_successful or not response.body:
+                return None
+            html = response.text()
+            if PORTAL_LOGIN_PAGE_MARKER in html:
+                return None
+            return parse_parent_unit_name(html, major)
+        except Exception:  # 부가 정보 > 어떤 실패든 통합 결과를 막지 않음
+            return None
 
     def _login(self, session, student_id: str, password: str, return_url: str) -> None:
         """포털 로그인 (실패 응답·시간 초과 시 max_retry 회까지) > 포털 판정값 확인 (틀린 비밀번호·잠금은 재시도 없이 즉시 실패)"""

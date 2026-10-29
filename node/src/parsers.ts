@@ -24,7 +24,7 @@ const LABEL_CERTIFIED_SEMESTERS = '인증완료 학기';
 const LABEL_CERTIFICATION_STATUS = '인증여부';
 
 // 주석 | 태그(닫힘 여부, 이름, 속성) | 글자
-const TOKEN_PATTERN = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>|([^<]+)/g;
+export const TOKEN_PATTERN = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>|([^<]+)/g;
 const RAW_TEXT_TAGS = new Set(['script', 'style']);
 // 포털 표에 나올 수 있는 이름 엔티티 (그 외 이름은 원문 유지)
 const NAMED_ENTITIES: Record<string, string> = {
@@ -51,9 +51,9 @@ function decodeEntities(text: string): string {
   });
 }
 
-const normalizeText = (text: string) => decodeEntities(text).replace(/\s+/g, ' ').trim();
+export const normalizeText = (text: string) => decodeEntities(text).replace(/\s+/g, ' ').trim();
 
-function hasClass(attributes: string, className: string): boolean {
+export function hasClass(attributes: string, className: string): boolean {
   const match = /class\s*=\s*["']([^"']*)["']/i.exec(attributes);
   return !!match && match[1].split(/\s+/).includes(className);
 }

@@ -4,11 +4,12 @@ import assert from 'node:assert/strict';
 import { ErrorCode, SejongAuthClient, SejongAuthError } from '../dist/esm/index.js';
 import { TimeoutError } from '../dist/esm/transport.js';
 import {
-  CLASSIC_SSO, CLASSIC_STATUS, LOGIN, SIS_SSO, SIS_USER_INFO, fakeSessionFactory, ok, readFixture, status,
+  CLASSIC_SSO, CLASSIC_STATUS, LOGIN, PORTAL_MAIN, SIS_SSO, SIS_USER_INFO, fakeSessionFactory, ok, readFixture, status,
 } from './helpers.mjs';
 
 const dhcHtml = readFixture('dhc_status.html');
 const sisJson = readFixture('sis_user_info.json');
+const portalMainHtml = readFixture('portal_main.html');
 
 function clientWith(responsesByUrlPrefix, options = {}) {
   const { factory, sessions } = fakeSessionFactory(responsesByUrlPrefix);
@@ -112,4 +113,45 @@ test('lockedAccountRaisesAccountLockedWithoutRetry', async () => {
   const { client, sessions } = clientWith({ [LOGIN]: [ok(lockedBody)] });
   await rejectsWithCode(client.authenticateSis('21011234', 'pw'), ErrorCode.ACCOUNT_LOCKED);
   assert.deepEqual(sessions[0].requestedUrls, [LOGIN]);
+});
+
+function integratedClientWith(portalMainOutcome) {
+  return clientWith({
+    [LOGIN]: [ok()], [CLASSIC_SSO]: [ok()], [CLASSIC_STATUS]: [ok(dhcHtml)], [SIS_SSO]: [ok()], [SIS_USER_INFO]: [ok(sisJson)],
+    [PORTAL_MAIN]: [portalMainOutcome],
+  });
+}
+
+test('integratedIncludesParentUnitNameFromPortalMain', async () => {
+  const { client, sessions } = integratedClientWith(ok(portalMainHtml));
+  const result = await client.authenticate('21011234', 'pw');
+  assert.equal(result.parentUnitName, '공과대학');
+  assert.equal(sessions[0].requestedUrls.filter((url) => url === PORTAL_MAIN).length, 1);
+  assert.equal(sessions[0].requestedUrls.filter((url) => url === LOGIN).length, 1);
+});
+
+const PORTAL_MAIN_FAILURES = {
+  timeout: new TimeoutError(),
+  networkError: new Error('connection reset'),
+  http500: status(500),
+  http401: status(401),
+  emptyBody: ok(''),
+  loginPageRedirect: ok("<html><form action='/jsp/login/login_action.jsp'>통합 로그인</form></html>"),
+};
+
+for (const [caseName, outcome] of Object.entries(PORTAL_MAIN_FAILURES)) {
+  test(`portalMainCallFailureIsNullAndKeepsOtherFields_${caseName}`, async () => {
+    const { client, sessions } = integratedClientWith(outcome);
+    const result = await client.authenticate('21011234', 'pw');
+    assert.equal(result.parentUnitName, null);
+    assert.deepEqual([result.email, result.userCategory, result.name], ['student@example.com', '학부생', '홍길동']);
+    assert.equal(result.classicReading.completedSemesters, '6 학기');
+    // 보조 조회는 재시도 없이 1회
+    assert.equal(sessions[0].requestedUrls.filter((url) => url === PORTAL_MAIN).length, 1);
+  });
+}
+
+test('portalMainWithoutMyInfoIsEmptyStringNotNull', async () => {
+  const { client } = integratedClientWith(ok('<html><body>교직원 화면</body></html>'));
+  assert.equal((await client.authenticate('21011234', 'pw')).parentUnitName, '');
 });

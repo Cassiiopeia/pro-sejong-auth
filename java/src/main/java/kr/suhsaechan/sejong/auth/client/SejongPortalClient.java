@@ -19,6 +19,10 @@ public class SejongPortalClient {
   // 포털 로그인 후 SSO 대상: 고전독서 사이트
   static final String CLASSIC_RETURN_URL = "classic.sejong.ac.kr";
 
+  // 포털 메인 (소속 표기 조회), 세션 만료 시 돌아오는 로그인 페이지는 form 대상 문구로 판별
+  static final String PORTAL_MAIN_URL = "https://portal.sejong.ac.kr/user/index.do";
+  static final String PORTAL_LOGIN_PAGE_MARKER = "login_action.jsp";
+
   private final SejongAuthProperties properties;
   private final OkHttpClient baseClient;
 
@@ -67,6 +71,35 @@ public class SejongPortalClient {
       handleSsoRedirect(session.sessionClient());
       return fetchClassicStatusPage(session.sessionClient());
     });
+  }
+
+  /**
+   * 로그인된 세션 > 포털 메인 HTML (보조 조회: 재시도 없음, 기존 타임아웃 그대로)
+   *
+   * @throws SejongAuthException 비 2xx·빈 본문·로그인 페이지(세션 만료)·연결 실패 (사유는 detail, 응답 본문은 담지 않음)
+   */
+  public String fetchPortalMainHtml(SejongPortalSession session) {
+    Request request = new Request.Builder()
+        .url(PORTAL_MAIN_URL)
+        .get()
+        .header("Referer", SejongHttpSupport.PORTAL_REFERER)
+        .build();
+
+    try (Response response = session.sessionClient().newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        throw new SejongAuthException(SejongAuthErrorCode.DATA_FETCH_FAILED, "http " + response.code());
+      }
+      String html = response.body() == null ? "" : response.body().string();
+      if (html.isEmpty()) {
+        throw new SejongAuthException(SejongAuthErrorCode.DATA_FETCH_FAILED, "empty body");
+      }
+      if (html.contains(PORTAL_LOGIN_PAGE_MARKER)) {
+        throw new SejongAuthException(SejongAuthErrorCode.SESSION_ERROR, "login page returned (session expired)");
+      }
+      return html;
+    } catch (IOException e) {
+      throw new SejongAuthException(SejongAuthErrorCode.CONNECTION_FAILED, "request failed : " + e.getClass().getSimpleName());
+    }
   }
 
   /**

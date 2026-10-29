@@ -220,6 +220,7 @@ Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number
 | `phoneNumber` | string or null | Phone, `010-1234-5678` format (null if SIS fails) |
 | `englishName` | string or null | English name (null if SIS fails) |
 | `userCategory` | string or null | User category, for example `학부생` (null if SIS fails) |
+| `parentUnitName` | string or null | Unit above the major, a college or a school, from the portal main page (null if that call fails, `""` if unavailable). Portal text as-is that changes by academic year: do not branch on its values or use it to decide authentication |
 | `authenticatedAt` | datetime | Authentication time |
 
 - DHC result: no contact fields; `rawHtml` with the raw option

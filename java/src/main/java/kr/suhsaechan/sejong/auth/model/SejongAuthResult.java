@@ -45,6 +45,12 @@ public class SejongAuthResult {
   /** 사용자 구분 (SIS에서 획득, 예: 학부생) */
   private final String userCategory;
 
+  /**
+   * 학과의 상위 소속 이름 (단과대학 또는 학부): 포털 메인 화면 표기에서 추출한 부가 정보, 조회 실패 시 null, 학적 구분에 따라 빈 문자열일 수 있음, 인증 판정에 쓰지 말 것
+   * 학년도마다 바뀌는 포털 표기 원문, 값 목록으로 분기하지 말 것
+   */
+  private final String parentUnitName;
+
   /** 인증 시간 */
   private final LocalDateTime authenticatedAt;
 
@@ -53,7 +59,7 @@ public class SejongAuthResult {
 
   @Override
   public String toString() {
-    return String.format("SejongAuthResult{success=%s, major='%s', studentId='%s', name='%s', grade='%s', status='%s', email='%s', phoneNumber='%s', englishName='%s', userCategory='%s', authenticatedAt=%s}",
-        success, major, studentId, name, grade, status, email, phoneNumber, englishName, userCategory, authenticatedAt);
+    return String.format("SejongAuthResult{success=%s, major='%s', studentId='%s', name='%s', grade='%s', status='%s', email='%s', phoneNumber='%s', englishName='%s', userCategory='%s', parentUnitName='%s', authenticatedAt=%s}",
+        success, major, studentId, name, grade, status, email, phoneNumber, englishName, userCategory, parentUnitName, authenticatedAt);
   }
 }

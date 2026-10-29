@@ -89,7 +89,7 @@ class SejongSisUserInfo:
 
 @dataclass(frozen=True)
 class SejongAuthResult:
-    """통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시 None)"""
+    """통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시, 상위 소속명은 포털 메인 조회 실패 시 None)"""
 
     success: bool
     student_id: str
@@ -102,6 +102,9 @@ class SejongAuthResult:
     phone_number: Optional[str]
     english_name: Optional[str]
     user_category: Optional[str]
+    # 학과의 상위 소속 이름(단과대학 또는 학부): 포털 화면 표기에서 추출한 부가 정보, 학적 구분에 따라 빈 문자열일 수 있음, 인증 판정에 쓰지 말 것
+    # 학년도마다 바뀌는 포털 표기 원문, 값 목록으로 분기하지 말 것
+    parent_unit_name: Optional[str]
     authenticated_at: datetime
 
 

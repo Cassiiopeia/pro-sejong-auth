@@ -18,7 +18,7 @@ from sejong_auth import SejongAuthError, authenticate  # noqa: E402
 FIELD_BY_COMPARED_NAME = {
     "studentId": "student_id", "name": "name", "major": "major", "grade": "grade", "status": "status",
     "email": "email", "phoneNumber": "phone_number", "englishName": "english_name",
-    "userCategory": "user_category", "classicReading": "classic_reading",
+    "userCategory": "user_category", "parentUnitName": "parent_unit_name", "classicReading": "classic_reading",
 }
 
 

@@ -447,6 +447,7 @@ String englishName = result.getEnglishName();
 // Integrated call (both DHC and SIS)
 SejongAuthResult result = authEngine.authenticate(studentId, password);
 // If SIS fails, email, phoneNumber and englishName are null
+// parentUnitName (unit above the major) comes from the portal main page, null if that call fails
 ```
 
 ### Handling SIS Failure in Integrated Auth

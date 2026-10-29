@@ -13,6 +13,10 @@
       "invalid": "ACCOUNT_UNAVAILABLE"
     }
   },
+  "portalMain": {
+    "url": "https://portal.sejong.ac.kr/user/index.do",
+    "loginPageMarker": "login_action.jsp"
+  },
   "classic": {
     "returnUrl": "classic.sejong.ac.kr",
     "ssoUrl": "https://classic.sejong.ac.kr/_custom/sejong/sso/sso-return.jsp?returnUrl=https://classic.sejong.ac.kr/classic/index.do",

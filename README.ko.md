@@ -214,6 +214,7 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 | `phoneNumber` | string 또는 null | 전화번호, `010-1234-5678` 형식 (SIS 실패 시 null) |
 | `englishName` | string 또는 null | 영문 이름 (SIS 실패 시 null) |
 | `userCategory` | string 또는 null | 사용자 구분, 예: `학부생` (SIS 실패 시 null) |
+| `parentUnitName` | string 또는 null | 학과의 상위 소속 이름(단과대학 또는 학부), 포털 메인 화면 표기에서 추출 (호출 실패 시 null, 값이 없으면 빈 문자열). 학년도마다 바뀌는 포털 표기 원문이라 값 목록으로 분기하거나 인증 판정에 쓰지 마세요 |
 | `authenticatedAt` | 날짜·시간 | 인증 시각 |
 
 - DHC 결과: 연락처 필드 없음, 원본 옵션 사용 시 `rawHtml` 포함
