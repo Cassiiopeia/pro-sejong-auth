@@ -42,6 +42,7 @@ class IntegratedSingleLoginTest {
     assertEquals(expectedSis.get("email").asText(), result.getEmail());
     assertEquals(expectedSis.get("phoneNumber").asText(), result.getPhoneNumber());
     assertEquals(expectedSis.get("englishName").asText(), result.getEnglishName());
+    assertEquals(expectedSis.get("userCategory").asText(), result.getUserCategory());
   }
 
   @Test
@@ -52,6 +53,7 @@ class IntegratedSingleLoginTest {
     assertEquals("21011234", result.getStudentId());
     assertNull(result.getEmail());
     assertNull(result.getPhoneNumber());
+    assertNull(result.getUserCategory());
   }
 
   // 가짜 포털: 로그인 OK > classic SSO·고전독서 페이지 > sjpt SSO·initUserInfo (sisStatusCode)

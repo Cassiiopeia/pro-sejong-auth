@@ -41,13 +41,17 @@ class ClassicContestRecord:
 
 @dataclass(frozen=True)
 class SejongClassicReading:
-    """고전독서 인증 현황: 영역별 인증, 시험, 과목 대체, 대회, 교과연계"""
+    """고전독서 인증 현황: 영역별 인증, 시험, 과목 대체, 대회, 교과연계, 이수·인증 학기, 인증여부"""
 
     certifications: List[ClassicCertification] = field(default_factory=list)
     exam_records: List[ClassicExamRecord] = field(default_factory=list)
     subject_substitutions: List[ClassicSubjectRecord] = field(default_factory=list)
     contest_records: List[ClassicContestRecord] = field(default_factory=list)
     curriculum_records: List[ClassicSubjectRecord] = field(default_factory=list)
+    # 사용자 정보 표 원문 (예: "8 학기", "6 학기", 대체이수 사유가 붙는 자유 텍스트), 없으면 빈 문자열
+    completed_semesters: str = ""
+    certified_semesters: str = ""
+    certification_status: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -69,7 +73,7 @@ class SejongStudentInfo:
 
 @dataclass(frozen=True)
 class SejongSisUserInfo:
-    """SIS initUserInfo: 학번, 이름, 학과, 이메일, 전화번호, 영문 이름"""
+    """SIS initUserInfo: 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분"""
 
     student_id: str
     name: str
@@ -77,6 +81,7 @@ class SejongSisUserInfo:
     email: str
     phone_number: str
     english_name: str
+    user_category: str
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -84,7 +89,7 @@ class SejongSisUserInfo:
 
 @dataclass(frozen=True)
 class SejongAuthResult:
-    """통합 인증 결과 (연락처는 SIS 실패 시 None)"""
+    """통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시 None)"""
 
     success: bool
     student_id: str
@@ -96,6 +101,7 @@ class SejongAuthResult:
     email: Optional[str]
     phone_number: Optional[str]
     english_name: Optional[str]
+    user_category: Optional[str]
     authenticated_at: datetime
 
 
@@ -127,5 +133,6 @@ class SejongSisAuthResult:
     email: str
     phone_number: str
     english_name: str
+    user_category: str
     authenticated_at: datetime
     raw_json: Optional[str] = None

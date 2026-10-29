@@ -225,6 +225,7 @@ HTTP/1.1 401 Unauthorized
 |------|------|------|------|
 | `DEPT_NM` | String | 학과명 (백업) | "컴퓨터공학과" |
 | `NM_ENG` | String | 영문 이름 (백업) | "Hong Gildong" |
+| `USER_CLSF_CD_NM` | String | 사용자 구분 (결과의 `userCategory`) | "학부생" |
 
 ---
 

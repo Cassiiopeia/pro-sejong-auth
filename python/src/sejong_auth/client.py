@@ -53,17 +53,19 @@ class SejongAuthClient:
         self._login(session, student_id, password, CLASSIC_RETURN_URL)
         dhc_result = self._fetch_dhc_with_session(session, should_include_raw_html=False)
 
-        email = phone_number = english_name = None
+        email = phone_number = english_name = user_category = None
         try:
             sis_user_info = parse_sis_user_info(self._fetch_sis_json_with_session(session))
             email, phone_number, english_name = sis_user_info.email, sis_user_info.phone_number, sis_user_info.english_name
+            user_category = sis_user_info.user_category
         except Exception:  # SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
             pass
 
         return SejongAuthResult(
             success=True, student_id=dhc_result.student_id, name=dhc_result.name, major=dhc_result.major,
             grade=dhc_result.grade, status=dhc_result.status, classic_reading=dhc_result.classic_reading,
-            email=email, phone_number=phone_number, english_name=english_name, authenticated_at=datetime.now(),
+            email=email, phone_number=phone_number, english_name=english_name, user_category=user_category,
+            authenticated_at=datetime.now(),
         )
 
     def authenticate_dhc(self, student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:
@@ -79,7 +81,7 @@ class SejongAuthClient:
         return SejongSisAuthResult(
             success=True, student_id=user_info.student_id, name=user_info.name, major=user_info.major,
             grade="", status="", email=user_info.email, phone_number=user_info.phone_number,
-            english_name=user_info.english_name, authenticated_at=datetime.now(),
+            english_name=user_info.english_name, user_category=user_info.user_category, authenticated_at=datetime.now(),
             raw_json=json_text if include_raw else None,
         )
 

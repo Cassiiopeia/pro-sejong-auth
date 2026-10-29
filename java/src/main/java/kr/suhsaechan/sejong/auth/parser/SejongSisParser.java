@@ -145,6 +145,18 @@ public class SejongSisParser {
   }
 
   /**
+   * JSON에서 사용자 구분 파싱 (dm_UserInfoSch.USER_CLSF_CD_NM, 예: 학부생)
+   *
+   * @param json initUserInfo.do API 응답 JSON
+   * @return 사용자 구분 (없으면 빈 문자열)
+   * @throws SejongAuthException 파싱 실패 시
+   */
+  public String parseUserCategory(String json) {
+    JsonNode dmUserInfoSch = readRoot(json).path("dm_UserInfoSch");
+    return CommonUtil.defaultIfBlank(getTextValue(dmUserInfoSch, "USER_CLSF_CD_NM"), "");
+  }
+
+  /**
    * JsonNode에서 텍스트 값 추출
    */
   /**

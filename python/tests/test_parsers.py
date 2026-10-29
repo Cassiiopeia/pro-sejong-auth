@@ -34,6 +34,32 @@ def test_parse_sis_fixture(sis_json):
     assert parse_sis_user_info(sis_json).to_dict() == expected
 
 
+def test_parse_classic_reading_user_info_values():
+    html = ('<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>'
+            '<tr><th>이수 학기</th><td>8 학기</td></tr><tr><th>인증완료 학기</th><td>6 학기</td></tr>'
+            '<tr><th>인증여부</th><td>아니오(고전특강 대상자) 2099년도 1학기 대체이수</td></tr></tbody></table></div>')
+
+    reading = parse_classic_reading(html)
+
+    assert (reading.completed_semesters, reading.certified_semesters) == ("8 학기", "6 학기")
+    assert reading.certification_status == "아니오(고전특강 대상자) 2099년도 1학기 대체이수"
+
+
+def test_parse_classic_reading_missing_user_info_labels_are_empty():
+    html = ('<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>'
+            '<tr><th>학년</th><td>3</td></tr></tbody></table></div>')
+
+    reading = parse_classic_reading(html)
+
+    assert (reading.completed_semesters, reading.certified_semesters, reading.certification_status) == ("", "", "")
+
+
+def test_parse_sis_user_category_missing_is_empty():
+    sis_json = '{"dm_UserInfo": {"INTG_USR_NO": "21011234"}, "dm_UserInfoSch": {}}'
+
+    assert parse_sis_user_info(sis_json).user_category == ""
+
+
 def test_decodes_common_named_entities():
     # Node·Jsoup 과 같은 기대값
     html = ('<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>'

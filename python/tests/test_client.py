@@ -54,7 +54,7 @@ def test_integrated_sis_failure_returns_dhc_with_null_contacts(dhc_html):
     assert result.success is True
     assert result.name == "홍길동"
     assert result.major == "컴퓨터공학과"
-    assert (result.email, result.phone_number, result.english_name) == (None, None, None)
+    assert (result.email, result.phone_number, result.english_name, result.user_category) == (None, None, None, None)
 
 
 def test_integrated_success_merges_dhc_and_sis(dhc_html, sis_json):
@@ -72,6 +72,9 @@ def test_integrated_success_merges_dhc_and_sis(dhc_html, sis_json):
     assert result.classic_reading.certifications[2].area == "동·서양의 문학 (3권)"
     assert result.phone_number == "010-1234-5678"
     assert result.english_name == "Hong Gildong"
+    assert result.user_category == "학부생"
+    assert result.classic_reading.completed_semesters == "6 학기"
+    assert result.classic_reading.certification_status == "아니오"
 
 
 def test_timeout_raises_connection_timeout():

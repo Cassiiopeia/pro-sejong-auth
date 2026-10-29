@@ -26,6 +26,7 @@ Input check first: blank student id or password raises `INVALID_INPUT` before an
 | email | email | string or null | from SIS; null if the SIS lookup fails for any reason |
 | phoneNumber | phone_number | string or null | same |
 | englishName | english_name | string or null | same |
+| userCategory | user_category | string or null | same (SIS `dm_UserInfoSch.USER_CLSF_CD_NM`, for example `학부생`) |
 | authenticatedAt | authenticated_at | datetime (local time) | |
 
 The integrated call logs in to the portal once and uses that session for DHC and SIS. A failing DHC step fails the whole call. A failing SIS step never fails the integrated call.
@@ -36,9 +37,15 @@ The integrated call logs in to the portal once and uses that session for DHC and
 
 ## SIS result
 
-`success, studentId, name, major, grade (always ""), status (always ""), email, phoneNumber, englishName, authenticatedAt, rawJson` (rawJson only with the raw option)
+`success, studentId, name, major, grade (always ""), status (always ""), email, phoneNumber, englishName, userCategory, authenticatedAt, rawJson` (rawJson only with the raw option)
 
 ## classicReading
+
+| Field | Type | Rule |
+|---|---|---|
+| completedSemesters | string | DHC user info table `이수 학기` as-is (for example `8 학기`), empty string if missing |
+| certifiedSemesters | string | `인증완료 학기` as-is, empty string if missing |
+| certificationStatus | string | `인증여부` as-is (free text, can carry a substitution reason), empty string if missing |
 
 | Field | Item fields |
 |---|---|
@@ -48,7 +55,7 @@ The integrated call logs in to the portal once and uses that session for DHC and
 | contestRecords | semester, contestName, area, bookTitle |
 | curriculumRecords | semester, subjectName, area, bookTitle, completion |
 
-Python item fields are snake_case (`required_count`, `book_title`, ...).
+Python field names are snake_case (`completed_semesters`, `certified_semesters`, `certification_status`, `required_count`, `book_title`, ...).
 
 ## Error codes
 

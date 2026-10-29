@@ -228,6 +228,7 @@ Used as a fallback data source.
 |------|------|------|------|
 | `DEPT_NM` | String | Department name (fallback) | "컴퓨터공학과" |
 | `NM_ENG` | String | English name (fallback) | "Hong Gildong" |
+| `USER_CLSF_CD_NM` | String | User category (result field `userCategory`) | "학부생" |
 
 ---
 

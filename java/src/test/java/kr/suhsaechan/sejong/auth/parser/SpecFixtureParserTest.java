@@ -50,6 +50,7 @@ class SpecFixtureParserTest {
     actual.put("email", parser.parseEmail(json));
     actual.put("phoneNumber", parser.parsePhoneNumber(json));
     actual.put("englishName", parser.parseEnglishName(json));
+    actual.put("userCategory", parser.parseUserCategory(json));
     assertEquals(expected, objectMapper.valueToTree(actual));
   }
 

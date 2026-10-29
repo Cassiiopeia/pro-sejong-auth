@@ -39,7 +39,7 @@ test('integratedSisFailureReturnsDhcWithNullContacts', async () => {
   const result = await client.authenticate('21011234', 'pw');
   assert.equal(result.success, true);
   assert.equal(result.name, '홍길동');
-  assert.deepEqual([result.email, result.phoneNumber, result.englishName], [null, null, null]);
+  assert.deepEqual([result.email, result.phoneNumber, result.englishName, result.userCategory], [null, null, null, null]);
 });
 
 test('integratedSuccessMergesDhcAndSis', async () => {
@@ -53,6 +53,9 @@ test('integratedSuccessMergesDhcAndSis', async () => {
   assert.equal(result.grade, '3');
   assert.equal(result.classicReading.certifications[2].area, '동·서양의 문학 (3권)');
   assert.equal(result.phoneNumber, '010-1234-5678');
+  assert.equal(result.userCategory, '학부생');
+  assert.equal(result.classicReading.completedSemesters, '6 학기');
+  assert.equal(result.classicReading.certificationStatus, '아니오');
   assert.ok(result.authenticatedAt instanceof Date);
 });
 

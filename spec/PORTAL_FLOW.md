@@ -70,7 +70,7 @@ Expected mapping for tests: `fixtures/expected_portal_login.json`. The portal so
 Sample: `fixtures/dhc_status.html`, expected result: `fixtures/expected_dhc.json`.
 
 - Each section is `div.b-con-box` with `h4.b-h4-tit01` title text; rows are `table.b-board-table tbody tr`
-- Student info (title `사용자 정보`): rows of `th` label, `td` value. Labels: `학과명` major, `학번` student id, `이름` name, `학년` grade, `사용자 상태` status. Missing label: empty string. No rows at all: `PARSE_ERROR`
+- Student info (title `사용자 정보`): rows of `th` label, `td` value. Labels: `학과명` major, `학번` student id, `이름` name, `학년` grade, `사용자 상태` status. Missing label: empty string. No rows at all: `PARSE_ERROR`. The same table also gives the classic-reading fields `이수 학기` completedSemesters, `인증완료 학기` certifiedSemesters, `인증여부` certificationStatus (as-is text, missing label: empty string, never `PARSE_ERROR`)
 - Certifications (`영역별 인증현황`): row `th` = area, first `td` = requiredCount, second `td` = certifiedCount. Rows without a `th` or with fewer than 2 `td` are skipped
 - Exam records (`인증 시험 현황`): 6 `td`: semester, area, bookTitle, examDate, score, passStatus
 - Subject substitutions (`과목 대체 인증 현황`) and curriculum records (`교과연계 인증 현황`): 5 `td`: semester, subjectName, area, bookTitle, completion
@@ -90,5 +90,6 @@ Sample: `fixtures/sis_user_info.json`, expected: `fixtures/expected_sis.json`.
 | email | `dm_UserInfoGam.USER_EMAIL` | |
 | phoneNumber | `USER_PHONE_NO1`-`NO2`-`NO3` of `dm_UserInfoGam`, non-empty parts joined with `-` | |
 | englishName | `dm_UserInfo.INTG_ENG_NM` | `dm_UserInfoSch.NM_ENG` |
+| userCategory | `dm_UserInfoSch.USER_CLSF_CD_NM` | |
 
 Missing values are empty strings. Invalid JSON: `PARSE_ERROR`.

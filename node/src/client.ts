@@ -62,11 +62,14 @@ export class SejongAuthClient {
     await this.login(session, studentId, password, CLASSIC_RETURN_URL);
     const dhcResult = await this.fetchDhcWithSession(session, false);
 
-    let contact: { email: string | null; phoneNumber: string | null; englishName: string | null } =
-      { email: null, phoneNumber: null, englishName: null };
+    let contact: { email: string | null; phoneNumber: string | null; englishName: string | null; userCategory: string | null } =
+      { email: null, phoneNumber: null, englishName: null, userCategory: null };
     try {
       const sisUserInfo = parseSisUserInfo(await this.fetchSisJsonWithSession(session));
-      contact = { email: sisUserInfo.email, phoneNumber: sisUserInfo.phoneNumber, englishName: sisUserInfo.englishName };
+      contact = {
+        email: sisUserInfo.email, phoneNumber: sisUserInfo.phoneNumber, englishName: sisUserInfo.englishName,
+        userCategory: sisUserInfo.userCategory,
+      };
     } catch {
       // SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
     }

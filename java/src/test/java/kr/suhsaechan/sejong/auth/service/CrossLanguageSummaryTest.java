@@ -65,6 +65,7 @@ class CrossLanguageSummaryTest {
       values.put("email", result.getEmail());
       values.put("phoneNumber", result.getPhoneNumber());
       values.put("englishName", result.getEnglishName());
+      values.put("userCategory", result.getUserCategory());
       values.put("classicReading", canonicalMapper.convertValue(result.getClassicReading(), TreeMap.class));
 
       Map<String, String> fieldHashes = new TreeMap<>();

@@ -60,16 +60,18 @@ public class SuhSejongAuthEngine {
     SejongPortalSession session = portalClient.openSession(studentId, password);
     SejongDhcAuthResult dhcResult = buildDhcResult(portalClient.fetchClassicStatusHtml(session), false);
 
-    // 2. 같은 세션으로 SIS 연락처 3개만 (실패해도 DHC 정보만으로 결과 반환)
+    // 2. 같은 세션으로 SIS 연락처 3개, 영어 이름, 사용자 구분 (실패해도 DHC 정보만으로 결과 반환)
     String email = null;
     String phoneNumber = null;
     String englishName = null;
+    String userCategory = null;
     try {
       String json = sisClient.fetchInitUserInfoJson(session);
       sisParser.ensureLoggedIn(json);
       email = sisParser.parseEmail(json);
       phoneNumber = sisParser.parsePhoneNumber(json);
       englishName = sisParser.parseEnglishName(json);
+      userCategory = sisParser.parseUserCategory(json);
     } catch (Exception e) {
       log.warn("[sejong auth] SIS contact lookup failed (ignored) : {}", e.getMessage());
     }
@@ -86,6 +88,7 @@ public class SuhSejongAuthEngine {
         .email(email)
         .phoneNumber(phoneNumber)
         .englishName(englishName)
+        .userCategory(userCategory)
         .authenticatedAt(LocalDateTime.now())
         .build();
 
@@ -208,6 +211,7 @@ public class SuhSejongAuthEngine {
         .email(sisParser.parseEmail(json))
         .phoneNumber(sisParser.parsePhoneNumber(json))
         .englishName(sisParser.parseEnglishName(json))
+        .userCategory(sisParser.parseUserCategory(json))
         .authenticatedAt(LocalDateTime.now())
         .rawJson(shouldIncludeRawJson ? json : null)
         .build();

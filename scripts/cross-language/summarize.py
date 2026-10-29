@@ -17,7 +17,8 @@ from sejong_auth import SejongAuthError, authenticate  # noqa: E402
 # 비교 필드 (Java·Node 이름 기준) > Python 필드
 FIELD_BY_COMPARED_NAME = {
     "studentId": "student_id", "name": "name", "major": "major", "grade": "grade", "status": "status",
-    "email": "email", "phoneNumber": "phone_number", "englishName": "english_name", "classicReading": "classic_reading",
+    "email": "email", "phoneNumber": "phone_number", "englishName": "english_name",
+    "userCategory": "user_category", "classicReading": "classic_reading",
 }
 
 

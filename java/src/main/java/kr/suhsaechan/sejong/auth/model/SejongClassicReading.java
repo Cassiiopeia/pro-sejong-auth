@@ -11,6 +11,15 @@ import lombok.Getter;
 @Builder
 public class SejongClassicReading {
 
+  /** 이수 학기 (사용자 정보 표 원문, 예: 8 학기) */
+  private final String completedSemesters;
+
+  /** 인증완료 학기 (사용자 정보 표 원문, 예: 6 학기) */
+  private final String certifiedSemesters;
+
+  /** 인증여부 (사용자 정보 표 원문 자유 텍스트, 대체이수 사유 포함 가능) */
+  private final String certificationStatus;
+
   /** 영역별 인증현황 */
   private final List<ClassicCertification> certifications;
 
@@ -28,7 +37,8 @@ public class SejongClassicReading {
 
   @Override
   public String toString() {
-    return String.format("SejongClassicReading{certifications=%d, examRecords=%d, subjectSubstitutions=%d, contestRecords=%d, curriculumRecords=%d}",
+    return String.format("SejongClassicReading{completedSemesters='%s', certifiedSemesters='%s', certificationStatus='%s', certifications=%d, examRecords=%d, subjectSubstitutions=%d, contestRecords=%d, curriculumRecords=%d}",
+        completedSemesters, certifiedSemesters, certificationStatus,
         certifications != null ? certifications.size() : 0,
         examRecords != null ? examRecords.size() : 0,
         subjectSubstitutions != null ? subjectSubstitutions.size() : 0,
