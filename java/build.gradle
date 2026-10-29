@@ -1,8 +1,8 @@
 plugins {
 	id 'java-library'
-	id 'org.springframework.boot' version '3.5.7'
+	id 'org.springframework.boot' version '4.1.2'
 	// Maven Central 배포 (0.36+ 는 Gradle 9 필요 > wrapper 8.14 에 맞춰 0.35.0)
-	id 'com.vanniktech.maven.publish' version '0.35.0'
+	id 'com.vanniktech.maven.publish' version '0.37.0'
 }
 
 // group, version: 루트 build.gradle (세 언어 공통 버전, projectops 가 갱신)
@@ -40,11 +40,11 @@ dependencies {
 	implementation 'org.slf4j:slf4j-api'
 
 	// HTTP Client (OkHttp)
-	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-	implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.12.0'
+	implementation 'com.squareup.okhttp3:okhttp:5.5.1'
+	implementation 'com.squareup.okhttp3:okhttp-urlconnection:5.5.1'
 
 	// HTML Parser (Jsoup)
-	implementation 'org.jsoup:jsoup:1.17.2'
+	implementation 'org.jsoup:jsoup:1.23.2'
 
 	// JSON Parser (Jackson)
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
