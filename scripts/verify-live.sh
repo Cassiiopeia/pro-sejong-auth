@@ -10,13 +10,13 @@ cd "$(dirname "$0")/.."
 : "${SEJONG_TEST_PASSWORD:?SEJONG_TEST_PASSWORD not set}"
 
 # 1. 언어별 결과 수집
-SEJONG_TEST_INCLUDE_WRONG_PASSWORD=true ./gradlew -q :sejong-univ-auth:test --tests '*CrossLanguageSummaryTest' --rerun-tasks
+SEJONG_TEST_INCLUDE_WRONG_PASSWORD=true ./gradlew -q :sejongpeia:test --tests '*CrossLanguageSummaryTest' --rerun-tasks
 (cd node && npm run --silent build)
 OUT=java/build/cross-language
 # 언어마다 정상 > 틀림 > SIS 틀림 순서 (포털 잠금 방지: 연속 실패 최대 2회, 정상 로그인이 사이에 끼도록)
 python3 scripts/cross-language/summarize.py > "$OUT/python.json"
 python3 scripts/cross-language/summarize.py --wrong-password > "$OUT/python-wrong.json"
-python3 -c "import os,sys,json; sys.path.insert(0,'python/src'); from sejong_auth import authenticate_sis, SejongAuthError
+python3 -c "import os,sys,json; sys.path.insert(0,'python/src'); from sejongpeia import authenticate_sis, SejongAuthError
 try: authenticate_sis(os.environ['SEJONG_TEST_STUDENT_ID'], os.environ['SEJONG_TEST_PASSWORD']+'-wrong'); print(json.dumps({}))
 except SejongAuthError as e: print(json.dumps({'error': e.code.value}))" > "$OUT/python-sis-wrong.json"
 node scripts/cross-language/summarize.mjs > "$OUT/node.json"

@@ -1,5 +1,5 @@
 {
-  "name": "pro-sejong-auth",
+  "name": "pro-sejongpeia",
   "version": "1.2.23",
   "description": "Sejong University login API for Node.js: verify students with portal SSO (세종대 로그인 API)",
   "keywords": [
@@ -10,13 +10,13 @@
     "sso",
     "student-verification"
   ],
-  "homepage": "https://cassiiopeia.github.io/pro-sejong-auth/",
+  "homepage": "https://cassiiopeia.github.io/pro-sejongpeia/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Cassiiopeia/pro-sejong-auth.git",
+    "url": "git+https://github.com/Cassiiopeia/pro-sejongpeia.git",
     "directory": "node"
   },
-  "bugs": "https://github.com/Cassiiopeia/pro-sejong-auth/issues",
+  "bugs": "https://github.com/Cassiiopeia/pro-sejongpeia/issues",
   "license": "MIT",
   "author": "Suh Saechan",
   "type": "module",

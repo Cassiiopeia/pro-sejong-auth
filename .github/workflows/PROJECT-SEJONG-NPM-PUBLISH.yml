@@ -1,5 +1,5 @@
 # Node 패키지 npm 배포 (deploy 브랜치 push = 릴리스, Trusted Publishing(OIDC) 우선, NPM_TOKEN 은 대체 수단)
-# npm 설정: 패키지 Settings > Trusted Publisher > GitHub Actions, repo Cassiiopeia/pro-sejong-auth, workflow PROJECT-SEJONG-NPM-PUBLISH.yml
+# npm 설정: 패키지 Settings > Trusted Publisher > GitHub Actions, repo Cassiiopeia/pro-sejongpeia, workflow PROJECT-SEJONG-NPM-PUBLISH.yml
 name: PROJECT-SEJONG-NPM-PUBLISH
 
 on:
@@ -39,7 +39,7 @@ jobs:
         working-directory: node
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if npm view "pro-sejong-auth@$VERSION" version >/dev/null 2>&1; then
+          if npm view "pro-sejongpeia@$VERSION" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"; echo "already published: $VERSION"
           fi
       - name: Publish to npm

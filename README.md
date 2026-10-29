@@ -2,7 +2,11 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-# pro-sejong-auth
+# pro-sejongpeia
+
+**Pro Sejongpeia: 세종대 개발자들의 작은 유토피아.** 세종대 로그인과 학교 데이터를 Java, Python, Node.js로 한 번에.
+
+> 이전 이름: `pro-sejong-auth`(PyPI, npm), `kr.suhsaechan:sejong-univ-auth`(Maven). 이름과 함께 Python 임포트 이름(`sejongpeia`), Java 패키지(`kr.suhsaechan.sejongpeia`), Spring 설정 접두사(`sejongpeia.*`)도 바뀌었습니다.
 
 **세종대 로그인 API: 세종대학교 포털 인증을 Java·Python·Node에서 한 번에**
 
@@ -11,13 +15,13 @@
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
 ## 최신 버전 : v1.2.23 (2026-10-29)
 
-[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejong-univ-auth?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejong-univ-auth)
-[![PyPI](https://img.shields.io/pypi/v/pro-sejong-auth?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejong-auth/)
-[![npm](https://img.shields.io/npm/v/pro-sejong-auth?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejong-auth)
+[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![PyPI](https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejongpeia/)
+[![npm](https://img.shields.io/npm/v/pro-sejongpeia?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejongpeia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
-[![Live portal check](https://github.com/Cassiiopeia/pro-sejong-auth/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejong-auth/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+[![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
-### [▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejong-auth/#demo)
+### [▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
 
 </div>
 
@@ -28,12 +32,12 @@
 
 | Java / Spring Boot | Python | Node.js |
 |---|---|---|
-| `implementation "kr.suhsaechan:sejong-univ-auth:<버전>"` | `pip install pro-sejong-auth` | `npm install pro-sejong-auth` |
+| `implementation "kr.suhsaechan:sejongpeia:<버전>"` | `pip install pro-sejongpeia` | `npm install pro-sejongpeia` |
 
 **호출 한 번, 포털 로그인 한 번** (약 0.6~0.8초) · **세 언어 모두 같은 결과 객체** · Python·Node는 **외부 의존성 0개** · **비밀번호가 틀리면 바로 멈춰** 계정 잠금을 막음 · **매일 실제 포털로 점검**
 
 <p align="center">
-  <a href="https://cassiiopeia.github.io/pro-sejong-auth/#demo">
+  <a href="https://cassiiopeia.github.io/pro-sejongpeia/#demo">
     <img src="docs/assets/demo-ko.png" alt="소개 페이지의 실시간 인증 데모" width="820">
   </a>
   <br>
@@ -83,7 +87,7 @@
 
 ```groovy
 dependencies {
-    implementation "kr.suhsaechan:sejong-univ-auth:<버전>"   // Maven Central 배지 확인
+    implementation "kr.suhsaechan:sejongpeia:<버전>"   // Maven Central 배지 확인
 }
 ```
 
@@ -93,7 +97,7 @@ dependencies {
 ```xml
 <dependency>
     <groupId>kr.suhsaechan</groupId>
-    <artifactId>sejong-univ-auth</artifactId>
+    <artifactId>sejongpeia</artifactId>
     <version><!-- Maven Central 배지 확인 --></version>
 </dependency>
 ```
@@ -137,11 +141,11 @@ SejongAuthResult result = engine.authenticate(studentId, password);
 Python 3.9+, 표준 라이브러리 외 의존성 없음.
 
 ```bash
-pip install pro-sejong-auth
+pip install pro-sejongpeia
 ```
 
 ```python
-from sejong_auth import authenticate, SejongAuthError, ErrorCode
+from sejongpeia import authenticate, SejongAuthError, ErrorCode
 
 try:
     result = authenticate("21011234", "비밀번호")
@@ -158,11 +162,11 @@ except SejongAuthError as error:
 Node 18+, 의존성 0개, TypeScript 타입 포함, ESM·CommonJS 모두 지원. 서버 전용입니다.
 
 ```bash
-npm install pro-sejong-auth
+npm install pro-sejongpeia
 ```
 
 ```js
-import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejong-auth';
+import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
 
 try {
   const result = await authenticate('21011234', '비밀번호');
@@ -248,9 +252,9 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 
 | Java (`application.yml`) | Python | Node |
 |---|---|---|
-| `sejong.auth.timeout-seconds: 10` | `SejongAuthClient(timeout_seconds=10)` | `new SejongAuthClient({ timeoutSeconds: 10 })` |
-| `sejong.auth.max-retry: 3` | `max_retry=3` | `maxRetry: 3` |
-| `sejong.auth.ssl-verification: true` | `ssl_verification=True` | `sslVerification: true` |
+| `sejongpeia.timeout-seconds: 10` | `SejongAuthClient(timeout_seconds=10)` | `new SejongAuthClient({ timeoutSeconds: 10 })` |
+| `sejongpeia.max-retry: 3` | `max_retry=3` | `maxRetry: 3` |
+| `sejongpeia.ssl-verification: true` | `ssl_verification=True` | `sslVerification: true` |
 
 > **Java TLS 안내**: 세종 포털은 최신 JDK가 막아 둔 레거시 cipher(`TLS_RSA_WITH_AES_256_CBC_SHA`)만 제공합니다. Java 라이브러리는 `jdk.tls.disabledAlgorithms`에서 `TLS_RSA_*`를 빼는데, 이 설정은 **JVM 전체**에 적용되고 JVM의 첫 TLS 연결 전에만 효과가 있습니다. Spring Boot는 시작할 때 자동으로 처리합니다. Spring 없이 쓰면 `main()` 맨 앞에서 `SejongTlsSupport.ensureLegacyCipherEnabled()`를 부르세요. 늦게 부르면 인증이 `CONNECTION_FAILED`와 그 원인을 알리는 메시지로 실패합니다. JVM 전체 변경을 허용할 수 없다면 인증을 별도 프로세스로 분리하세요. Python·Node는 자기 연결의 TLS 설정만 바꿉니다.
 
@@ -274,8 +278,8 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 <details>
 <summary><b>인증이 갑자기 실패해요</b></summary>
 
-[데모](https://cassiiopeia.github.io/pro-sejong-auth/#demo)로 먼저 확인해 보세요. 데모도 실패하면 포털 쪽이 바뀌었을 가능성이 높습니다.
-[이슈](https://github.com/Cassiiopeia/pro-sejong-auth/issues)에 에러 코드와 함께 남겨 주세요.
+[데모](https://cassiiopeia.github.io/pro-sejongpeia/#demo)로 먼저 확인해 보세요. 데모도 실패하면 포털 쪽이 바뀌었을 가능성이 높습니다.
+[이슈](https://github.com/Cassiiopeia/pro-sejongpeia/issues)에 에러 코드와 함께 남겨 주세요.
 </details>
 
 <details>

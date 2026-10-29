@@ -1,0 +1,257 @@
+{
+  "organization_categories": [
+    {
+      "code": "20",
+      "name": "예시학부",
+      "name_en": "Example Undergraduate",
+      "extra": {
+        "PRT_ORD": "1"
+      }
+    },
+    {
+      "code": "30",
+      "name": "예시대학원",
+      "name_en": "Example Graduate School",
+      "extra": {
+        "PRT_ORD": "2"
+      }
+    }
+  ],
+  "terms": [
+    {
+      "year": "2099",
+      "semester_code": "20",
+      "code": "2099/20",
+      "name": "2099/2학기",
+      "extra": {}
+    },
+    {
+      "year": "2099",
+      "semester_code": "10",
+      "code": "2099/10",
+      "name": "2099/1학기",
+      "extra": {}
+    }
+  ],
+  "departments": [
+    {
+      "code": "9101",
+      "level": "2",
+      "college_code": "9100",
+      "college_name": "예시대학",
+      "unit_code": "9101",
+      "unit_name": "예시공학과",
+      "major_code": "",
+      "major_name": "",
+      "name_en": "Department of Example Engineering",
+      "extra": {
+        "DEPT_NM": "예시대학 예시공학과【9101 학부】"
+      }
+    },
+    {
+      "code": "9201",
+      "level": "3",
+      "college_code": "9100",
+      "college_name": "예시대학",
+      "unit_code": "9200",
+      "unit_name": "",
+      "major_code": "9201",
+      "major_name": "예시전공A",
+      "name_en": "",
+      "extra": {
+        "DEPT_NM": "예시대학 예시학부 예시전공A【9201 학부】"
+      }
+    }
+  ],
+  "course_types": [
+    {
+      "code": "1E",
+      "name": "공필",
+      "category_code": "20",
+      "extra": {
+        "NEW_FIELD": "x",
+        "PRT_ORD": "1"
+      }
+    }
+  ],
+  "selective_domains": [
+    {
+      "code": "10",
+      "name": "예시영역",
+      "name_en": "Example Domain",
+      "extra": {
+        "PRT_ORD": "1"
+      }
+    }
+  ],
+  "lectures": [
+    {
+      "course_number": "000001",
+      "section": "001",
+      "name": "예시과목",
+      "course_type_code": "1E",
+      "course_type_name": "공필",
+      "domain_code": "",
+      "domain_name": "",
+      "credits": "3.0",
+      "hours": "3.0 / 3 / 0",
+      "total_hours": "3",
+      "schedule": "월09:00-10:30",
+      "room": "예시101",
+      "instructor": "가상교수",
+      "grade_level": "1",
+      "language_code": "1",
+      "language_name": "",
+      "department_code": "9101",
+      "department_name": "예시공학과",
+      "managing_department": "예시공학과",
+      "remark": "",
+      "year": "2099",
+      "semester_code": "20",
+      "extra": {
+        "NEW_FIELD": "y"
+      }
+    }
+  ],
+  "calendar": [
+    {
+      "year": "2099",
+      "month": "10",
+      "category_code": "0001",
+      "category_name": "학부",
+      "title": "예시 시험 기간",
+      "title_en": "Example Exam Period",
+      "start_date": "2099-10-20",
+      "end_date": "2099-10-26",
+      "extra": {}
+    }
+  ],
+  "dormitory_menu": [
+    {
+      "date": "2099-10-20",
+      "breakfast": "조식1",
+      "lunch": "중식1",
+      "dinner": "석식1",
+      "alternative": "대체1"
+    },
+    {
+      "date": "2099-10-21",
+      "breakfast": "조식2",
+      "lunch": "중식2",
+      "dinner": "석식2",
+      "alternative": ""
+    },
+    {
+      "date": "2099-10-22",
+      "breakfast": "조식3",
+      "lunch": "중식3",
+      "dinner": "석식3",
+      "alternative": ""
+    },
+    {
+      "date": "2099-10-23",
+      "breakfast": "조식4",
+      "lunch": "중식4",
+      "dinner": "석식4",
+      "alternative": ""
+    },
+    {
+      "date": "2099-10-24",
+      "breakfast": "조식5",
+      "lunch": "중식5",
+      "dinner": "석식5",
+      "alternative": ""
+    },
+    {
+      "date": "2099-10-25",
+      "breakfast": "조식6",
+      "lunch": "중식6",
+      "dinner": "석식6",
+      "alternative": ""
+    },
+    {
+      "date": "2099-10-26",
+      "breakfast": "조식7",
+      "lunch": "중식7",
+      "dinner": "석식7",
+      "alternative": ""
+    }
+  ],
+  "dormitory_notices": {
+    "total": 2,
+    "pinned": [
+      {
+        "id": "10",
+        "title": "고정 공지",
+        "date": "2099-10-01",
+        "views": 5,
+        "file_name": "a.pdf"
+      }
+    ],
+    "items": [
+      {
+        "id": "11",
+        "title": "일반 공지",
+        "date": "2099-10-02",
+        "views": 7,
+        "file_name": ""
+      }
+    ]
+  },
+  "cafeteria_menu": [
+    {
+      "building_name": "예시관",
+      "location": "6층",
+      "place_id": "1",
+      "place_name": "예시식당",
+      "date": "2099-10-20",
+      "day": "월",
+      "meal_type_id": "2",
+      "meal_name": "중식",
+      "menu_name": "예시메뉴",
+      "price": "5500"
+    },
+    {
+      "building_name": "예시관",
+      "location": "6층",
+      "place_id": "1",
+      "place_name": "예시식당",
+      "date": "",
+      "day": "",
+      "meal_type_id": "",
+      "meal_name": "",
+      "menu_name": "고정메뉴",
+      "price": "4000"
+    }
+  ],
+  "campus_places": [
+    {
+      "id": "1",
+      "name": "예시관",
+      "name_en": "Example Hall",
+      "place_type": "BUILDING",
+      "category": "",
+      "latitude": 37.5,
+      "longitude": 127.07,
+      "info": "예시 안내",
+      "phone": "02-0000-0000",
+      "description": "",
+      "extra": {
+        "orderNo": "1",
+        "useYn": "Y"
+      }
+    }
+  ],
+  "extracurricular_events": [
+    {
+      "id": "e1",
+      "title": "예시 특강",
+      "start": "2099-10-20T14:00:00",
+      "end": "2099-10-20T16:00:00",
+      "category_title": "특강",
+      "url": "https://example.invalid/e1",
+      "description": "예시 설명",
+      "location": "예시관"
+    }
+  ]
+}

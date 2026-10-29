@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from sejong_auth.transport import HttpResponse
+from sejongpeia.transport import HttpResponse
 
 FIXTURE_DIRECTORY = Path(__file__).resolve().parents[2] / "spec" / "fixtures"
 

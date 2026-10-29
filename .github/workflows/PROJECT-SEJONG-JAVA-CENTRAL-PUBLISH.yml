@@ -34,14 +34,14 @@ jobs:
       - name: Skip if already on Central
         id: check
         run: |
-          URL="https://repo1.maven.org/maven2/kr/suhsaechan/sejong-univ-auth/${{ steps.version.outputs.version }}/"
+          URL="https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/${{ steps.version.outputs.version }}/"
           if [ "$(curl -s -o /dev/null -w '%{http_code}' "$URL")" = "200" ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"; echo "already published: ${{ steps.version.outputs.version }}"
           fi
 
       - name: Test
         if: steps.check.outputs.exists != 'true'
-        run: ./gradlew :sejong-univ-auth:test
+        run: ./gradlew :sejongpeia:test
 
       - name: Publish to Maven Central
         if: steps.check.outputs.exists != 'true'
@@ -50,4 +50,4 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
-        run: ./gradlew :sejong-univ-auth:publishToMavenCentral --no-configuration-cache
+        run: ./gradlew :sejongpeia:publishToMavenCentral --no-configuration-cache

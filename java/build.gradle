@@ -65,7 +65,7 @@ tasks.named('test') {
 }
 
 bootJar { enabled = false }
-// Boot 플러그인 기본 classifier(plain) 제거 > Maven 사용자가 받는 기본 jar 이름(sejong-univ-auth-{버전}.jar)
+// Boot 플러그인 기본 classifier(plain) 제거 > Maven 사용자가 받는 기본 jar 이름(sejongpeia-{버전}.jar)
 jar {
 	enabled = true
 	archiveClassifier = ''
@@ -89,9 +89,9 @@ mavenPublishing {
 	}
 	coordinates(project.group.toString(), project.name, project.version.toString())
 	pom {
-		name = 'sejong-univ-auth'
+		name = 'sejongpeia'
 		description = 'Sejong University login API for Java and Spring Boot (세종대 로그인 API)'
-		url = 'https://github.com/Cassiiopeia/pro-sejong-auth'
+		url = 'https://github.com/Cassiiopeia/pro-sejongpeia'
 		inceptionYear = '2025'
 		licenses {
 			license {
@@ -108,9 +108,9 @@ mavenPublishing {
 			}
 		}
 		scm {
-			url = 'https://github.com/Cassiiopeia/pro-sejong-auth'
-			connection = 'scm:git:https://github.com/Cassiiopeia/pro-sejong-auth.git'
-			developerConnection = 'scm:git:ssh://git@github.com/Cassiiopeia/pro-sejong-auth.git'
+			url = 'https://github.com/Cassiiopeia/pro-sejongpeia'
+			connection = 'scm:git:https://github.com/Cassiiopeia/pro-sejongpeia.git'
+			developerConnection = 'scm:git:ssh://git@github.com/Cassiiopeia/pro-sejongpeia.git'
 		}
 	}
 }

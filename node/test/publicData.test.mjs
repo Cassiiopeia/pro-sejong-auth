@@ -1,0 +1,196 @@
+// 공개 데이터: spec/fixtures/public_data 기대값 일치, 요청 형태, 캐시, 실패 격리 (학교 서버 호출 없음)
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { SejongPublicData } from '../dist/esm/publicData.js';
+import { ErrorCode, SejongAuthError } from '../dist/esm/errors.js';
+import { readFixture } from './helpers.mjs';
+
+const readPublicFixture = (fileName) => readFixture(`public_data/${fileName}`);
+const toCamelCase = (name) => name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+// expected(snake_case) > camelCase, extra 안의 키는 학교 원문이라 변환하지 않음
+const camelizeKeys = (value) => {
+  if (Array.isArray(value)) return value.map(camelizeKeys);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([key, inner]) => [toCamelCase(key), key === 'extra' ? inner : camelizeKeys(inner)]));
+};
+const expected = camelizeKeys(JSON.parse(readPublicFixture('expected_public_data.json')));
+
+const SIS = 'https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/';
+const HOMEPAGE = 'https://www.sejong.ac.kr/kor/';
+const DORMITORY = 'https://happydorm.sejong.ac.kr/';
+
+// URL 앞부분 > fixture 파일명 (SIS doOnload 는 세 소스가 공유)
+const fixtureNameByUrlPrefix = {
+  [`${SIS}doOnload.do`]: 'reference_onload.json',
+  [`${SIS}doYearsmtlist.do`]: 'reference_terms.json',
+  [`${SIS}doLesndeptgroup.do`]: 'reference_departments.json',
+  [`${SIS}doList.do`]: 'lectures.json',
+  [`${HOMEPAGE}academics/academic-calendar.do`]: 'calendar.json',
+  [`${DORMITORY}food/indexFoodList.do`]: 'dormitory_menu.json',
+  [`${DORMITORY}bbs/getBbsList.do`]: 'dormitory_notices.json',
+  [`${HOMEPAGE}unilife/cafeteria-info.do`]: 'cafeteria.json',
+  [`${HOMEPAGE}intro/campus-map.do`]: 'campus_places.json',
+  'https://do.sejong.ac.kr/ko/process/schedule/getEvents': 'extracurricular_events.json',
+};
+
+// 요청 기록 + 응답 교체 가능한 가짜 세션 (outcome: { status, body } 또는 Error)
+function createPublicData({ options = {}, outcome, delayMilliseconds = 0 } = {}) {
+  const requests = [];
+  const clock = { now: 1_000_000 };
+  const session = {
+    async request(method, url, requestOptions = {}) {
+      requests.push({ method, url, headers: requestOptions.headers, body: requestOptions.body });
+      if (delayMilliseconds) await new Promise((resolve) => setTimeout(resolve, delayMilliseconds));
+      const current = typeof outcome === 'function' ? outcome() : outcome;
+      if (current instanceof Error) throw current;
+      if (current) return { status: current.status, body: Buffer.from(current.body, 'utf8') };
+      const prefix = Object.keys(fixtureNameByUrlPrefix).find((candidate) => url.startsWith(candidate));
+      return { status: 200, body: Buffer.from(readPublicFixture(fixtureNameByUrlPrefix[prefix]), 'utf8') };
+    },
+  };
+  const publicData = new SejongPublicData({ ...options, _sessionFactory: () => session, _nowMilliseconds: () => clock.now });
+  return { publicData, requests, clock };
+}
+
+const TERM = { categoryCode: '20', year: '2099', semesterCode: '20' };
+const callBySource = {
+  organizationCategories: (p) => p.organizationCategories(),
+  terms: (p) => p.terms('20'),
+  departments: (p) => p.departments(TERM),
+  courseTypes: (p) => p.courseTypes(),
+  selectiveDomains: (p) => p.selectiveDomains(),
+  lectures: (p) => p.lectures({ ...TERM, departmentCode: '9101' }),
+  calendar: (p) => p.calendar({ start: '2099-10-01', end: '2099-10-31' }),
+  dormitoryMenu: (p) => p.dormitoryMenu(),
+  dormitoryNotices: (p) => p.dormitoryNotices(),
+  cafeteriaMenu: (p) => p.cafeteriaMenu(1),
+  campusPlaces: (p) => p.campusPlaces(),
+  extracurricularEvents: (p) => p.extracurricularEvents({ start: '2099-10-01', end: '2099-10-31' }),
+};
+
+for (const [sourceName, call] of Object.entries(callBySource)) {
+  test(`${sourceName} matches expected_public_data`, async () => {
+    const { publicData } = createPublicData();
+    const snakeName = sourceName.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    const expectedKey = toCamelCase(snakeName);
+    assert.deepEqual(await call(publicData), expected[expectedKey]);
+  });
+}
+
+test('extra never contains deny list fields', async () => {
+  const { publicData } = createPublicData();
+  const deniedKeys = ['CD_ALIAS1', 'CD_ALIAS2', 'CD_ALIAS3', 'CD_ALIAS1_ENG', 'regname', 'regid', 'STACK_TRACE'];
+  const results = [await publicData.organizationCategories(), await publicData.lectures({ ...TERM, courseName: '예시' }), await publicData.departments(TERM)];
+  for (const row of results.flat()) for (const key of deniedKeys) assert.ok(!(key in row.extra), key);
+  assert.deepEqual((await publicData.organizationCategories())[0].extra, { PRT_ORD: '1' });
+  assert.equal(JSON.stringify(await publicData.dormitoryNotices()).includes('regname'), false);
+});
+
+test('request shapes follow the contract', async () => {
+  const { publicData, requests } = createPublicData();
+  await publicData.terms('20');
+  await publicData.lectures({ ...TERM, departmentCode: '9101', courseName: '과목', instructorName: '교수' });
+  await publicData.calendar({ categoryCode: '0002', start: '2099-10-01', end: '2099-10-31' });
+  await publicData.dormitoryMenu('SJ');
+  await publicData.dormitoryNotices({ page: 2, rows: 5, keyword: '공지' });
+  await publicData.cafeteriaMenu(7);
+  await publicData.campusPlaces('BUILDING');
+  await publicData.extracurricularEvents({ start: '2098-12-01', end: '2099-01-31', category: 'a' });
+  const [terms, lectures, calendar, menu, notices, cafeteria, places, events] = requests;
+
+  assert.equal(terms.method, 'POST');
+  assert.equal(terms.url, `${SIS}doYearsmtlist.do`);
+  assert.deepEqual(JSON.parse(terms.body), { dm_search: { ORGN_CLSF_CD: '20' } });
+  assert.equal(terms.headers['Content-Type'], 'application/json; charset="UTF-8"');
+  assert.equal(terms.headers.Accept, 'application/json');
+
+  assert.deepEqual(JSON.parse(lectures.body).dm_search, {
+    ORGN_CLSF_CD: '20', YEAR: '2099', SMT_CD: '20', YEAR_SMT: '2099/20', DEPT_CD: '9101', CURI_NM: '과목', EMP_NM: '교수', LANG_CHK: 'KOR',
+  });
+
+  assert.equal(calendar.method, 'GET');
+  assert.equal(calendar.url, `${HOMEPAGE}academics/academic-calendar.do?mode=getCalendarData&start=2099-10-01&end=2099-10-31&collDiv=0002`);
+
+  assert.equal(menu.method, 'POST');
+  assert.equal(menu.url, `${DORMITORY}food/indexFoodList.do`);
+  assert.equal(menu.body, 'locgbn=SJ');
+  assert.equal(menu.headers['Content-Type'], 'application/x-www-form-urlencoded; charset=UTF-8');
+  assert.equal(menu.headers['X-Requested-With'], 'XMLHttpRequest');
+
+  const noticeForm = new URLSearchParams(notices.body);
+  assert.deepEqual(Object.fromEntries(noticeForm), { cPage: '2', rows: '5', bbs_locgbn: 'SJ', bbs_id: 'notice', sType: 'subject', sWord: '공지' });
+
+  assert.equal(cafeteria.url, `${HOMEPAGE}unilife/cafeteria-info.do?mode=getMenuList&placeId=7`);
+  assert.equal(places.url, `${HOMEPAGE}intro/campus-map.do?mode=getPlaceUserList&placeType=BUILDING`);
+
+  assert.equal(events.url, 'https://do.sejong.ac.kr/ko/process/schedule/getEvents');
+  assert.deepEqual(Object.fromEntries(new URLSearchParams(events.body)), {
+    cid: 'eco', category: 'a', start: '2098-12-01', end: '2099-01-31', start_year: '2098', end_year: '2099',
+  });
+});
+
+test('cache: fresh entry makes no request, expired entry refreshes', async () => {
+  const { publicData, requests, clock } = createPublicData({ options: { cacheTtlSeconds: 60 } });
+  await publicData.courseTypes();
+  clock.now += 59_000;
+  await publicData.courseTypes();
+  assert.equal(requests.length, 1);
+  clock.now += 2_000;
+  await publicData.courseTypes();
+  assert.equal(requests.length, 2);
+  await publicData.terms('20');
+  await publicData.terms('30');
+  assert.equal(requests.length, 4);
+});
+
+test('cached result is not affected by caller mutation', async () => {
+  const { publicData } = createPublicData();
+  (await publicData.courseTypes())[0].name = 'changed';
+  assert.equal((await publicData.courseTypes())[0].name, expected.courseTypes[0].name);
+});
+
+test('failure returns expired cache, or empty value without cache', async () => {
+  let currentOutcome;
+  const { publicData, requests, clock } = createPublicData({ options: { cacheTtlSeconds: 10 }, outcome: () => currentOutcome });
+  currentOutcome = undefined;
+  const first = await publicData.cafeteriaMenu(1);
+  clock.now += 20_000;
+  currentOutcome = new Error('connection reset');
+  assert.deepEqual(await publicData.cafeteriaMenu(1), first);
+  assert.equal(requests.length, 2);
+  assert.deepEqual(await publicData.cafeteriaMenu(2), []);
+});
+
+const failureOutcomes = {
+  'connection failure': () => new Error('ECONNREFUSED'),
+  'server error status': () => ({ status: 500, body: '{"items":[]}' }),
+  'not json': () => ({ status: 200, body: '<html>maintenance</html>' }),
+  'expected key missing': () => ({ status: 200, body: '{"other":[]}' }),
+  'submit error object': () => ({ status: 200, body: '{"_SUBMIT_ERROR_":{"STACK_TRACE":"internal secret"}}' }),
+};
+
+for (const [label, makeOutcome] of Object.entries(failureOutcomes)) {
+  test(`failure isolation: ${label}`, async () => {
+    for (const [sourceName, call] of Object.entries(callBySource)) {
+      const { publicData } = createPublicData({ outcome: makeOutcome });
+      const result = await call(publicData);
+      const emptyValue = sourceName === 'dormitoryNotices' ? { total: 0, pinned: [], items: [] } : [];
+      assert.deepEqual(result, emptyValue, sourceName);
+    }
+  });
+}
+
+test('lectures without any filter raises INVALID_INPUT and sends no request', () => {
+  const { publicData, requests } = createPublicData();
+  assert.throws(() => publicData.lectures({ ...TERM, departmentCode: ' ', courseName: '' }),
+    (error) => error instanceof SejongAuthError && error.code === ErrorCode.INVALID_INPUT);
+  assert.equal(requests.length, 0);
+});
+
+test('concurrent calls with the same arguments share one request', async () => {
+  const { publicData, requests } = createPublicData({ delayMilliseconds: 20 });
+  const results = await Promise.all([publicData.campusPlaces(), publicData.campusPlaces(), publicData.campusPlaces()]);
+  assert.equal(requests.length, 1);
+  assert.deepEqual(results[0], expected.campusPlaces);
+  assert.deepEqual(results[2], expected.campusPlaces);
+});

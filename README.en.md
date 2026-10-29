@@ -2,7 +2,11 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-# pro-sejong-auth
+# pro-sejongpeia
+
+**Pro Sejongpeia: a little utopia for Sejong developers.** Sejong University login and school data for Java, Python and Node.js in one place.
+
+> Formerly `pro-sejong-auth` (PyPI, npm) and `kr.suhsaechan:sejong-univ-auth` (Maven). The Python import name (`sejongpeia`), the Java package (`kr.suhsaechan.sejongpeia`) and the Spring property prefix (`sejongpeia.*`) changed with the name.
 
 **Sejong University login API for Java, Python and Node.js: verify students in one call**
 
@@ -10,13 +14,13 @@
 
 [한국어](README.md) | English
 
-[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejong-univ-auth?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejong-univ-auth)
-[![PyPI](https://img.shields.io/pypi/v/pro-sejong-auth?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejong-auth/)
-[![npm](https://img.shields.io/npm/v/pro-sejong-auth?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejong-auth)
+[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![PyPI](https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejongpeia/)
+[![npm](https://img.shields.io/npm/v/pro-sejongpeia?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejongpeia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
-[![Live portal check](https://github.com/Cassiiopeia/pro-sejong-auth/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejong-auth/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+[![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
-### [▶ Try it live in your browser](https://cassiiopeia.github.io/pro-sejong-auth/#demo)
+### [▶ Try it live in your browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
 
 </div>
 
@@ -28,12 +32,12 @@ session cookies, legacy TLS and HTML/JSON parsing. Same features, same results i
 
 | Java / Spring Boot | Python | Node.js |
 |---|---|---|
-| `implementation "kr.suhsaechan:sejong-univ-auth:<version>"` | `pip install pro-sejong-auth` | `npm install pro-sejong-auth` |
+| `implementation "kr.suhsaechan:sejongpeia:<version>"` | `pip install pro-sejongpeia` | `npm install pro-sejongpeia` |
 
 **One call, one portal login** (about 0.6 to 0.8 s) · **same typed result in all three languages** · **zero runtime dependencies** for Python and Node · **stops at the first wrong password** so accounts don't get locked · **checked against the live portal every day**
 
 <p align="center">
-  <a href="https://cassiiopeia.github.io/pro-sejong-auth/#demo">
+  <a href="https://cassiiopeia.github.io/pro-sejongpeia/#demo">
     <img src="docs/assets/demo-en-dark.png" alt="Live authentication demo on the project page" width="820">
   </a>
   <br>
@@ -83,7 +87,7 @@ Published to **Maven Central** (no extra repository needed). Java 17+, Spring Bo
 
 ```groovy
 dependencies {
-    implementation "kr.suhsaechan:sejong-univ-auth:<version>"   // see the Maven Central badge
+    implementation "kr.suhsaechan:sejongpeia:<version>"   // see the Maven Central badge
 }
 ```
 
@@ -93,7 +97,7 @@ dependencies {
 ```xml
 <dependency>
     <groupId>kr.suhsaechan</groupId>
-    <artifactId>sejong-univ-auth</artifactId>
+    <artifactId>sejongpeia</artifactId>
     <version><!-- see the Maven Central badge --></version>
 </dependency>
 ```
@@ -137,11 +141,11 @@ SejongAuthResult result = engine.authenticate(studentId, password);
 Python 3.9+, no dependencies beyond the standard library.
 
 ```bash
-pip install pro-sejong-auth
+pip install pro-sejongpeia
 ```
 
 ```python
-from sejong_auth import authenticate, SejongAuthError, ErrorCode
+from sejongpeia import authenticate, SejongAuthError, ErrorCode
 
 try:
     result = authenticate("21011234", "password")
@@ -158,11 +162,11 @@ except SejongAuthError as error:
 Node 18+, zero dependencies, TypeScript types, ESM and CommonJS. Server-side only.
 
 ```bash
-npm install pro-sejong-auth
+npm install pro-sejongpeia
 ```
 
 ```js
-import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejong-auth';
+import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
 
 try {
   const result = await authenticate('21011234', 'password');
@@ -250,9 +254,9 @@ All optional. Defaults: 10 second timeout, 3 login retries, certificate verifica
 
 | Java (`application.yml`) | Python | Node |
 |---|---|---|
-| `sejong.auth.timeout-seconds: 10` | `SejongAuthClient(timeout_seconds=10)` | `new SejongAuthClient({ timeoutSeconds: 10 })` |
-| `sejong.auth.max-retry: 3` | `max_retry=3` | `maxRetry: 3` |
-| `sejong.auth.ssl-verification: true` | `ssl_verification=True` | `sslVerification: true` |
+| `sejongpeia.timeout-seconds: 10` | `SejongAuthClient(timeout_seconds=10)` | `new SejongAuthClient({ timeoutSeconds: 10 })` |
+| `sejongpeia.max-retry: 3` | `max_retry=3` | `maxRetry: 3` |
+| `sejongpeia.ssl-verification: true` | `ssl_verification=True` | `sslVerification: true` |
 
 > **Java TLS note**: the Sejong portal only offers the legacy `TLS_RSA_WITH_AES_256_CBC_SHA` cipher, which recent JDKs disable. The Java library removes `TLS_RSA_*` from `jdk.tls.disabledAlgorithms`, which affects **the whole JVM** and only works before the JVM's first TLS connection. Spring Boot does this automatically at startup. Without Spring, call `SejongTlsSupport.ensureLegacyCipherEnabled()` first thing in `main()`; if it runs too late, authentication fails with `CONNECTION_FAILED` and a message saying so. If your service cannot accept the JVM-wide change, run the authentication in a separate process. Python and Node only change the TLS settings of their own connections.
 
@@ -276,8 +280,8 @@ No. It is a personal open-source project by a Sejong student and is not affiliat
 <details>
 <summary><b>Authentication suddenly fails</b></summary>
 
-Try the [demo](https://cassiiopeia.github.io/pro-sejong-auth/#demo) first. If the demo also fails, the portal has probably changed.
-Please open an [issue](https://github.com/Cassiiopeia/pro-sejong-auth/issues) with the error code.
+Try the [demo](https://cassiiopeia.github.io/pro-sejongpeia/#demo) first. If the demo also fails, the portal has probably changed.
+Please open an [issue](https://github.com/Cassiiopeia/pro-sejongpeia/issues) with the error code.
 </details>
 
 <details>

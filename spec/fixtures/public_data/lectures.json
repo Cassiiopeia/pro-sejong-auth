@@ -1,0 +1,29 @@
+{
+  "dl_main": [
+    {
+      "CURI_NO": "000001",
+      "CLASS": "001",
+      "CURI_NM": "예시과목",
+      "CURI_TYPE_CD": "1E",
+      "CURI_TYPE_CD_NM": "공필",
+      "SLT_DOMAIN_CD": null,
+      "SLT_DOMAIN_CD_NM": null,
+      "CDT": "3.0",
+      "TM_NUM": "3.0 / 3 / 0",
+      "TOT_TM_NUM": 3,
+      "LESN_TIME": "월09:00-10:30",
+      "LESN_ROOM": "예시101",
+      "LESN_EMP": "가상교수",
+      "STUDENT_YEAR": 1,
+      "CURI_LANG_CD": "1",
+      "CURI_LANG_NM": null,
+      "DEPT_CD": "9101",
+      "SCH_DEPT_ALIAS": "예시공학과",
+      "MANAGE_DEPT_NM": "예시공학과",
+      "REMARK": null,
+      "YEAR": "2099",
+      "SMT_CD": "20",
+      "NEW_FIELD": "y"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "dl_code_orgn": [
+    { "COM_CD": "20", "CD_NM": "예시학부", "CD_NM_ENG": "Example Undergraduate", "ORGN_CLSF_CD": "20", "PRT_ORD": "1", "CLOSE_YN": null },
+    { "COM_CD": "30", "CD_NM": "예시대학원", "CD_NM_ENG": "Example Graduate School", "ORGN_CLSF_CD": "30", "PRT_ORD": "2", "CLOSE_YN": null },
+    { "COM_CD": "3Z", "CD_NM": "예시특수대학원", "CD_NM_ENG": "Example Professional School", "ORGN_CLSF_CD": "3Z", "PRT_ORD": "3", "CLOSE_YN": null }
+  ],
+  "dl_code_sltDomain": [],
+  "dl_code_curiType": []
+}

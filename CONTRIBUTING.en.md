@@ -9,16 +9,16 @@ Please do not report security vulnerabilities in public issues. Use the private 
 ## Start with an issue
 
 - Bugs: include the error code (`SejongAuthException.getErrorCode()`) and the method you called. Never post student IDs, passwords or other personal data.
-- If authentication broke because the portal changed, first check whether the [live demo](https://cassiiopeia.github.io/pro-sejong-auth/#demo) reproduces it.
+- If authentication broke because the portal changed, first check whether the [live demo](https://cassiiopeia.github.io/pro-sejongpeia/#demo) reproduces it.
 - For larger changes, agree on the direction in an issue before opening a PR.
 
 ## Repository layout
 
 | Folder | What |
 |---|---|
-| `java/` | Java / Spring Boot library (`kr.suhsaechan:sejong-univ-auth`) |
-| `python/` | Python package (`pro-sejong-auth`, import `sejong_auth`) |
-| `node/` | Node.js package (`pro-sejong-auth`, TypeScript) |
+| `java/` | Java / Spring Boot library (`kr.suhsaechan:sejongpeia`) |
+| `python/` | Python package (`pro-sejongpeia`, import `sejongpeia`) |
+| `node/` | Node.js package (`pro-sejongpeia`, TypeScript) |
 | `spec/` | Shared contract: portal flow, result schema, sanitized response samples used by every language's tests |
 
 All three languages share one version number (`version.yml`, updated by the release workflow).

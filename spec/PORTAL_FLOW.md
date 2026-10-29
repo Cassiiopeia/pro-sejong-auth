@@ -2,7 +2,9 @@
 
 Every language implementation (Java, Python, Node) follows exactly this flow. When the Sejong portal changes, update this file first, then all three implementations in the same PR.
 
-Reference implementation: `java/src/main/java/kr/suhsaechan/sejong/auth/client/`.
+Reference implementation: `java/src/main/java/kr/suhsaechan/sejongpeia/client/`.
+
+See also (no login needed): [REFERENCE_DATA.md](REFERENCE_DATA.md) for the public organization / department code tables, and [REFERENCE_DATA_SURVEY.md](REFERENCE_DATA_SURVEY.md) for where the school serves what.
 
 ## Transport requirements
 
@@ -12,7 +14,7 @@ Reference implementation: `java/src/main/java/kr/suhsaechan/sejong/auth/client/`
 | Python | `ssl` context ciphers `DEFAULT:AES256-SHA:@SECLEVEL=1` | Verified with Python 3.14 / OpenSSL 3.6 |
 | Node | `https.Agent({ ciphers: 'DEFAULT:AES256-SHA:@SECLEVEL=1' })` | Verified with Node 26 / OpenSSL 3.6 (keep SECLEVEL 1: level 0 would also accept weak certificate keys) |
 | Java | remove `TLS_RSA_*` from `jdk.tls.disabledAlgorithms` (JVM-wide, see `SejongTlsSupport`) | JSSE reads the property once, at the JVM's first TLS use: later changes have no effect. Spring Boot: `SejongTlsEnvironmentPostProcessor` at startup. Plain Java: call `SejongTlsSupport.ensureLegacyCipherEnabled()` first in `main()`. Too late: `CONNECTION_FAILED` with that hint |
-| User-Agent | Always send a non-empty, non-default User-Agent: `pro-sejong-auth-<language>/<version>` | Without it classic.sejong.ac.kr returns 404 after SSO, and sjpt.sejong.ac.kr's firewall blocks default library agents (for example `Python-urllib`) with an "Alert!!!" HTML page |
+| User-Agent | Always send a non-empty, non-default User-Agent: `pro-sejongpeia-<language>/<version>` | Without it classic.sejong.ac.kr returns 404 after SSO, and sjpt.sejong.ac.kr's firewall blocks default library agents (for example `Python-urllib`) with an "Alert!!!" HTML page |
 | Cookies | One cookie jar per authentication call, honoring `Domain=.sejong.ac.kr` | `ssotoken` is set for `.sejong.ac.kr` and must reach classic / sjpt |
 | Redirects | Follow 301/302/303/307 automatically | SSO answers 303 |
 | Timeout | default 10 seconds (connect and read) | |

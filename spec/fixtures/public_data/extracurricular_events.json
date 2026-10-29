@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "year": 2099,
+  "years": [
+    2099
+  ],
+  "category": [],
+  "site": "eco",
+  "loading": false,
+  "events": [
+    {
+      "id": "e1",
+      "title": "예시 특강",
+      "start": "2099-10-20T14:00:00",
+      "end": "2099-10-20T16:00:00",
+      "category_title": "특강",
+      "data": {
+        "url": "https://example.invalid/e1",
+        "description": "예시 설명",
+        "location": "예시관",
+        "uid": "u1"
+      }
+    }
+  ]
+}

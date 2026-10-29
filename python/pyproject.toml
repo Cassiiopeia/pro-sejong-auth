@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pro-sejong-auth"
+name = "pro-sejongpeia"
 version = "1.2.23"
 description = "Sejong University login API for Python: verify students with portal SSO in one line (세종대 로그인 API)"
 readme = "README.md"
@@ -22,12 +22,12 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://cassiiopeia.github.io/pro-sejong-auth/"
-Source = "https://github.com/Cassiiopeia/pro-sejong-auth"
-Issues = "https://github.com/Cassiiopeia/pro-sejong-auth/issues"
+Homepage = "https://cassiiopeia.github.io/pro-sejongpeia/"
+Source = "https://github.com/Cassiiopeia/pro-sejongpeia"
+Issues = "https://github.com/Cassiiopeia/pro-sejongpeia/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sejong_auth"]
+packages = ["src/sejongpeia"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

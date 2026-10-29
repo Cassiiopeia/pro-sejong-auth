@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from sejong_auth import ErrorCode, SejongAuthError, authenticate, authenticate_dhc, authenticate_sis
+from sejongpeia import ErrorCode, SejongAuthError, authenticate, authenticate_dhc, authenticate_sis
 
 STUDENT_ID = os.environ.get("SEJONG_TEST_STUDENT_ID")
 PASSWORD = os.environ.get("SEJONG_TEST_PASSWORD")

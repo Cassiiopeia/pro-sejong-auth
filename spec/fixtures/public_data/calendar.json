@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "scmYear": 2099,
+      "scmMonth": 10,
+      "collDiv": "0001",
+      "collDivNm": "학부",
+      "scmSubject": "예시 시험 기간",
+      "scmSubjectEng": "Example Exam Period",
+      "frDt": "2099-10-20",
+      "toDt": "2099-10-26"
+    }
+  ]
+}

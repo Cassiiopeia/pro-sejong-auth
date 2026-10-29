@@ -1,0 +1,35 @@
+{
+  "dl_code_orgn": [
+    {
+      "COM_CD": "20",
+      "CD_NM": "예시학부",
+      "CD_NM_ENG": "Example Undergraduate",
+      "CD_ALIAS3": "가상담당자",
+      "PRT_ORD": "1"
+    },
+    {
+      "COM_CD": "30",
+      "CD_NM": "예시대학원",
+      "CD_NM_ENG": "Example Graduate School",
+      "CD_ALIAS3": "가상담당자",
+      "PRT_ORD": "2"
+    }
+  ],
+  "dl_code_sltDomain": [
+    {
+      "COM_CD": "10",
+      "CD_NM": "예시영역",
+      "CD_NM_ENG": "Example Domain",
+      "PRT_ORD": "1"
+    }
+  ],
+  "dl_code_curiType": [
+    {
+      "CURI_TYPE_CD": "1E",
+      "CURI_TYPE_CD_NM": "공필",
+      "ORGN_CLSF_CD": "20",
+      "PRT_ORD": "1",
+      "NEW_FIELD": "x"
+    }
+  ]
+}

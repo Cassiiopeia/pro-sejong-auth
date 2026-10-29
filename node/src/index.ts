@@ -1,5 +1,5 @@
 // 세종대 로그인 API: 학번·비밀번호로 세종대학교 포털(SSO) 인증
-//   import { authenticate } from 'pro-sejong-auth';
+//   import { authenticate } from 'pro-sejongpeia';
 //   const result = await authenticate('21011234', 'password');
 import { SejongAuthClient } from './client.js';
 import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
@@ -7,6 +7,8 @@ import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthRes
 export { SejongAuthClient, type SejongAuthClientOptions } from './client.js';
 export { ErrorCode, SejongAuthError } from './errors.js';
 export type * from './models.js';
+export { SejongPublicData, type SejongPublicDataOptions } from './publicData.js';
+export type * from './publicDataModels.js';
 export { VERSION } from './version.js';
 
 const defaultClient = new SejongAuthClient();

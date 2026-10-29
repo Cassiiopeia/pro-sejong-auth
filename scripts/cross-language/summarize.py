@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "python" / "src"))
 
-from sejong_auth import SejongAuthError, authenticate  # noqa: E402
+from sejongpeia import SejongAuthError, authenticate  # noqa: E402
 
 # 비교 필드 (Java·Node 이름 기준) > Python 필드
 FIELD_BY_COMPARED_NAME = {

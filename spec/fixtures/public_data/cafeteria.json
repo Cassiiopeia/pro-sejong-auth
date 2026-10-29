@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "buildingName": "예시관",
+      "location": "6층",
+      "placeId": 1,
+      "placeName": "예시식당",
+      "menuDate": "2099-10-20",
+      "day": "월",
+      "mealTypeId": 2,
+      "mealName": "중식",
+      "menuName": "예시메뉴",
+      "price": 5500
+    },
+    {
+      "buildingName": "예시관",
+      "location": "6층",
+      "placeId": 1,
+      "placeName": "예시식당",
+      "menuDate": null,
+      "day": null,
+      "mealTypeId": null,
+      "mealName": null,
+      "menuName": "고정메뉴",
+      "price": 4000
+    }
+  ]
+}
