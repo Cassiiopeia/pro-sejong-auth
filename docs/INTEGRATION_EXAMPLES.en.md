@@ -128,7 +128,7 @@ Things to watch:
 A small server that returns departments and lectures as JSON. A front end only needs these two URLs.
 
 - `GET /departments`: department code, college, department name
-- `GET /lectures?department=<department code>&name=<course name>`: one of the two is required (so the school server is not asked for everything)
+- `GET /lectures?department=<department code>&name=<course name>`: one of the two is required (a rule of this example server; the library returns the whole term when all conditions are empty)
 
 The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) and the semester value are the school's own values; list them with `organization_categories()` and `terms(...)`.
 
@@ -168,7 +168,7 @@ class LectureSearchHandler(BaseHTTPRequestHandler):
             query = parse_qs(url.query)
             department_code = query.get("department", [""])[0].strip()
             course_name = query.get("name", [""])[0].strip()
-            if not department_code and not course_name:  # 조건이 하나도 없으면 라이브러리가 INVALID_INPUT을 던지므로 먼저 막음
+            if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
                 self.send_error(400, "department or name is required")
                 return
             body = search_lectures(department_code, course_name)
@@ -216,7 +216,7 @@ createServer(async (request, response) => {
   } else if (url.pathname === '/lectures') {
     const departmentCode = (url.searchParams.get('department') ?? '').trim();
     const courseName = (url.searchParams.get('name') ?? '').trim();
-    if (!departmentCode && !courseName) { // 조건이 하나도 없으면 라이브러리가 INVALID_INPUT을 던지므로 먼저 막음
+    if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
       response.writeHead(400).end('department or name is required');
       return;
     }
@@ -253,7 +253,7 @@ class LectureSearchController {
   @GetMapping("/lectures")
   List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
                          @RequestParam(defaultValue = "") String name) {
-    if (department.isBlank() && name.isBlank()) { // 조건이 하나도 없으면 라이브러리가 INVALID_INPUT 예외를 던짐
+    if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
       return List.of();
     }
     return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
@@ -269,7 +269,7 @@ What was checked (each server started and called with `curl`):
 
 Notes:
 
-- `lectures` needs **at least one** of department code, course name, instructor name, otherwise it throws `INVALID_INPUT` (the only case in public data that throws).
+- Department code, course name and instructor name of `lectures` are all optional. **With all of them empty you get the whole term**: about 2,800 rows and 2.4 MB for undergraduate (as of 2026-10-30, see [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md)), so the example server requires a condition. If you need everything, query department by department.
 - Lecture results include the instructor name (`instructor`). The examples return only selected fields; decide which fields to expose when you publish this.
 - Course-name search matched substrings (`알고리즘` 18, `프로그래밍` 73). Some names return 0 (that day `자료구조` returned 0), so show an empty-result hint.
 - A lecture's `course_number` and `department_code` lead on to the department curriculum entry (grade, semester, course overview) with `curriculum_courses`.

@@ -128,7 +128,7 @@ class StudentVerificationService {
 학과 목록과 개설강좌를 JSON으로 내려주는 작은 서버입니다. 프런트엔드는 이 두 주소만 부르면 됩니다.
 
 - `GET /departments` : 학과 코드, 단과대, 학과 이름
-- `GET /lectures?department=<학과 코드>&name=<과목명>` : 둘 중 하나는 필수 (학교 서버에 전체 조회 부담을 주지 않기 위함)
+- `GET /lectures?department=<학과 코드>&name=<과목명>` : 둘 중 하나는 필수 (이 예시 서버가 정한 규칙이며, 라이브러리는 조건을 모두 비우면 그 학기 전체를 줍니다)
 
 학부·2026년 2학기 기준이며 `"20"`(학부)과 학기 값은 학교 값입니다. 목록은 `organization_categories()`, `terms(...)`로 확인하세요.
 
@@ -168,7 +168,7 @@ class LectureSearchHandler(BaseHTTPRequestHandler):
             query = parse_qs(url.query)
             department_code = query.get("department", [""])[0].strip()
             course_name = query.get("name", [""])[0].strip()
-            if not department_code and not course_name:  # 조건이 하나도 없으면 라이브러리가 INVALID_INPUT을 던지므로 먼저 막음
+            if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
                 self.send_error(400, "department or name is required")
                 return
             body = search_lectures(department_code, course_name)
@@ -216,7 +216,7 @@ createServer(async (request, response) => {
   } else if (url.pathname === '/lectures') {
     const departmentCode = (url.searchParams.get('department') ?? '').trim();
     const courseName = (url.searchParams.get('name') ?? '').trim();
-    if (!departmentCode && !courseName) { // 조건이 하나도 없으면 라이브러리가 INVALID_INPUT을 던지므로 먼저 막음
+    if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
       response.writeHead(400).end('department or name is required');
       return;
     }
@@ -253,7 +253,7 @@ class LectureSearchController {
   @GetMapping("/lectures")
   List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
                          @RequestParam(defaultValue = "") String name) {
-    if (department.isBlank() && name.isBlank()) { // 조건이 하나도 없으면 라이브러리가 INVALID_INPUT 예외를 던짐
+    if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
       return List.of();
     }
     return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
@@ -269,7 +269,7 @@ class LectureSearchController {
 
 참고:
 
-- `lectures`는 학과 코드, 과목명, 교수명 중 **하나 이상**이 필요하고 없으면 `INVALID_INPUT`을 던집니다 (공개 데이터에서 유일하게 예외를 던지는 경우).
+- `lectures`의 학과 코드, 과목명, 교수명은 모두 선택입니다. **모두 비우면 그 학기 전체**를 받는데 학부는 약 2,800행, 2.4MB라서(2026-10-30 기준, [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md)), 예시 서버는 조건을 필수로 했습니다. 전체가 필요하면 학과 단위로 나눠 조회하세요.
 - 강의 결과에는 교수 이름(`instructor`)도 들어 있습니다. 예시는 필요한 필드만 골라서 내려주고, 외부에 공개할 때는 어떤 필드를 낼지 직접 정하세요.
 - 과목명 검색은 부분 일치였습니다 (`알고리즘` 18건, `프로그래밍` 73건). 결과가 0건인 이름도 있으므로(예: 이 날 `자료구조`는 0건) 빈 결과 안내가 필요합니다.
 - 강의의 `course_number`와 `department_code`로 학과 교육과정의 학년·학기·교과목 개요(`curriculum_courses`)를 이어서 조회할 수 있습니다.
