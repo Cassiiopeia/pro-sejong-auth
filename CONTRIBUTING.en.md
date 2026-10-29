@@ -63,6 +63,14 @@ Live tests log in to the real Sejong portal, so they only run when you provide a
 2. Fix Java, Python and Node in the **same PR**
 3. Run each language's tests and `scripts/verify-live.sh`
 
+## Documentation languages
+
+- The default document is Korean `X.md`; translations are `X.<language code>.md` (for example `README.en.md`). Add a new language the same way.
+- The language line at the top of each document links every language of that document (for example `[한국어](README.md) | English | [日本語](README.ja.md)`).
+- When you change a Korean document, update its translations in the same PR. If you cannot, say so in the PR description.
+- The `## 최신 버전 :` line in `README.md` is updated by the release workflow; do not edit it by hand.
+- Check with `python3 scripts/check-docs.py` (broken relative links, missing language links). `PROJECT-SEJONG-DOCS-CHECK` also runs on pull requests.
+
 ## Pull requests
 
 - Branch from `main`.

@@ -63,6 +63,14 @@ cd node && npm ci && npm test                     # Node 18+
 2. Java, Python, Node를 **한 PR에서** 같이 수정
 3. 언어별 테스트와 `scripts/verify-live.sh` 실행
 
+## 문서 언어
+
+- 기본 문서는 한국어 `X.md`, 번역은 `X.<언어코드>.md`입니다 (예: `README.en.md`). 새 언어는 같은 규칙으로 파일을 추가하면 됩니다.
+- 문서 맨 위 언어 전환 줄에 같은 문서의 모든 언어를 링크합니다 (예: `한국어 | [English](README.en.md) | [日本語](README.ja.md)`).
+- 한국어 문서를 고치면 번역도 같은 PR에서 고칩니다. 번역을 못 하면 PR 설명에 적어 주세요.
+- `README.md`의 `## 최신 버전 :` 줄은 릴리스 워크플로우가 갱신하므로 직접 고치지 않습니다.
+- 확인: `python3 scripts/check-docs.py` (깨진 상대 링크, 언어 전환 링크 누락). PR에서도 `PROJECT-SEJONG-DOCS-CHECK`가 실행됩니다.
+
 ## PR
 
 - 브랜치는 `main` 기준으로 만듭니다.
