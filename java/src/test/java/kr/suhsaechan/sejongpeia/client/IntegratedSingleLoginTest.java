@@ -90,6 +90,19 @@ class IntegratedSingleLoginTest {
   }
 
   @Test
+  void 학교_제공_코드는_항상_담기고_extra는_옵션일_때만_담긴다() throws Exception {
+    SejongAuthResult defaultResult = createEngine(200).authenticate("21011234", "password");
+    SejongAuthResult extraResult = createEngine(200).authenticate("21011234", "password", false, true);
+
+    assertAll(
+        () -> assertEquals("1234567", defaultResult.getDepartmentCode()),
+        () -> assertEquals("20", defaultResult.getOrganizationClassificationCode()),
+        () -> assertNull(defaultResult.getExtra()),
+        () -> assertEquals("S1", extraResult.getExtra().get("dm_UserInfoSch.GRADE_SCOPE_CD")),
+        () -> assertNull(createEngine(500).authenticate("21011234", "password").getDepartmentCode()));
+  }
+
+  @Test
   void SIS가_실패해도_DHC_결과를_돌려주고_연락처는_null() throws Exception {
     SejongAuthResult result = createEngine(500).authenticate("21011234", "password");
 

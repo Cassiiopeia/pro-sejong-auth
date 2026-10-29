@@ -29,9 +29,9 @@ except SejongAuthError as error:
 
 | 함수 | 반환 |
 |---|---|
-| `authenticate(id, pw, include_raw=False)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `None`, `include_raw=True` 면 `raw_html`·`raw_json` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지) |
+| `authenticate(id, pw, include_raw=False, include_extra=False)` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `None`, `include_raw=True` 면 `raw_html`·`raw_json` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지, `include_extra=True` 면 나머지 SIS 필드 `extra`. 학과 코드 `department_code` 등 SIS 코드 11개는 항상 포함) |
 | `authenticate_dhc(id, pw, include_raw=False)` | 학생 정보 + 고전독서 |
-| `authenticate_sis(id, pw, include_raw=False)` | 학생 정보 + 이메일, 전화번호, 영문 이름 |
+| `authenticate_sis(id, pw, include_raw=False, include_extra=False)` | 학생 정보 + 이메일, 전화번호, 영문 이름 + 학교 제공 코드 11개 (`department_code` 등) |
 
 ### 대신 해결해 주는 것
 

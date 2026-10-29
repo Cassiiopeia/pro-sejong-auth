@@ -33,6 +33,7 @@ def test_classic_and_sis_values_match_contract():
         == (sis["returnUrl"], sis["ssoUrl"], sis["userInfoUrl"], sis["origin"])
     assert (parsers.SIS_SUBMIT_ERROR_KEY, parsers.SIS_LOGGED_OUT_ERROR_TYPE) \
         == (sis["submitErrorKey"], sis["loggedOutErrorType"])
+    assert parsers.SIS_EXTRA_EXCLUDED_KEY_PATTERN == sis["extraExcludedKeyPattern"]
 
 
 def test_tls_and_error_messages_match_contract():

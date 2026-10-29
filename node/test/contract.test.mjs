@@ -32,6 +32,7 @@ test('classicAndSisValuesMatchContract', () => {
   assert.equal(client.SIS_ORIGIN, contract.sis.origin);
   assert.equal(parsers.SIS_SUBMIT_ERROR_KEY, contract.sis.submitErrorKey);
   assert.equal(parsers.SIS_LOGGED_OUT_ERROR_TYPE, contract.sis.loggedOutErrorType);
+  assert.equal(parsers.SIS_EXTRA_EXCLUDED_KEY_PATTERN, contract.sis.extraExcludedKeyPattern);
 });
 
 test('tlsAndErrorMessagesMatchContract', () => {

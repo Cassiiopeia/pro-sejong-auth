@@ -2,7 +2,7 @@
 import { ErrorCode, SejongAuthError } from './errors.js';
 import type {
   ClassicCertification, ClassicContestRecord, ClassicExamRecord, ClassicSubjectRecord,
-  SejongClassicReading, SejongSisUserInfo, SejongStudentInfo,
+  SejongClassicReading, SejongSisSchoolCodes, SejongSisUserInfo, SejongStudentInfo,
 } from './models.js';
 
 // 섹션 제목 (포털 화면 문구 그대로, 바꾸면 파싱 실패)
@@ -219,7 +219,66 @@ export function ensureSisLoggedIn(jsonText: string): void {
   throw new SejongAuthError(ErrorCode.DATA_FETCH_FAILED, `SIS returned an error : ${errorType}`);
 }
 
-/** initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분 (dm_UserInfo 없으면 PARSE_ERROR) */
+// SIS 데이터셋 조회 순서 (같은 키는 앞 데이터셋 값 우선)
+const SIS_DATASET_NAMES = ['dm_UserInfoSch', 'dm_UserInfoGam', 'dm_UserInfo'] as const;
+// 결과 필드 > 후보 키 (앞 키 우선, 데이터셋 순서대로 찾음): 학과 코드 기준은 DEPT_CD, 없으면 DEPT_NO
+export const SIS_CODE_KEYS_BY_FIELD: Record<keyof SejongSisSchoolCodes, readonly string[]> = {
+  departmentCode: ['DEPT_CD', 'DEPT_NO'],
+  organizationClassificationCode: ['ORGN_CLSF_CD'],
+  enrollmentStatusCode: ['STATUS_DIV_CD'],
+  userClassificationCode: ['USER_CLSF_CD'],
+  userClassificationLargeCode: ['USER_CLSF_L_CD'],
+  userClassificationMiddleCode: ['USER_CLSF_M_CD'],
+  roleCode: ['RPSN_ROLE_CD'],
+  roleName: ['RPSN_ROLE_CD_NM'],
+  menuSystemId: ['MENU_SYS_ID'],
+  menuSystemName: ['MENU_SYS_NM'],
+  locale: ['INTG_LOCALE'],
+};
+// 기존 필드가 읽는 키 (extra 에서 제외)
+const SIS_NAMED_FIELD_KEYS = new Set([
+  ...Object.values(SIS_CODE_KEYS_BY_FIELD).flat(),
+  'INTG_USR_NO', 'INTG_USR_NM', 'INTG_ENG_NM', 'DEPT_NM', 'USER_EMAIL', 'USER_PHONE_NO1', 'USER_PHONE_NO2',
+  'USER_PHONE_NO3', 'NM_ENG', 'USER_CLSF_CD_NM',
+]);
+// extra 제외 키 (대소문자 무시): 세션값, 접속 IP, 비밀번호·계정 상태, 주민번호, 계좌, 주소, 직원 이름(ALIAS), 연락처, 생년월일 (spec/contract.json sis.extraExcludedKeyPattern)
+export const SIS_EXTRA_EXCLUDED_KEY_PATTERN =
+  '(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID' +
+  '|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)';
+const SIS_EXTRA_EXCLUDED_KEY = new RegExp(SIS_EXTRA_EXCLUDED_KEY_PATTERN, 'i');
+
+/** 이름 붙이지 않은 문자열·숫자 필드 > {"데이터셋.필드": 원문} (민감 키·중첩 값 제외) */
+function sisExtraFields(root: JsonObject): Record<string, string> {
+  const extra: Record<string, string> = {};
+  for (const datasetName of SIS_DATASET_NAMES) {
+    const dataset = root[datasetName];
+    if (!isObject(dataset)) continue;
+    for (const [key, value] of Object.entries(dataset)) {
+      const isScalar = typeof value === 'string' || typeof value === 'number';
+      if (SIS_NAMED_FIELD_KEYS.has(key) || !isScalar || SIS_EXTRA_EXCLUDED_KEY.test(key)) continue;
+      extra[`${datasetName}.${key}`] = String(value);
+    }
+  }
+  return extra;
+}
+
+/** 결과 필드별 코드 원문 (데이터셋 순서로 처음 찾은 값, 없으면 빈 문자열) */
+function sisCodeValues(root: JsonObject): SejongSisSchoolCodes {
+  const codeByField = {} as SejongSisSchoolCodes;
+  for (const [fieldName, keys] of Object.entries(SIS_CODE_KEYS_BY_FIELD) as [keyof SejongSisSchoolCodes, readonly string[]][]) {
+    codeByField[fieldName] = '';
+    for (const key of keys) {
+      const foundValue = SIS_DATASET_NAMES.map((datasetName) => textOf(root[datasetName], key).trim()).find(Boolean);
+      if (foundValue) {
+        codeByField[fieldName] = foundValue;
+        break;
+      }
+    }
+  }
+  return codeByField;
+}
+
+/** initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분, 학교 제공 코드, extra (dm_UserInfo 없으면 PARSE_ERROR) */
 export function parseSisUserInfo(jsonText: string): SejongSisUserInfo {
   let root: unknown;
   try {
@@ -243,5 +302,7 @@ export function parseSisUserInfo(jsonText: string): SejongSisUserInfo {
     phoneNumber: phoneParts.filter(Boolean).join('-'),
     englishName: textOf(userInfo, 'INTG_ENG_NM').trim() || textOf(sch, 'NM_ENG'),
     userCategory: textOf(sch, 'USER_CLSF_CD_NM'),
+    ...sisCodeValues(root),
+    extra: sisExtraFields(root),
   };
 }

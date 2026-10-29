@@ -1,5 +1,6 @@
 """spec/fixtures 파싱 결과 == 기대값 (Java, Node 와 같은 기준)"""
 
+import json
 import re
 
 import pytest
@@ -15,7 +16,8 @@ def to_snake_case(name: str) -> str:
 
 def snake_case_keys(value):
     if isinstance(value, dict):
-        return {to_snake_case(key): snake_case_keys(item) for key, item in value.items()}
+        # extra 의 키는 학교 원문 키라 변환하지 않음
+        return {to_snake_case(key): (item if key == "extra" else snake_case_keys(item)) for key, item in value.items()}
     if isinstance(value, list):
         return [snake_case_keys(item) for item in value]
     return value
@@ -32,6 +34,21 @@ def test_parse_sis_fixture(sis_json):
     expected = snake_case_keys(read_expected("expected_sis.json"))
 
     assert parse_sis_user_info(sis_json).to_dict() == expected
+
+
+def test_sis_school_codes_prefer_department_code_and_never_expose_sensitive_fields(sis_json):
+    root = json.loads(sis_json)
+    root["dm_UserInfoGam"]["DEPT_NO"] = "OTHER"
+    assert parse_sis_user_info(json.dumps(root)).department_code == "1234567"
+
+    del root["dm_UserInfoSch"]["DEPT_CD"]
+    user_info = parse_sis_user_info(json.dumps(root))
+    assert user_info.department_code == "OTHER"
+    extra_keys = " ".join(user_info.extra)
+    for excluded in ("RUNNING", "IP", "PWD_YN", "ID_YN", "PASS_VALID", "VALID_FLAG", "CD_ALIAS", "RESI", "ADDR", "BANK"):
+        assert excluded not in extra_keys
+    sensitive_values = {"synthetic-session-value", "203.0.113.1", "synthetic staff name", "000000-0000000"}
+    assert sensitive_values.isdisjoint(user_info.extra.values())
 
 
 def test_parse_classic_reading_user_info_values():

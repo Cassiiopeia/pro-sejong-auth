@@ -14,8 +14,8 @@ export { VERSION } from './version.js';
 const defaultClient = new SejongAuthClient();
 
 /** 통합 인증 (기본 설정: 10초, 재시도 3회, 인증서 검증) */
-export const authenticate = (studentId: string, password: string): Promise<SejongAuthResult> =>
-  defaultClient.authenticate(studentId, password);
+export const authenticate = (studentId: string, password: string, options?: RawOption): Promise<SejongAuthResult> =>
+  defaultClient.authenticate(studentId, password, options);
 
 /** DHC 인증: 학생 정보 + 고전독서 */
 export const authenticateDhc = (studentId: string, password: string, options?: RawOption): Promise<SejongDhcAuthResult> =>

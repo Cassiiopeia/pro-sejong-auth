@@ -240,8 +240,64 @@ def ensure_sis_logged_in(json_text: str) -> None:
     raise SejongAuthError(ErrorCode.DATA_FETCH_FAILED, f"SIS returned an error : {error_type}")
 
 
+# SIS 데이터셋 조회 순서 (같은 키는 앞 데이터셋 값 우선)
+SIS_DATASET_NAMES = ("dm_UserInfoSch", "dm_UserInfoGam", "dm_UserInfo")
+# 결과 필드 > 후보 키 (앞 키 우선, 데이터셋 순서대로 찾음): 학과 코드 기준은 DEPT_CD, 없으면 DEPT_NO
+SIS_CODE_KEYS_BY_FIELD = {
+    "department_code": ("DEPT_CD", "DEPT_NO"),
+    "organization_classification_code": ("ORGN_CLSF_CD",),
+    "enrollment_status_code": ("STATUS_DIV_CD",),
+    "user_classification_code": ("USER_CLSF_CD",),
+    "user_classification_large_code": ("USER_CLSF_L_CD",),
+    "user_classification_middle_code": ("USER_CLSF_M_CD",),
+    "role_code": ("RPSN_ROLE_CD",),
+    "role_name": ("RPSN_ROLE_CD_NM",),
+    "menu_system_id": ("MENU_SYS_ID",),
+    "menu_system_name": ("MENU_SYS_NM",),
+    "locale": ("INTG_LOCALE",),
+}
+# 기존 필드가 읽는 키 (extra 에서 제외)
+SIS_NAMED_FIELD_KEYS = frozenset(
+    key for keys in SIS_CODE_KEYS_BY_FIELD.values() for key in keys
+) | {
+    "INTG_USR_NO", "INTG_USR_NM", "INTG_ENG_NM", "DEPT_NM", "USER_EMAIL", "USER_PHONE_NO1", "USER_PHONE_NO2",
+    "USER_PHONE_NO3", "NM_ENG", "USER_CLSF_CD_NM",
+}
+# extra 제외 키 (대소문자 무시): 세션값, 접속 IP, 비밀번호·계정 상태, 주민번호, 계좌, 주소, 직원 이름(ALIAS), 연락처, 생년월일 (spec/contract.json sis.extraExcludedKeyPattern)
+SIS_EXTRA_EXCLUDED_KEY_PATTERN = (
+    r"(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID"
+    r"|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)"
+)
+_SIS_EXTRA_EXCLUDED_KEY = re.compile(SIS_EXTRA_EXCLUDED_KEY_PATTERN, re.IGNORECASE)
+
+
+def _sis_extra_fields(root: dict) -> Dict[str, str]:
+    """이름 붙이지 않은 문자열·숫자 필드 > {"데이터셋.필드": 원문} (민감 키·중첩 값 제외)"""
+    extra: Dict[str, str] = {}
+    for dataset_name in SIS_DATASET_NAMES:
+        dataset = root.get(dataset_name)
+        if not isinstance(dataset, dict):
+            continue
+        for key, value in dataset.items():
+            is_scalar = isinstance(value, (str, int, float)) and not isinstance(value, bool)
+            if key in SIS_NAMED_FIELD_KEYS or not is_scalar or _SIS_EXTRA_EXCLUDED_KEY.search(key):
+                continue
+            extra[f"{dataset_name}.{key}"] = str(value)
+    return extra
+
+
+def _sis_code_values(root: dict) -> Dict[str, str]:
+    """결과 필드별 코드 원문 (데이터셋 순서로 처음 찾은 값, 없으면 빈 문자열)"""
+    datasets = [root.get(name) or {} for name in SIS_DATASET_NAMES]
+    code_by_field = {}
+    for field_name, keys in SIS_CODE_KEYS_BY_FIELD.items():
+        code_by_field[field_name] = next(
+            (value for key in keys for dataset in datasets if (value := _text(dataset, key).strip())), "")
+    return code_by_field
+
+
 def parse_sis_user_info(json_text: str) -> SejongSisUserInfo:
-    """initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분 (dm_UserInfo 없으면 PARSE_ERROR)"""
+    """initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분, 학교 제공 코드, extra (dm_UserInfo 없으면 PARSE_ERROR)"""
     try:
         root = json.loads(json_text)
     except (TypeError, ValueError) as error:
@@ -262,4 +318,6 @@ def parse_sis_user_info(json_text: str) -> SejongSisUserInfo:
         phone_number="-".join(part for part in phone_parts if part),
         english_name=_text(user_info, "INTG_ENG_NM").strip() or _text(sch, "NM_ENG"),
         user_category=_text(sch, "USER_CLSF_CD_NM"),
+        **_sis_code_values(root),
+        extra=_sis_extra_fields(root),
     )

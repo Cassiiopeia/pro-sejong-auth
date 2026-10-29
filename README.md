@@ -195,6 +195,7 @@ try {
 | 통합: 학생 정보 + 고전독서 + 연락처 | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: 학생 정보 + 고전독서 | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: 학생 정보 + 연락처 | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
+| 나머지 SIS 필드 포함 | `authenticate(id, pw, false, true)` | `include_extra=True` | `{ includeExtra: true }` |
 | 원본 응답 포함 (디버깅) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
 
 통합 인증은 포털에 **한 번만** 로그인하고 같은 세션으로 DHC와 SIS를 조회합니다. SIS(연락처) 조회가 실패해도 학생 정보는 돌려주고, 연락처 칸만 null이 됩니다.
@@ -271,6 +272,8 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 | `userCategory` | string 또는 null | 사용자 구분, 예: `학부생` (SIS 실패 시 null) |
 | `parentUnitName` | string 또는 null | 학과의 상위 소속 이름(단과대학 또는 학부), 포털 메인 화면 표기에서 추출 (호출 실패 시 null, 값이 없으면 빈 문자열). 학년도마다 바뀌는 포털 표기 원문이라 값 목록으로 분기하거나 인증 판정에 쓰지 마세요 |
 | `authenticatedAt` | 날짜·시간 | 인증 시각 |
+| `departmentCode` 외 코드 10개 | string 또는 null | SIS 학교 제공 코드 원문: `departmentCode`(학과 코드), `organizationClassificationCode`, `enrollmentStatusCode`, `userClassificationCode`·`LargeCode`·`MiddleCode`, `roleCode`, `roleName`, `menuSystemId`, `menuSystemName`, `locale` (SIS 실패 시 null, 없으면 빈 문자열). 코드 이름 매핑은 라이브러리에 없음 |
+| `extra` | 맵 또는 null | 옵션을 켰을 때만: 이름 붙이지 않은 나머지 SIS 필드 `{"데이터셋.필드": 원문}`. 세션값, 접속 IP, 비밀번호·계정 상태, 주민번호, 계좌, 주소, 직원 이름 등 민감 키는 항상 제외되지만 이름 패턴 기준이라 외부 클라이언트에 그대로 내려주지 마세요 |
 | `rawHtml` | string 또는 null | DHC 원문 HTML (원본 옵션일 때만) |
 | `rawJson` | string 또는 null | SIS 원문 JSON (원본 옵션일 때만, SIS 실패 시 null) |
 

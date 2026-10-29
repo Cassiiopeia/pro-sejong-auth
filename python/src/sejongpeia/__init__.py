@@ -34,9 +34,9 @@ from .public_data_models import (  # noqa: E402
 _default_client = SejongAuthClient()
 
 
-def authenticate(student_id: str, password: str) -> SejongAuthResult:
+def authenticate(student_id: str, password: str, include_raw: bool = False, include_extra: bool = False) -> SejongAuthResult:
     """통합 인증 (기본 설정: 10초, 재시도 3회, 인증서 검증)"""
-    return _default_client.authenticate(student_id, password)
+    return _default_client.authenticate(student_id, password, include_raw=include_raw, include_extra=include_extra)
 
 
 def authenticate_dhc(student_id: str, password: str, include_raw: bool = False) -> SejongDhcAuthResult:
@@ -44,9 +44,9 @@ def authenticate_dhc(student_id: str, password: str, include_raw: bool = False) 
     return _default_client.authenticate_dhc(student_id, password, include_raw=include_raw)
 
 
-def authenticate_sis(student_id: str, password: str, include_raw: bool = False) -> SejongSisAuthResult:
+def authenticate_sis(student_id: str, password: str, include_raw: bool = False, include_extra: bool = False) -> SejongSisAuthResult:
     """SIS 인증: 학생 정보 + 연락처"""
-    return _default_client.authenticate_sis(student_id, password, include_raw=include_raw)
+    return _default_client.authenticate_sis(student_id, password, include_raw=include_raw, include_extra=include_extra)
 
 
 __all__ = [

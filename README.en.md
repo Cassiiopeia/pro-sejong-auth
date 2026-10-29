@@ -193,6 +193,7 @@ try {
 | Integrated: student info + classic reading + contact | `authenticate(id, pw)` | `authenticate(id, pw)` | `authenticate(id, pw)` |
 | DHC: student info + classic reading | `authenticateWithDHC` | `authenticate_dhc` | `authenticateDhc` |
 | SIS: student info + contact | `authenticateWithSIS` | `authenticate_sis` | `authenticateSis` |
+| With the other SIS fields | `authenticate(id, pw, false, true)` | `include_extra=True` | `{ includeExtra: true }` |
 | With raw response (debugging) | `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` | `include_raw=True` | `{ includeRaw: true }` |
 
 The integrated call logs in to the portal **once** and reads DHC and SIS with the same session. It still returns student info when the SIS (contact) lookup fails; contact fields are then null.
@@ -269,6 +270,8 @@ Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number
 | `userCategory` | string or null | User category, for example `학부생` (null if SIS fails) |
 | `parentUnitName` | string or null | Unit above the major, a college or a school, from the portal main page (null if that call fails, `""` if unavailable). Portal text as-is that changes by academic year: do not branch on a value list or use it to decide authentication |
 | `authenticatedAt` | datetime | Authentication time |
+| `departmentCode` and 10 more codes | string or null | School codes from SIS as-is: `departmentCode`, `organizationClassificationCode`, `enrollmentStatusCode`, `userClassificationCode`, `userClassificationLargeCode`, `userClassificationMiddleCode`, `roleCode`, `roleName`, `menuSystemId`, `menuSystemName`, `locale` (null if SIS fails, `""` if missing). No code-to-name mapping in the library |
+| `extra` | map or null | Only with the extra option: the other SIS fields as `{"dataset.FIELD": "value"}`. Sensitive keys (session value, client IP, password and account flags, resident number, bank account, address, staff names) are always excluded, but by name pattern, so do not pass it to an external client as-is |
 | `rawHtml` | string or null | DHC page as received (only with the raw option) |
 | `rawJson` | string or null | SIS response as received (only with the raw option, null if SIS fails) |
 

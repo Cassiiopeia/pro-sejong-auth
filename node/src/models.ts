@@ -52,8 +52,23 @@ export interface SejongStudentInfo {
   status: string;
 }
 
-/** SIS initUserInfo 값 (userCategory: 사용자 구분, 예: 학부생) */
-export interface SejongSisUserInfo {
+/** SIS 학교 제공 코드·구분 원문 (없으면 빈 문자열, 이름 매핑·값 목록 없음) */
+export interface SejongSisSchoolCodes {
+  departmentCode: string;
+  organizationClassificationCode: string;
+  enrollmentStatusCode: string;
+  userClassificationCode: string;
+  userClassificationLargeCode: string;
+  userClassificationMiddleCode: string;
+  roleCode: string;
+  roleName: string;
+  menuSystemId: string;
+  menuSystemName: string;
+  locale: string;
+}
+
+/** SIS initUserInfo 값 (userCategory: 사용자 구분, 예: 학부생, extra: 이름 붙이지 않은 나머지 학교 제공 필드 {"데이터셋.필드": 원문}, 민감 키 제외) */
+export interface SejongSisUserInfo extends SejongSisSchoolCodes {
   studentId: string;
   name: string;
   major: string;
@@ -61,10 +76,11 @@ export interface SejongSisUserInfo {
   phoneNumber: string;
   englishName: string;
   userCategory: string;
+  extra: Record<string, string>;
 }
 
 /** 통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시, 상위 소속명은 포털 메인 조회 실패 시 null) */
-export interface SejongAuthResult extends SejongStudentInfo {
+export interface SejongAuthResult extends SejongStudentInfo, Partial<Record<keyof SejongSisSchoolCodes, string | null>> {
   success: true;
   classicReading: SejongClassicReading;
   email: string | null;
@@ -80,6 +96,8 @@ export interface SejongAuthResult extends SejongStudentInfo {
   // includeRaw 일 때만: DHC 원문 HTML, SIS 원문 JSON (SIS 조회 실패 시 null), 세션값·접속 IP 포함이라 외부 전달 금지
   rawHtml: string | null;
   rawJson: string | null;
+  // SIS 조회 실패 시 위 코드 필드는 null, extra 는 includeExtra 일 때만
+  extra: Record<string, string> | null;
 }
 
 /** DHC 인증 결과 (rawHtml 은 includeRaw 일 때만) */
@@ -91,14 +109,17 @@ export interface SejongDhcAuthResult extends SejongStudentInfo {
 }
 
 /** SIS 인증 결과 (grade·status 는 SIS 미제공 > 빈 문자열, rawJson 은 includeRaw 일 때만) */
-export interface SejongSisAuthResult extends SejongSisUserInfo {
+export interface SejongSisAuthResult extends Omit<SejongSisUserInfo, 'extra'> {
   success: true;
   grade: '';
   status: '';
   authenticatedAt: Date;
   rawJson: string | null;
+  extra: Record<string, string> | null; // includeExtra 일 때만
 }
 
 export interface RawOption {
   includeRaw?: boolean;
+  /** SIS 나머지 학교 제공 필드를 extra 로 포함 (기본 false) */
+  includeExtra?: boolean;
 }

@@ -5,7 +5,7 @@
     "INTG_KOR_NM": "홍길동",
     "INTG_ENG_NM": "Hong Gildong",
     "INTG_LOCALE": "ko",
-    "RUNNING_SEJONG": ""
+    "RUNNING_SEJONG": "synthetic-session-value"
   },
   "dm_UserInfoGam": {
     "DEPT_NM": "컴퓨터공학과",
@@ -14,13 +14,35 @@
     "USER_PHONE_NO1": "010",
     "USER_PHONE_NO2": "1234",
     "USER_PHONE_NO3": "5678",
-    "LOGIN_ID": "21011234"
+    "LOGIN_ID": "21011234",
+    "DEPT_NO": "1234567",
+    "ADDR1": "synthetic address",
+    "BANK_ACNT_NO": "000-000"
   },
   "dm_UserInfoSch": {
     "NM": "홍길동",
     "NM_ENG": "Hong Gildong",
     "EMAIL": "student@example.com",
     "USER_ID": "21011234",
-    "USER_CLSF_CD_NM": "학부생"
+    "USER_CLSF_CD_NM": "학부생",
+    "DEPT_CD": "1234567",
+    "ORGN_CLSF_CD": "20",
+    "STATUS_DIV_CD": "10",
+    "USER_CLSF_CD": "20",
+    "USER_CLSF_L_CD": "10",
+    "USER_CLSF_M_CD": "20",
+    "RPSN_ROLE_CD": "R01",
+    "RPSN_ROLE_CD_NM": "학생",
+    "MENU_SYS_ID": "SYS1",
+    "MENU_SYS_NM": "학사",
+    "GRADE_SCOPE_CD": "S1",
+    "IP": "203.0.113.1",
+    "LOGIN_IP": "203.0.113.1",
+    "PWD_YN": "N",
+    "ID_YN": "Y",
+    "PASS_VALID": "Y",
+    "VALID_FLAG": "Y",
+    "CD_ALIAS1": "synthetic staff name",
+    "RESI_NO": "000000-0000000"
   }
 }

@@ -3,6 +3,7 @@ package kr.suhsaechan.sejongpeia.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -51,7 +52,10 @@ class SpecFixtureParserTest {
     actual.put("phoneNumber", parser.parsePhoneNumber(json));
     actual.put("englishName", parser.parseEnglishName(json));
     actual.put("userCategory", parser.parseUserCategory(json));
-    assertEquals(expected, objectMapper.valueToTree(actual));
+    // 학교 제공 코드·extra (record 필드 이름이 expected 키와 같음)
+    ObjectNode actualNode = objectMapper.valueToTree(actual);
+    actualNode.setAll((ObjectNode) objectMapper.valueToTree(parser.parseSchoolFields(json)));
+    assertEquals(expected, actualNode);
   }
 
   private String readFixture(String fileName) throws Exception {

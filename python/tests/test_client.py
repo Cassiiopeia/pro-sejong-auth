@@ -113,6 +113,16 @@ def test_sis_result_has_empty_grade_and_status_and_raw_json(sis_json):
     assert result.raw_json == sis_json
 
 
+def test_school_codes_always_and_extra_only_when_requested(dhc_html, sis_json):
+    routes = {LOGIN: [ok()], CLASSIC_SSO: [ok()], CLASSIC_STATUS: [ok(dhc_html)], SIS_SSO: [ok()], SIS_USER_INFO: [ok(sis_json)]}
+    sis_result = client_with(routes)[0].authenticate_sis("21011234", "pw")
+    integrated_result = client_with(routes)[0].authenticate("21011234", "pw", include_extra=True)
+
+    assert (sis_result.department_code, sis_result.organization_classification_code, sis_result.extra) == ("1234567", "20", None)
+    assert integrated_result.department_code == "1234567"
+    assert integrated_result.extra["dm_UserInfoSch.GRADE_SCOPE_CD"] == "S1"
+
+
 def test_dhc_raw_html_only_when_requested(dhc_html):
     client, _ = client_with({LOGIN: [ok()], CLASSIC_SSO: [ok()], CLASSIC_STATUS: [ok(dhc_html)]})
 

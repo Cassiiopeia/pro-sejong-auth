@@ -83,6 +83,17 @@ test('sisResultHasEmptyGradeStatusAndRawJson', async () => {
   assert.equal(result.rawJson, sisJson);
 });
 
+test('schoolCodesAlwaysAndExtraOnlyWhenRequested', async () => {
+  const routes = () => ({
+    [LOGIN]: [ok()], [CLASSIC_SSO]: [ok()], [CLASSIC_STATUS]: [ok(dhcHtml)], [SIS_SSO]: [ok()], [SIS_USER_INFO]: [ok(sisJson)],
+  });
+  const sisResult = await clientWith(routes()).client.authenticateSis('21011234', 'pw');
+  const integratedResult = await clientWith(routes()).client.authenticate('21011234', 'pw', { includeExtra: true });
+  assert.deepEqual([sisResult.departmentCode, sisResult.organizationClassificationCode, sisResult.extra], ['1234567', '20', null]);
+  assert.equal(integratedResult.departmentCode, '1234567');
+  assert.equal(integratedResult.extra['dm_UserInfoSch.GRADE_SCOPE_CD'], 'S1');
+});
+
 test('dhcRawHtmlOnlyWhenRequested', async () => {
   const { client } = clientWith({ [LOGIN]: [ok()], [CLASSIC_SSO]: [ok()], [CLASSIC_STATUS]: [ok(dhcHtml)] });
   assert.equal((await client.authenticateDhc('21011234', 'pw')).rawHtml, null);

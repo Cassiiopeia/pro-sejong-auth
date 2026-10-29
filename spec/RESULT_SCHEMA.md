@@ -6,9 +6,9 @@ Java is the reference. Python uses snake_case, Node uses camelCase (same as Java
 
 | Operation | Java | Python | Node |
 |---|---|---|---|
-| Integrated (DHC + SIS contacts) | `authenticate(id, pw)` / `authenticateWithRaw(id, pw)` | `authenticate(id, pw, include_raw=False)` | `authenticate(id, pw, { includeRaw })` |
+| Integrated (DHC + SIS contacts) | `authenticate(id, pw)` / `authenticateWithRaw(id, pw)` / `authenticate(id, pw, raw, extra)` | `authenticate(id, pw, include_raw=False, include_extra=False)` | `authenticate(id, pw, { includeRaw, includeExtra })` |
 | DHC | `authenticateWithDHC` / `authenticateWithDHCRaw` | `authenticate_dhc(id, pw, include_raw=False)` | `authenticateDhc(id, pw, { includeRaw })` |
-| SIS | `authenticateWithSIS` / `authenticateWithSISRaw` | `authenticate_sis(id, pw, include_raw=False)` | `authenticateSis(id, pw, { includeRaw })` |
+| SIS | `authenticateWithSIS` / `authenticateWithSISRaw` / `authenticateWithSIS(id, pw, raw, extra)` | `authenticate_sis(id, pw, include_raw=False, include_extra=False)` | `authenticateSis(id, pw, { includeRaw, includeExtra })` |
 
 Input check first: blank student id or password raises `INVALID_INPUT` before any network call.
 
@@ -29,6 +29,8 @@ Input check first: blank student id or password raises `INVALID_INPUT` before an
 | userCategory | user_category | string or null | same (SIS `dm_UserInfoSch.USER_CLSF_CD_NM`, for example `학부생`) |
 | parentUnitName | parent_unit_name | string or null | portal main page `span.txt4`; null if the portal main call fails, `""` if the page has no usable value |
 | authenticatedAt | authenticated_at | datetime (local time) | |
+| (SIS school codes) | (same names in snake_case) | string or null | the 11 fields of the table below; null if the SIS lookup fails |
+| extra | extra | map or null | only with the extra option, see below; null otherwise |
 | rawHtml | raw_html | string or null | DHC page as received; only with the raw option, otherwise null |
 | rawJson | raw_json | string or null | SIS `initUserInfo` response as received; only with the raw option, null if the SIS lookup failed |
 
@@ -40,13 +42,29 @@ Safety: the SIS raw text contains values that look like a session identifier, th
 
 A failing DHC step fails the whole call. A failing SIS step or portal main step never fails the integrated call.
 
+## SIS school codes and extra
+
+All values are the school's strings as-is (no code tables, no name mapping, `""` when missing). Datasets are searched in the order `dm_UserInfoSch`, `dm_UserInfoGam`, `dm_UserInfo`; the first non-blank value wins. They are returned by default in the SIS result and the integrated result (null there if the SIS lookup fails).
+
+| Field (Python) | SIS key | Note |
+|---|---|---|
+| departmentCode (department_code) | `DEPT_CD`, else `DEPT_NO` | `DEPT_CD` first; the two are expected to be equal and are not verified for every student state |
+| organizationClassificationCode | `ORGN_CLSF_CD` | |
+| enrollmentStatusCode | `STATUS_DIV_CD` | raw code only, meaning not verified for every state |
+| userClassificationCode / userClassificationLargeCode / userClassificationMiddleCode | `USER_CLSF_CD` / `USER_CLSF_L_CD` / `USER_CLSF_M_CD` | |
+| roleCode / roleName | `RPSN_ROLE_CD` / `RPSN_ROLE_CD_NM` | |
+| menuSystemId / menuSystemName | `MENU_SYS_ID` / `MENU_SYS_NM` | |
+| locale | `INTG_LOCALE` | |
+
+`extra` (off by default, option `include_extra` / `includeExtra` / `shouldIncludeExtra`): the other scalar fields of the three datasets as `{"dataset.FIELD": "value"}`, so a field the school adds is reachable without a release. Keys matching `sis.extraExcludedKeyPattern` in `contract.json` (case-insensitive) are never included: session value, client IP, password and account state flags, resident number, bank account, address, staff-name `ALIAS` fields, phone, mail, birth date. The filter is a best-effort name pattern, so do not forward `extra` to an external client as-is.
+
 ## DHC result
 
 `success, studentId, name, major, grade, status, classicReading, authenticatedAt, rawHtml` (rawHtml only with the raw option, otherwise null)
 
 ## SIS result
 
-`success, studentId, name, major, grade (always ""), status (always ""), email, phoneNumber, englishName, userCategory, authenticatedAt, rawJson` (rawJson only with the raw option)
+`success, studentId, name, major, grade (always ""), status (always ""), email, phoneNumber, englishName, userCategory, the school codes above, extra (only with the extra option), authenticatedAt, rawJson` (rawJson only with the raw option)
 
 ## classicReading
 

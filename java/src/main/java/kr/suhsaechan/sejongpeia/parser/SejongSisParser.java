@@ -4,7 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
+import kr.suhsaechan.sejongpeia.model.SejongSisSchoolFields;
 import kr.suhsaechan.sejongpeia.util.CommonUtil;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,6 +25,74 @@ public class SejongSisParser {
   // SIS 오류 응답: 200 + {"_SUBMIT_ERROR_": {"ERRTYPE": ...}}, 로그인 세션 없음(틀린 비밀번호) = LOGOUT
   static final String SUBMIT_ERROR_KEY = "_SUBMIT_ERROR_";
   static final String LOGGED_OUT_ERROR_TYPE = "LOGOUT";
+
+  // SIS 데이터셋 조회 순서 (같은 키는 앞 데이터셋 값 우선)
+  private static final List<String> DATASET_NAMES = List.of("dm_UserInfoSch", "dm_UserInfoGam", "dm_UserInfo");
+  // 학과 코드 기준은 DEPT_CD, 없으면 DEPT_NO
+  private static final List<String> DEPARTMENT_CODE_KEYS = List.of("DEPT_CD", "DEPT_NO");
+  // 기존 필드가 읽는 키 (extra 에서 제외)
+  private static final Set<String> NAMED_FIELD_KEYS = Set.of(
+      "DEPT_CD", "DEPT_NO", "ORGN_CLSF_CD", "STATUS_DIV_CD", "USER_CLSF_CD", "USER_CLSF_L_CD", "USER_CLSF_M_CD",
+      "RPSN_ROLE_CD", "RPSN_ROLE_CD_NM", "MENU_SYS_ID", "MENU_SYS_NM", "INTG_LOCALE",
+      "INTG_USR_NO", "INTG_USR_NM", "INTG_ENG_NM", "DEPT_NM", "USER_EMAIL", "USER_PHONE_NO1", "USER_PHONE_NO2",
+      "USER_PHONE_NO3", "NM_ENG", "USER_CLSF_CD_NM");
+  // extra 제외 키 (대소문자 무시): 세션값, 접속 IP, 비밀번호·계정 상태, 주민번호, 계좌, 주소, 직원 이름(ALIAS), 연락처, 생년월일 (spec/contract.json sis.extraExcludedKeyPattern)
+  static final String EXTRA_EXCLUDED_KEY_PATTERN =
+      "(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID"
+          + "|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)";
+  private static final Pattern EXTRA_EXCLUDED_KEY = Pattern.compile(EXTRA_EXCLUDED_KEY_PATTERN, Pattern.CASE_INSENSITIVE);
+
+  /**
+   * JSON에서 학교 제공 코드·구분과 extra 파싱 (코드는 데이터셋 순서로 처음 찾은 값, 없으면 빈 문자열)
+   *
+   * @param json initUserInfo.do API 응답 JSON
+   * @throws SejongAuthException 파싱 실패 시
+   */
+  public SejongSisSchoolFields parseSchoolFields(String json) {
+    JsonNode root = readRoot(json);
+    return new SejongSisSchoolFields(
+        findCode(root, DEPARTMENT_CODE_KEYS), findCode(root, List.of("ORGN_CLSF_CD")), findCode(root, List.of("STATUS_DIV_CD")),
+        findCode(root, List.of("USER_CLSF_CD")), findCode(root, List.of("USER_CLSF_L_CD")), findCode(root, List.of("USER_CLSF_M_CD")),
+        findCode(root, List.of("RPSN_ROLE_CD")), findCode(root, List.of("RPSN_ROLE_CD_NM")),
+        findCode(root, List.of("MENU_SYS_ID")), findCode(root, List.of("MENU_SYS_NM")), findCode(root, List.of("INTG_LOCALE")),
+        collectExtra(root));
+  }
+
+  /**
+   * 후보 키 순서 > 데이터셋 순서로 처음 찾은 비어 있지 않은 값
+   */
+  private String findCode(JsonNode root, List<String> keys) {
+    for (String key : keys) {
+      for (String datasetName : DATASET_NAMES) {
+        String value = getTextValue(root.path(datasetName), key).trim();
+        if (!value.isEmpty()) {
+          return value;
+        }
+      }
+    }
+    return "";
+  }
+
+  /**
+   * 이름 붙이지 않은 문자열·숫자 필드 > {"데이터셋.필드": 원문} (민감 키·중첩 값 제외)
+   */
+  private Map<String, String> collectExtra(JsonNode root) {
+    Map<String, String> extra = new LinkedHashMap<>();
+    for (String datasetName : DATASET_NAMES) {
+      JsonNode dataset = root.path(datasetName);
+      if (!dataset.isObject()) {
+        continue;
+      }
+      dataset.fields().forEachRemaining(entry -> {
+        JsonNode value = entry.getValue();
+        boolean isScalar = value.isTextual() || (value.isNumber());
+        if (isScalar && !NAMED_FIELD_KEYS.contains(entry.getKey()) && !EXTRA_EXCLUDED_KEY.matcher(entry.getKey()).find()) {
+          extra.put(datasetName + "." + entry.getKey(), value.asText());
+        }
+      });
+    }
+    return extra;
+  }
 
   /**
    * initUserInfo 오류 응답 판정: LOGOUT > AUTHENTICATION_FAILED, 그 외 오류 > DATA_FETCH_FAILED (JSON 아니면 통과)

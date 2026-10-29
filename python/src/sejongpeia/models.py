@@ -2,7 +2,7 @@
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass(frozen=True)
@@ -82,6 +82,20 @@ class SejongSisUserInfo:
     phone_number: str
     english_name: str
     user_category: str
+    # 학교 제공 코드·구분 원문 (없으면 빈 문자열, 이름 매핑·값 목록 없음)
+    department_code: str = ""
+    organization_classification_code: str = ""
+    enrollment_status_code: str = ""
+    user_classification_code: str = ""
+    user_classification_large_code: str = ""
+    user_classification_middle_code: str = ""
+    role_code: str = ""
+    role_name: str = ""
+    menu_system_id: str = ""
+    menu_system_name: str = ""
+    locale: str = ""
+    # 이름 붙이지 않은 나머지 학교 제공 필드 {"데이터셋.필드": 원문}, 민감 키 제외
+    extra: Dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -106,6 +120,19 @@ class SejongAuthResult:
     # 학년도마다 바뀌는 포털 표기 원문, 값 목록으로 분기하지 말 것
     parent_unit_name: Optional[str]
     authenticated_at: datetime
+    # SIS 학교 제공 코드·구분 원문 (SIS 조회 실패 시 None, 없으면 빈 문자열), extra 는 include_extra=True 일 때만
+    department_code: Optional[str] = None
+    organization_classification_code: Optional[str] = None
+    enrollment_status_code: Optional[str] = None
+    user_classification_code: Optional[str] = None
+    user_classification_large_code: Optional[str] = None
+    user_classification_middle_code: Optional[str] = None
+    role_code: Optional[str] = None
+    role_name: Optional[str] = None
+    menu_system_id: Optional[str] = None
+    menu_system_name: Optional[str] = None
+    locale: Optional[str] = None
+    extra: Optional[Dict[str, str]] = None
     # include_raw=True 일 때만: DHC 원문 HTML, SIS 원문 JSON (SIS 조회 실패 시 None), 세션값·접속 IP 포함이라 외부 전달 금지
     raw_html: Optional[str] = None
     raw_json: Optional[str] = None
@@ -142,3 +169,16 @@ class SejongSisAuthResult:
     user_category: str
     authenticated_at: datetime
     raw_json: Optional[str] = None
+    department_code: str = ""
+    organization_classification_code: str = ""
+    enrollment_status_code: str = ""
+    user_classification_code: str = ""
+    user_classification_large_code: str = ""
+    user_classification_middle_code: str = ""
+    role_code: str = ""
+    role_name: str = ""
+    menu_system_id: str = ""
+    menu_system_name: str = ""
+    locale: str = ""
+    # include_extra=True 일 때만
+    extra: Optional[Dict[str, str]] = None

@@ -1,7 +1,7 @@
 // 세종대 포털 인증 클라이언트: 입력 검증 > 포털 로그인(재시도) > SSO > 데이터 조회 > 파싱 (흐름: spec/PORTAL_FLOW.md)
 import { ErrorCode, SejongAuthError } from './errors.js';
-import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
-import { ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
+import type { RawOption, SejongAuthResult, SejongSisSchoolCodes, SejongSisUserInfo, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
+import { SIS_CODE_KEYS_BY_FIELD, ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
 import { parseParentUnitName } from './portalMainParser.js';
 import { NodeHttpsSession, TimeoutError, USER_AGENT, type HttpResponse, type RequestOptions, type Session } from './transport.js';
 
@@ -44,6 +44,13 @@ export interface SejongAuthClientOptions {
 
 const isSuccessful = (response: HttpResponse) => response.status >= 200 && response.status < 300;
 
+/** SIS 사용자 정보 > 결과에 붙일 코드 필드 (extra 는 요청했을 때만) */
+function sisSchoolCodesOf(userInfo: SejongSisUserInfo, includeExtra: boolean) {
+  const codeByField = {} as SejongSisSchoolCodes;
+  for (const fieldName of Object.keys(SIS_CODE_KEYS_BY_FIELD) as (keyof SejongSisSchoolCodes)[]) codeByField[fieldName] = userInfo[fieldName];
+  return { ...codeByField, extra: includeExtra ? { ...userInfo.extra } : null };
+}
+
 /** 세종대 포털 인증 */
 export class SejongAuthClient {
   readonly timeoutSeconds: number;
@@ -58,8 +65,8 @@ export class SejongAuthClient {
     this.sessionFactory = _sessionFactory ?? (() => new NodeHttpsSession(this.timeoutSeconds, this.sslVerification, USER_AGENT));
   }
 
-  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 null, includeRaw 면 받은 원문만 담음) */
-  async authenticate(studentId: string, password: string, { includeRaw = false }: RawOption = {}): Promise<SejongAuthResult> {
+  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 null, includeRaw 면 받은 원문, includeExtra 면 SIS 나머지 필드 extra) */
+  async authenticate(studentId: string, password: string, { includeRaw = false, includeExtra = false }: RawOption = {}): Promise<SejongAuthResult> {
     validateCredentials(studentId, password);
     const session = this.sessionFactory();
     await this.login(session, studentId, password, CLASSIC_RETURN_URL);
@@ -68,6 +75,7 @@ export class SejongAuthClient {
     let contact: { email: string | null; phoneNumber: string | null; englishName: string | null; userCategory: string | null } =
       { email: null, phoneNumber: null, englishName: null, userCategory: null };
     let sisJson: string | null = null;
+    let schoolCodes: Partial<SejongSisSchoolCodes> & { extra: Record<string, string> | null } = { extra: null };
     try {
       sisJson = await this.fetchSisJsonWithSession(session);
       const sisUserInfo = parseSisUserInfo(sisJson);
@@ -75,6 +83,7 @@ export class SejongAuthClient {
         email: sisUserInfo.email, phoneNumber: sisUserInfo.phoneNumber, englishName: sisUserInfo.englishName,
         userCategory: sisUserInfo.userCategory,
       };
+      schoolCodes = sisSchoolCodesOf(sisUserInfo, includeExtra);
     } catch {
       // SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
     }
@@ -84,7 +93,7 @@ export class SejongAuthClient {
     const { rawHtml, ...dhcFields } = dhcResult;
     return {
       ...dhcFields, ...contact, parentUnitName, authenticatedAt: new Date(),
-      rawHtml, rawJson: includeRaw ? sisJson : null,
+      rawHtml, rawJson: includeRaw ? sisJson : null, ...schoolCodes,
     };
   }
 
@@ -94,13 +103,14 @@ export class SejongAuthClient {
     return this.fetchDhc(studentId, password, includeRaw);
   }
 
-  /** SIS 인증: 학생 정보 + 연락처 (grade·status 빈 문자열, includeRaw 면 원본 JSON 포함) */
-  async authenticateSis(studentId: string, password: string, { includeRaw = false }: RawOption = {}): Promise<SejongSisAuthResult> {
+  /** SIS 인증: 학생 정보 + 연락처 + 학교 제공 코드 (grade·status 빈 문자열, includeRaw 면 원본 JSON, includeExtra 면 나머지 필드 extra) */
+  async authenticateSis(studentId: string, password: string, { includeRaw = false, includeExtra = false }: RawOption = {}): Promise<SejongSisAuthResult> {
     validateCredentials(studentId, password);
     const jsonText = await this.fetchSisJson(studentId, password);
+    const userInfo = parseSisUserInfo(jsonText);
     return {
-      success: true, ...parseSisUserInfo(jsonText), grade: '', status: '',
-      authenticatedAt: new Date(), rawJson: includeRaw ? jsonText : null,
+      success: true, ...userInfo, grade: '', status: '',
+      authenticatedAt: new Date(), rawJson: includeRaw ? jsonText : null, extra: includeExtra ? userInfo.extra : null,
     };
   }
 

@@ -28,7 +28,8 @@
     "userInfoUrl": "https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do",
     "origin": "https://sjpt.sejong.ac.kr",
     "submitErrorKey": "_SUBMIT_ERROR_",
-    "loggedOutErrorType": "LOGOUT"
+    "loggedOutErrorType": "LOGOUT",
+    "extraExcludedKeyPattern": "(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)"
   },
   "opensslCiphers": "DEFAULT:AES256-SHA:@SECLEVEL=1",
   "errorMessageByCode": {

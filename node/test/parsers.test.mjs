@@ -17,6 +17,21 @@ test('parseSisFixture', () => {
   assert.deepEqual(parseSisUserInfo(readFixture('sis_user_info.json')), readExpected('expected_sis.json'));
 });
 
+test('sisSchoolCodesPreferDepartmentCodeAndNeverExposeSensitiveFields', () => {
+  const root = JSON.parse(readFixture('sis_user_info.json'));
+  root.dm_UserInfoGam.DEPT_NO = 'OTHER';
+  assert.equal(parseSisUserInfo(JSON.stringify(root)).departmentCode, '1234567');
+
+  delete root.dm_UserInfoSch.DEPT_CD;
+  const userInfo = parseSisUserInfo(JSON.stringify(root));
+  assert.equal(userInfo.departmentCode, 'OTHER');
+  for (const excluded of ['RUNNING', 'IP', 'PWD_YN', 'ID_YN', 'PASS_VALID', 'VALID_FLAG', 'CD_ALIAS', 'RESI', 'ADDR', 'BANK']) {
+    assert.ok(!Object.keys(userInfo.extra).join(' ').includes(excluded), excluded);
+  }
+  const sensitiveValues = ['synthetic-session-value', '203.0.113.1', 'synthetic staff name', '000000-0000000'];
+  assert.ok(Object.values(userInfo.extra).every((value) => !sensitiveValues.includes(value)));
+});
+
 test('parsesClassicReadingUserInfoValues', () => {
   const html = `<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>
     <tr><th>이수 학기</th><td>8 학기</td></tr><tr><th>인증완료 학기</th><td>6 학기</td></tr>
