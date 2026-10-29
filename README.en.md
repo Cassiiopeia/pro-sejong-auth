@@ -44,8 +44,9 @@ print(len(departments), lectures[0].name)
 import { SejongPublicData } from 'pro-sejongpeia';
 
 const publicData = new SejongPublicData();
-const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
-const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: '3220' });
+const term = { categoryCode: '20', year: '2026', semesterCode: '20' };
+const departments = await publicData.departments(term);
+const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
@@ -81,22 +82,24 @@ Student verification can be tried in the browser first. The code is in the [quic
 | Feature | Java | Python | Node |
 |---|---|---|---|
 | **Login (student ID + portal password)** | | | |
-| Integrated: student info + classic reading + contact (one portal login) | ✅ `authenticate` | ✅ `authenticate` | ✅ `authenticate` |
-| DHC: student info + classic-reading certification status | ✅ `authenticateWithDHC` | ✅ `authenticate_dhc` | ✅ `authenticateDhc` |
-| SIS: student info + email, phone, English name | ✅ `authenticateWithSIS` | ✅ `authenticate_sis` | ✅ `authenticateSis` |
-| SIS user codes (11, such as the department code) + the other fields as `extra` | ✅ `authenticate(id, pw, false, true)` | ✅ `include_extra=True` | ✅ `{ includeExtra: true }` |
-| Raw response (debugging) | ✅ `authenticateWithRaw` and more | ✅ `include_raw=True` | ✅ `{ includeRaw: true }` |
-| SIS business periods (which business is allowed in which period, such as course registration or certificate printing) | ✅ `fetchSisBusinessPeriods` | ✅ `fetch_sis_business_periods` | ✅ `fetchSisBusinessPeriods` |
+| Integrated | ✅ `authenticate` | ✅ `authenticate` | ✅ `authenticate` |
+| DHC | ✅ `authenticateWithDHC` | ✅ `authenticate_dhc` | ✅ `authenticateDhc` |
+| SIS | ✅ `authenticateWithSIS` | ✅ `authenticate_sis` | ✅ `authenticateSis` |
+| SIS codes, `extra` | ✅ `authenticate(id, pw, false, true)` | ✅ `include_extra=True` | ✅ `{ includeExtra: true }` |
+| Raw response | ✅ `authenticateWithRaw` and more | ✅ `include_raw=True` | ✅ `{ includeRaw: true }` |
+| SIS business periods | ✅ `fetchSisBusinessPeriods` | ✅ `fetch_sis_business_periods` | ✅ `fetchSisBusinessPeriods` |
 | **No login (public school data)** | | | |
-| College and department codes, terms (by category) | ✅ `departments` and more | ✅ `departments` and more | ✅ `departments` and more |
-| Lectures, the whole term (search by department, course name, instructor) | ✅ `lectures` | ✅ `lectures` | ✅ `lectures` |
-| Curriculum courses and course overview (suggested year and semester, credits) | ✅ `curriculumCourses` | ✅ `curriculum_courses` | ✅ `curriculumCourses` |
-| Academic calendar: undergraduate + graduate school | ✅ `calendar`, `graduateCalendar` | ✅ `calendar`, `graduate_calendar` | ✅ `calendar`, `graduateCalendar` |
+| Department and term codes | ✅ `departments` and more | ✅ `departments` and more | ✅ `departments` and more |
+| Lectures | ✅ `lectures` | ✅ `lectures` | ✅ `lectures` |
+| Curriculum and overview | ✅ `curriculumCourses` | ✅ `curriculum_courses` | ✅ `curriculumCourses` |
+| Academic calendar (undergrad, graduate) | ✅ `calendar`, `graduateCalendar` | ✅ `calendar`, `graduate_calendar` | ✅ `calendar`, `graduateCalendar` |
 | Dormitory menu and notices | ✅ `dormitoryMenu`, `dormitoryNotices` | ✅ `dormitory_menu`, `dormitory_notices` | ✅ `dormitoryMenu`, `dormitoryNotices` |
 | Cafeteria list and menu | ✅ `cafeteriaPlaces`, `cafeteriaMenu` | ✅ `cafeteria_places`, `cafeteria_menu` | ✅ `cafeteriaPlaces`, `cafeteriaMenu` |
 | Campus places | ✅ `campusPlaces` | ✅ `campus_places` | ✅ `campusPlaces` |
-| Extracurricular program schedule | ✅ `extracurricularEvents` | ✅ `extracurricular_events` | ✅ `extracurricularEvents` |
+| Extracurricular events | ✅ `extracurricularEvents` | ✅ `extracurricular_events` | ✅ `extracurricularEvents` |
 
+- **Integrated** returns student info + classic reading + contact, **DHC** student info + classic-reading certification status, **SIS** student info + email, phone and English name. **SIS codes** are the 11 school-provided codes such as the department code, and `extra` holds the other SIS fields. **SIS business periods** are the per-business allowed periods such as course registration or certificate printing.
+- **Lectures** are searched by department, course name or instructor, and an empty search returns the whole term. **Curriculum and overview** give the suggested year and semester, credits and the course overview.
 - The category, term and department methods are `organizationCategories`, `terms` and `departments`; the lecture helper codes are `courseTypes` and `selectiveDomains` (Python: `organization_categories`, `course_types`, `selective_domains`). The public-data contract is [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
 - In Java the raw-response variants are `authenticateWithRaw`, `authenticateWithDHCRaw` and `authenticateWithSISRaw`.
 - **Same results across languages** is enforced by keeping shared values in one place, [spec/contract.json](spec/contract.json), and failing each language's tests when they drift.

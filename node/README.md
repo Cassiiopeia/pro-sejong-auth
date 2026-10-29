@@ -18,8 +18,9 @@ npm install pro-sejongpeia
 import { SejongPublicData } from 'pro-sejongpeia';
 
 const publicData = new SejongPublicData();
-const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
-const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: '3220' });
+const term = { categoryCode: '20', year: '2026', semesterCode: '20' };
+const departments = await publicData.departments(term);
+const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
