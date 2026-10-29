@@ -73,6 +73,7 @@ session cookies, legacy TLS and HTML/JSON parsing. Same features, same results i
 - [Result fields](#result-fields)
 - [Error codes](#error-codes)
 - [Configuration](#configuration)
+- [More: integration examples and API stability](#more-integration-examples-and-api-stability)
 - [FAQ](#faq)
 - [Contributing](#contributing)
 
@@ -323,6 +324,11 @@ All optional. Defaults: 10 second timeout, 3 login retries, certificate verifica
 > **Java TLS note**: the Sejong portal only offers the legacy `TLS_RSA_WITH_AES_256_CBC_SHA` cipher, which recent JDKs disable. The Java library removes `TLS_RSA_*` from `jdk.tls.disabledAlgorithms`, which affects **the whole JVM** and only works before the JVM's first TLS connection. Spring Boot does this automatically at startup. Without Spring, call `SejongTlsSupport.ensureLegacyCipherEnabled()` first thing in `main()`; if it runs too late, authentication fails with `CONNECTION_FAILED` and a message saying so. If your service cannot accept the JVM-wide change, run the authentication in a separate process. Python and Node only change the TLS settings of their own connections.
 
 How the portal flow works: [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md), [DHC login flow](docs/DHC_LOGIN_FLOW.en.md), [SIS login flow](docs/SIS_LOGIN_FLOW.en.md).
+
+## More: integration examples and API stability
+
+- [Integration examples](docs/INTEGRATION_EXAMPLES.en.md): student verification (club sign-up), department and lecture search, an academic calendar widget and a dormitory/cafeteria bot in Java, Python and Node. The public-data examples were run against the real school servers.
+- [API stability policy](docs/API_STABILITY.en.md): what is public API and what is internal, and the version rule. **Backward compatibility is not guaranteed, so pin the version.**
 
 ## FAQ
 
