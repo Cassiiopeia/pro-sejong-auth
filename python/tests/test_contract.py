@@ -20,6 +20,11 @@ def test_portal_values_match_contract():
         == portal["loginErrorCodeByResult"]
 
 
+def test_portal_main_values_match_contract():
+    portal_main = CONTRACT["portalMain"]
+    assert (client.PORTAL_MAIN_URL, client.PORTAL_LOGIN_PAGE_MARKER) == (portal_main["url"], portal_main["loginPageMarker"])
+
+
 def test_classic_and_sis_values_match_contract():
     classic, sis = CONTRACT["classic"], CONTRACT["sis"]
     assert (client.CLASSIC_RETURN_URL, client.CLASSIC_SSO_URL, client.CLASSIC_STATUS_URL) \

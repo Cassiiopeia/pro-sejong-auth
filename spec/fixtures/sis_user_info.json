@@ -20,6 +20,7 @@
     "NM": "홍길동",
     "NM_ENG": "Hong Gildong",
     "EMAIL": "student@example.com",
-    "USER_ID": "21011234"
+    "USER_ID": "21011234",
+    "USER_CLSF_CD_NM": "학부생"
   }
 }

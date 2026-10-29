@@ -33,6 +33,14 @@ class ContractConstantsTest {
   }
 
   @Test
+  void 포털_메인_값이_contract와_같다() {
+    JsonNode portalMain = contract.get("portalMain");
+
+    assertEquals(portalMain.get("url").asText(), SejongPortalClient.PORTAL_MAIN_URL);
+    assertEquals(portalMain.get("loginPageMarker").asText(), SejongPortalClient.PORTAL_LOGIN_PAGE_MARKER);
+  }
+
+  @Test
   void 고전독서_학사정보시스템_값이_contract와_같다() {
     JsonNode classic = contract.get("classic");
     JsonNode sis = contract.get("sis");

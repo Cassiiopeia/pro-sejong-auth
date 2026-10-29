@@ -7,6 +7,9 @@
     "status": "재학"
   },
   "classicReading": {
+    "completedSemesters": "6 학기",
+    "certifiedSemesters": "6 학기",
+    "certificationStatus": "아니오",
     "certifications": [
       {
         "area": "서양의 역사와 사상 (4권)",

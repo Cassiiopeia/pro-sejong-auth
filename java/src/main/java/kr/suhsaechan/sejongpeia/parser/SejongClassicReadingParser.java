@@ -1,7 +1,9 @@
 package kr.suhsaechan.sejongpeia.parser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.model.ClassicCertification;
@@ -18,11 +20,13 @@ import org.jsoup.select.Elements;
 
 /**
  * 세종대학교 고전독서 인증 정보 파서
- * - 영역별 인증현황, 시험현황, 대체인증, 대회, 교과연계 파싱
+ * - 영역별 인증현황, 시험현황, 대체인증, 대회, 교과연계, 이수·인증 학기와 인증여부 파싱
  */
 @Slf4j
 public class SejongClassicReadingParser {
 
+  private static final String USER_INFO_SELECTOR =
+      ".b-con-box:has(h4.b-h4-tit01:contains(사용자 정보)) table.b-board-table tbody tr";
   private static final String CERT_SELECTOR =
       ".b-con-box:has(h4.b-h4-tit01:contains(영역별 인증현황)) table.b-board-table tbody tr";
   private static final String EXAM_SELECTOR =
@@ -33,6 +37,11 @@ public class SejongClassicReadingParser {
       ".b-con-box:has(h4.b-h4-tit01:contains(대회 인증 현황)) table.b-board-table tbody tr";
   private static final String CURRICULUM_SELECTOR =
       ".b-con-box:has(h4.b-h4-tit01:contains(교과연계 인증 현황)) table.b-board-table tbody tr";
+
+  // 사용자 정보 표 라벨 (포털 화면 문구 그대로, 바꾸면 값이 빈 문자열)
+  private static final String LABEL_COMPLETED_SEMESTERS = "이수 학기";
+  private static final String LABEL_CERTIFIED_SEMESTERS = "인증완료 학기";
+  private static final String LABEL_CERTIFICATION_STATUS = "인증여부";
 
   /**
    * HTML에서 고전독서 전체 정보 파싱
@@ -45,7 +54,11 @@ public class SejongClassicReadingParser {
     try {
       Document doc = Jsoup.parse(html);
 
+      Map<String, String> userInfoValueByLabel = parseUserInfoValues(doc);
       SejongClassicReading reading = SejongClassicReading.builder()
+          .completedSemesters(userInfoValueByLabel.getOrDefault(LABEL_COMPLETED_SEMESTERS, ""))
+          .certifiedSemesters(userInfoValueByLabel.getOrDefault(LABEL_CERTIFIED_SEMESTERS, ""))
+          .certificationStatus(userInfoValueByLabel.getOrDefault(LABEL_CERTIFICATION_STATUS, ""))
           .certifications(parseCertifications(doc))
           .examRecords(parseExamRecords(doc))
           .subjectSubstitutions(parseSubjectSubstitutions(doc))
@@ -59,6 +72,20 @@ public class SejongClassicReadingParser {
     } catch (Exception e) {
       throw new SejongAuthException(SejongAuthErrorCode.PARSE_ERROR, e);
     }
+  }
+
+  /**
+   * 사용자 정보 표 > 라벨별 값 (고전독서 관련 3개 라벨만 사용)
+   */
+  private Map<String, String> parseUserInfoValues(Document doc) {
+    Map<String, String> valueByLabel = new HashMap<>();
+    for (Element row : doc.select(USER_INFO_SELECTOR)) {
+      String label = CommonUtil.trimToEmpty(row.select("th").text());
+      if (CommonUtil.hasText(label)) {
+        valueByLabel.put(label, CommonUtil.trimToEmpty(row.select("td").text()));
+      }
+    }
+    return valueByLabel;
   }
 
   /**

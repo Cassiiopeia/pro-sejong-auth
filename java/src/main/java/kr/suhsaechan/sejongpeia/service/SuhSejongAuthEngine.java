@@ -11,6 +11,7 @@ import kr.suhsaechan.sejongpeia.model.SejongDhcAuthResult;
 import kr.suhsaechan.sejongpeia.model.SejongSisAuthResult;
 import kr.suhsaechan.sejongpeia.model.SejongStudentInfo;
 import kr.suhsaechan.sejongpeia.parser.SejongClassicReadingParser;
+import kr.suhsaechan.sejongpeia.parser.SejongPortalMainParser;
 import kr.suhsaechan.sejongpeia.parser.SejongSisParser;
 import kr.suhsaechan.sejongpeia.parser.SejongStudentInfoParser;
 import kr.suhsaechan.sejongpeia.util.CommonUtil;
@@ -30,6 +31,7 @@ public class SuhSejongAuthEngine {
   private final SejongClassicReadingParser classicReadingParser;
   private final SejongSisClient sisClient;
   private final SejongSisParser sisParser;
+  private final SejongPortalMainParser portalMainParser;
 
   public SuhSejongAuthEngine(
       SejongPortalClient portalClient,
@@ -37,15 +39,26 @@ public class SuhSejongAuthEngine {
       SejongClassicReadingParser classicReadingParser,
       SejongSisClient sisClient,
       SejongSisParser sisParser) {
+    this(portalClient, studentInfoParser, classicReadingParser, sisClient, sisParser, new SejongPortalMainParser());
+  }
+
+  public SuhSejongAuthEngine(
+      SejongPortalClient portalClient,
+      SejongStudentInfoParser studentInfoParser,
+      SejongClassicReadingParser classicReadingParser,
+      SejongSisClient sisClient,
+      SejongSisParser sisParser,
+      SejongPortalMainParser portalMainParser) {
     this.portalClient = portalClient;
     this.studentInfoParser = studentInfoParser;
     this.classicReadingParser = classicReadingParser;
     this.sisClient = sisClient;
     this.sisParser = sisParser;
+    this.portalMainParser = portalMainParser;
   }
 
   /**
-   * 세종대학교 통합 인증: 포털 로그인 1회 > DHC(학생 정보·고전독서) > 같은 세션으로 SIS(연락처)
+   * 세종대학교 통합 인증: 포털 로그인 1회 > DHC(학생 정보·고전독서) > 같은 세션으로 SIS(연락처), 포털 메인(상위 소속)
    *
    * @param studentId 학번
    * @param password 비밀번호
@@ -60,21 +73,26 @@ public class SuhSejongAuthEngine {
     SejongPortalSession session = portalClient.openSession(studentId, password);
     SejongDhcAuthResult dhcResult = buildDhcResult(portalClient.fetchClassicStatusHtml(session), false);
 
-    // 2. 같은 세션으로 SIS 연락처 3개만 (실패해도 DHC 정보만으로 결과 반환)
+    // 2. 같은 세션으로 SIS 연락처 3개, 영어 이름, 사용자 구분 (실패해도 DHC 정보만으로 결과 반환)
     String email = null;
     String phoneNumber = null;
     String englishName = null;
+    String userCategory = null;
     try {
       String json = sisClient.fetchInitUserInfoJson(session);
       sisParser.ensureLoggedIn(json);
       email = sisParser.parseEmail(json);
       phoneNumber = sisParser.parsePhoneNumber(json);
       englishName = sisParser.parseEnglishName(json);
+      userCategory = sisParser.parseUserCategory(json);
     } catch (Exception e) {
       log.warn("[sejong auth] SIS contact lookup failed (ignored) : {}", e.getMessage());
     }
 
-    // 3. 결과 합치기
+    // 3. 같은 세션으로 포털 메인 1회 (보조 조회: 실패 시 null)
+    String parentUnitName = fetchParentUnitName(session, dhcResult.getMajor());
+
+    // 4. 결과 합치기
     SejongAuthResult integratedResult = SejongAuthResult.builder()
         .success(true)
         .major(dhcResult.getMajor())
@@ -86,11 +104,25 @@ public class SuhSejongAuthEngine {
         .email(email)
         .phoneNumber(phoneNumber)
         .englishName(englishName)
+        .userCategory(userCategory)
+        .parentUnitName(parentUnitName)
         .authenticatedAt(LocalDateTime.now())
         .build();
 
     log.info("[sejong auth] integrated auth completed : studentId={}", studentId);
     return integratedResult;
+  }
+
+  /**
+   * 포털 메인 1회 조회 > 상위 소속명 (조회 실패 null, 표기 없음 빈 문자열, 통합 인증을 막지 않음)
+   */
+  private String fetchParentUnitName(SejongPortalSession session, String major) {
+    try {
+      return portalMainParser.parseParentUnitName(portalClient.fetchPortalMainHtml(session), major);
+    } catch (SejongAuthException e) {
+      log.warn("[portal main] skipped : {}", e.getDetail());
+      return null;
+    }
   }
 
   /**
@@ -208,6 +240,7 @@ public class SuhSejongAuthEngine {
         .email(sisParser.parseEmail(json))
         .phoneNumber(sisParser.parsePhoneNumber(json))
         .englishName(sisParser.parseEnglishName(json))
+        .userCategory(sisParser.parseUserCategory(json))
         .authenticatedAt(LocalDateTime.now())
         .rawJson(shouldIncludeRawJson ? json : null)
         .build();

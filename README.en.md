@@ -216,14 +216,16 @@ Names below are Java / Node. Python uses snake_case (`student_id`, `phone_number
 | `major` | string | Major |
 | `grade` | string | Year |
 | `status` | string | Enrollment status (재학 enrolled, 휴학 on leave, 졸업 graduated) |
-| `classicReading` | object | Classic-reading certification, exam, contest and substitution records |
+| `classicReading` | object | Classic-reading certification, exam, contest and substitution records, plus `completedSemesters`, `certifiedSemesters` and `certificationStatus` (portal text as-is) |
 | `email` | string or null | Email (null if SIS fails) |
 | `phoneNumber` | string or null | Phone, `010-1234-5678` format (null if SIS fails) |
 | `englishName` | string or null | English name (null if SIS fails) |
+| `userCategory` | string or null | User category, for example `학부생` (null if SIS fails) |
+| `parentUnitName` | string or null | Unit above the major, a college or a school, from the portal main page (null if that call fails, `""` if unavailable). Portal text as-is that changes by academic year: do not branch on a value list or use it to decide authentication |
 | `authenticatedAt` | datetime | Authentication time |
 
 - DHC result: no contact fields; `rawHtml` with the raw option
-- SIS result: no classic-reading field, `grade` and `status` are empty strings; `rawJson` with the raw option
+- SIS result: includes `userCategory`, no classic-reading field, `grade` and `status` are empty strings; `rawJson` with the raw option
 
 Text values come from the portal as-is (Korean).
 

@@ -40,6 +40,9 @@ public class SejongSisAuthResult {
   /** 영어 이름 */
   private final String englishName;
 
+  /** 사용자 구분 (예: 학부생) */
+  private final String userCategory;
+
   /** 인증 시간 */
   private final LocalDateTime authenticatedAt;
 
@@ -48,7 +51,7 @@ public class SejongSisAuthResult {
 
   @Override
   public String toString() {
-    return String.format("SejongSisAuthResult{success=%s, major='%s', studentId='%s', name='%s', email='%s', phoneNumber='%s', englishName='%s', authenticatedAt=%s}",
-        success, major, studentId, name, email, phoneNumber, englishName, authenticatedAt);
+    return String.format("SejongSisAuthResult{success=%s, major='%s', studentId='%s', name='%s', email='%s', phoneNumber='%s', englishName='%s', userCategory='%s', authenticatedAt=%s}",
+        success, major, studentId, name, email, phoneNumber, englishName, userCategory, authenticatedAt);
   }
 }

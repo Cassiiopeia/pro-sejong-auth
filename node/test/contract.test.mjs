@@ -17,6 +17,11 @@ test('portalValuesMatchContract', () => {
   assert.deepEqual({ ...parsers.PORTAL_LOGIN_ERROR_CODE_BY_RESULT }, contract.portal.loginErrorCodeByResult);
 });
 
+test('portalMainValuesMatchContract', () => {
+  assert.equal(client.PORTAL_MAIN_URL, contract.portalMain.url);
+  assert.equal(client.PORTAL_LOGIN_PAGE_MARKER, contract.portalMain.loginPageMarker);
+});
+
 test('classicAndSisValuesMatchContract', () => {
   assert.equal(client.CLASSIC_RETURN_URL, contract.classic.returnUrl);
   assert.equal(client.CLASSIC_SSO_URL, contract.classic.ssoUrl);
