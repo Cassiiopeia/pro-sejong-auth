@@ -67,12 +67,28 @@ Expected mapping for tests: `fixtures/expected_portal_login.json`. The portal so
    - `401`: `AUTHENTICATION_FAILED`; other non-200 or empty body: `DATA_FETCH_FAILED`
    - `200` with `{"_SUBMIT_ERROR_": {"ERRTYPE": "LOGOUT", ...}}`: `AUTHENTICATION_FAILED` (a wrong password leaves no session, the API answers 200 with this error; sample `fixtures/sis_submit_error_logout.json`). Any other `_SUBMIT_ERROR_`: `DATA_FETCH_FAILED`
 
+## Step 2c: portal main (portal.sejong.ac.kr), integrated call only
+
+1. `GET https://portal.sejong.ac.kr/user/index.do` with `Referer: https://portal.sejong.ac.kr`, same session, one attempt, the normal timeout, no retry
+2. The result is `null` (call failure) for: non-2xx, timeout, network error, empty body, a login page answer (session expired: body contains `login_action.jsp`). Never an exception, the integrated result is returned with the other fields intact (Java logs one line `[portal main] skipped : <reason>`, no body)
+3. Otherwise parse (below): no usable value gives `""` (parse stage), never `null`
+
+## Portal main parsing (parentUnitName)
+
+Sample: `fixtures/portal_main.html`, expected: `fixtures/expected_portal_main.json` (synthetic data).
+
+- Text of the first `span.txt4` inside `div.top_myinfo`, whitespace collapsed to one space and trimmed. Shape `<parent unit> <major>`, for example `공과대학 컴퓨터공학과`
+- Rule 1: the major known from DHC equals the text: `""`. The text ends with a space plus the major: the text before it (trimmed)
+- Rule 2: otherwise, only when the text has exactly 2 space-separated tokens: the first token. One token, or 3 or more tokens: `""` (no guessing, a wrong value is worse than an empty one)
+- No `div.top_myinfo`, no `span.txt4` or a broken page (a staff-type screen): `""`, never an exception
+- The value is the portal text as-is: no list of units, no code table, no validation against allowed values
+
 ## DHC HTML parsing
 
 Sample: `fixtures/dhc_status.html`, expected result: `fixtures/expected_dhc.json`.
 
 - Each section is `div.b-con-box` with `h4.b-h4-tit01` title text; rows are `table.b-board-table tbody tr`
-- Student info (title `사용자 정보`): rows of `th` label, `td` value. Labels: `학과명` major, `학번` student id, `이름` name, `학년` grade, `사용자 상태` status. Missing label: empty string. No rows at all: `PARSE_ERROR`
+- Student info (title `사용자 정보`): rows of `th` label, `td` value. Labels: `학과명` major, `학번` student id, `이름` name, `학년` grade, `사용자 상태` status. Missing label: empty string. No rows at all: `PARSE_ERROR`. The same table also gives the classic-reading fields `이수 학기` completedSemesters, `인증완료 학기` certifiedSemesters, `인증여부` certificationStatus (as-is text, missing label: empty string, never `PARSE_ERROR`)
 - Certifications (`영역별 인증현황`): row `th` = area, first `td` = requiredCount, second `td` = certifiedCount. Rows without a `th` or with fewer than 2 `td` are skipped
 - Exam records (`인증 시험 현황`): 6 `td`: semester, area, bookTitle, examDate, score, passStatus
 - Subject substitutions (`과목 대체 인증 현황`) and curriculum records (`교과연계 인증 현황`): 5 `td`: semester, subjectName, area, bookTitle, completion
@@ -92,5 +108,6 @@ Sample: `fixtures/sis_user_info.json`, expected: `fixtures/expected_sis.json`.
 | email | `dm_UserInfoGam.USER_EMAIL` | |
 | phoneNumber | `USER_PHONE_NO1`-`NO2`-`NO3` of `dm_UserInfoGam`, non-empty parts joined with `-` | |
 | englishName | `dm_UserInfo.INTG_ENG_NM` | `dm_UserInfoSch.NM_ENG` |
+| userCategory | `dm_UserInfoSch.USER_CLSF_CD_NM` | |
 
 Missing values are empty strings. Invalid JSON: `PARSE_ERROR`.

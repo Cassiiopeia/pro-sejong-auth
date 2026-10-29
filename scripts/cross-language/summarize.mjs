@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 import { SejongAuthError, authenticate } from '../../node/dist/esm/index.js';
 
-const COMPARED_FIELDS = ['studentId', 'name', 'major', 'grade', 'status', 'email', 'phoneNumber', 'englishName', 'classicReading'];
+const COMPARED_FIELDS = ['studentId', 'name', 'major', 'grade', 'status', 'email', 'phoneNumber', 'englishName', 'userCategory', 'parentUnitName', 'classicReading'];
 
 // 키 정렬 JSON (Python json.dumps(sort_keys=True, separators=(",", ":")) 와 같은 모양)
 const canonicalJson = (value) => {

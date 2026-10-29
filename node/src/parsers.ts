@@ -19,9 +19,12 @@ const LABEL_STUDENT_ID = '학번';
 const LABEL_NAME = '이름';
 const LABEL_GRADE = '학년';
 const LABEL_STATUS = '사용자 상태';
+const LABEL_COMPLETED_SEMESTERS = '이수 학기';
+const LABEL_CERTIFIED_SEMESTERS = '인증완료 학기';
+const LABEL_CERTIFICATION_STATUS = '인증여부';
 
 // 주석 | 태그(닫힘 여부, 이름, 속성) | 글자
-const TOKEN_PATTERN = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>|([^<]+)/g;
+export const TOKEN_PATTERN = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>|([^<]+)/g;
 const RAW_TEXT_TAGS = new Set(['script', 'style']);
 // 포털 표에 나올 수 있는 이름 엔티티 (그 외 이름은 원문 유지)
 const NAMED_ENTITIES: Record<string, string> = {
@@ -48,9 +51,9 @@ function decodeEntities(text: string): string {
   });
 }
 
-const normalizeText = (text: string) => decodeEntities(text).replace(/\s+/g, ' ').trim();
+export const normalizeText = (text: string) => decodeEntities(text).replace(/\s+/g, ' ').trim();
 
-function hasClass(attributes: string, className: string): boolean {
+export function hasClass(attributes: string, className: string): boolean {
   const match = /class\s*=\s*["']([^"']*)["']/i.exec(attributes);
   return !!match && match[1].split(/\s+/).includes(className);
 }
@@ -116,13 +119,19 @@ const findRows = (sections: Section[], title: string) =>
 const tdTexts = (row: Cell[]) => row.filter((cell) => cell.tag === 'td').map((cell) => cell.text);
 const thText = (row: Cell[]) => row.filter((cell) => cell.tag === 'th').map((cell) => cell.text).join(' ').trim();
 
-/** 사용자 정보 표 > 학과, 학번, 이름, 학년, 상태 (표 없으면 PARSE_ERROR) */
-export function parseStudentInfo(html: string): SejongStudentInfo {
+/** 사용자 정보 표 > {라벨: 값} */
+function readUserInfoValueByLabel(sections: Section[]): Map<string, string> {
   const valueByLabel = new Map<string, string>();
-  for (const row of findRows(readSections(html), SECTION_USER_INFO)) {
+  for (const row of findRows(sections, SECTION_USER_INFO)) {
     const label = thText(row);
     if (label) valueByLabel.set(label, tdTexts(row).join(' ').trim());
   }
+  return valueByLabel;
+}
+
+/** 사용자 정보 표 > 학과, 학번, 이름, 학년, 상태 (표 없으면 PARSE_ERROR) */
+export function parseStudentInfo(html: string): SejongStudentInfo {
+  const valueByLabel = readUserInfoValueByLabel(readSections(html));
   if (valueByLabel.size === 0) throw new SejongAuthError(ErrorCode.PARSE_ERROR, 'Student info table not found');
   return {
     major: valueByLabel.get(LABEL_MAJOR) ?? '',
@@ -133,9 +142,10 @@ export function parseStudentInfo(html: string): SejongStudentInfo {
   };
 }
 
-/** 고전독서 5개 표 > SejongClassicReading (칸 수 부족한 행은 건너뜀) */
+/** 고전독서 5개 표 + 사용자 정보 표의 이수·인증 학기, 인증여부 > SejongClassicReading (칸 수 부족한 행은 건너뜀) */
 export function parseClassicReading(html: string): SejongClassicReading {
   const sections = readSections(html);
+  const userInfoValueByLabel = readUserInfoValueByLabel(sections);
   const rowsWith = (title: string, minimumCellCount: number) =>
     findRows(sections, title).map(tdTexts).filter((cells) => cells.length >= minimumCellCount);
   const toSubjectRecord = ([semester, subjectName, area, bookTitle, completion]: string[]): ClassicSubjectRecord =>
@@ -149,6 +159,9 @@ export function parseClassicReading(html: string): SejongClassicReading {
   }
 
   return {
+    completedSemesters: userInfoValueByLabel.get(LABEL_COMPLETED_SEMESTERS) ?? '',
+    certifiedSemesters: userInfoValueByLabel.get(LABEL_CERTIFIED_SEMESTERS) ?? '',
+    certificationStatus: userInfoValueByLabel.get(LABEL_CERTIFICATION_STATUS) ?? '',
     certifications,
     examRecords: rowsWith(SECTION_EXAMS, 6).map(([semester, area, bookTitle, examDate, score, passStatus]): ClassicExamRecord =>
       ({ semester, area, bookTitle, examDate, score, passStatus })),
@@ -206,7 +219,7 @@ export function ensureSisLoggedIn(jsonText: string): void {
   throw new SejongAuthError(ErrorCode.DATA_FETCH_FAILED, `SIS returned an error : ${errorType}`);
 }
 
-/** initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름 (dm_UserInfo 없으면 PARSE_ERROR) */
+/** initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분 (dm_UserInfo 없으면 PARSE_ERROR) */
 export function parseSisUserInfo(jsonText: string): SejongSisUserInfo {
   let root: unknown;
   try {
@@ -229,5 +242,6 @@ export function parseSisUserInfo(jsonText: string): SejongSisUserInfo {
     email: textOf(gam, 'USER_EMAIL'),
     phoneNumber: phoneParts.filter(Boolean).join('-'),
     englishName: textOf(userInfo, 'INTG_ENG_NM').trim() || textOf(sch, 'NM_ENG'),
+    userCategory: textOf(sch, 'USER_CLSF_CD_NM'),
   };
 }

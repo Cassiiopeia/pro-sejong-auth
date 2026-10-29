@@ -257,4 +257,30 @@ class SejongSisParserTest {
 
     log.info("파싱 결과: email={}, phoneNumber={}, englishName={}", email, phoneNumber, englishName);
   }
+
+  @Test
+  void 사용자구분_파싱_성공() {
+    String json = """
+        {
+          "dm_UserInfo": {},
+          "dm_UserInfoSch": {
+            "USER_CLSF_CD_NM": "학부생"
+          }
+        }
+        """;
+
+    assertEquals("학부생", parser.parseUserCategory(json));
+  }
+
+  @Test
+  void 사용자구분_파싱_값없음은_빈문자열() {
+    String json = """
+        {
+          "dm_UserInfo": {},
+          "dm_UserInfoSch": {}
+        }
+        """;
+
+    assertEquals("", parser.parseUserCategory(json));
+  }
 }

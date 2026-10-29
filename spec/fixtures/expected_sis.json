@@ -4,5 +4,6 @@
   "major": "컴퓨터공학과",
   "email": "student@example.com",
   "phoneNumber": "010-1234-5678",
-  "englishName": "Hong Gildong"
+  "englishName": "Hong Gildong",
+  "userCategory": "학부생"
 }

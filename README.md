@@ -216,14 +216,16 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 | `major` | string | 학과(전공) |
 | `grade` | string | 학년 |
 | `status` | string | 학적 상태 (재학, 휴학, 졸업) |
-| `classicReading` | object | 고전독서 인증 현황, 시험·대회·대체 이수 기록 |
+| `classicReading` | object | 고전독서 인증 현황, 시험·대회·대체 이수 기록, `completedSemesters`(이수 학기)·`certifiedSemesters`(인증완료 학기)·`certificationStatus`(인증여부) 포털 원문 |
 | `email` | string 또는 null | 이메일 (SIS 실패 시 null) |
 | `phoneNumber` | string 또는 null | 전화번호, `010-1234-5678` 형식 (SIS 실패 시 null) |
 | `englishName` | string 또는 null | 영문 이름 (SIS 실패 시 null) |
+| `userCategory` | string 또는 null | 사용자 구분, 예: `학부생` (SIS 실패 시 null) |
+| `parentUnitName` | string 또는 null | 학과의 상위 소속 이름(단과대학 또는 학부), 포털 메인 화면 표기에서 추출 (호출 실패 시 null, 값이 없으면 빈 문자열). 학년도마다 바뀌는 포털 표기 원문이라 값 목록으로 분기하거나 인증 판정에 쓰지 마세요 |
 | `authenticatedAt` | 날짜·시간 | 인증 시각 |
 
 - DHC 결과: 연락처 필드 없음, 원본 옵션 사용 시 `rawHtml` 포함
-- SIS 결과: 고전독서 필드 없음, `grade`·`status`는 빈 문자열, 원본 옵션 사용 시 `rawJson` 포함
+- SIS 결과: `userCategory` 포함, 고전독서 필드 없음, `grade`·`status`는 빈 문자열, 원본 옵션 사용 시 `rawJson` 포함
 
 ## 에러 코드
 

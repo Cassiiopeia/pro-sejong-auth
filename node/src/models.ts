@@ -30,8 +30,12 @@ export interface ClassicContestRecord {
   bookTitle: string;
 }
 
-/** 고전독서 인증 현황: 영역별 인증, 시험, 과목 대체, 대회, 교과연계 */
+/** 고전독서 인증 현황: 영역별 인증, 시험, 과목 대체, 대회, 교과연계, 이수·인증 학기, 인증여부 */
 export interface SejongClassicReading {
+  // 사용자 정보 표 원문 (예: "8 학기", 대체이수 사유가 붙는 자유 텍스트), 없으면 빈 문자열
+  completedSemesters: string;
+  certifiedSemesters: string;
+  certificationStatus: string;
   certifications: ClassicCertification[];
   examRecords: ClassicExamRecord[];
   subjectSubstitutions: ClassicSubjectRecord[];
@@ -48,7 +52,7 @@ export interface SejongStudentInfo {
   status: string;
 }
 
-/** SIS initUserInfo 값 */
+/** SIS initUserInfo 값 (userCategory: 사용자 구분, 예: 학부생) */
 export interface SejongSisUserInfo {
   studentId: string;
   name: string;
@@ -56,15 +60,22 @@ export interface SejongSisUserInfo {
   email: string;
   phoneNumber: string;
   englishName: string;
+  userCategory: string;
 }
 
-/** 통합 인증 결과 (연락처는 SIS 실패 시 null) */
+/** 통합 인증 결과 (연락처·영문 이름·사용자 구분은 SIS 실패 시, 상위 소속명은 포털 메인 조회 실패 시 null) */
 export interface SejongAuthResult extends SejongStudentInfo {
   success: true;
   classicReading: SejongClassicReading;
   email: string | null;
   phoneNumber: string | null;
   englishName: string | null;
+  userCategory: string | null;
+  /**
+   * 학과의 상위 소속 이름(단과대학 또는 학부): 포털 화면 표기에서 추출한 부가 정보, 학적 구분에 따라 빈 문자열일 수 있음, 인증 판정에 쓰지 말 것
+   * 학년도마다 바뀌는 포털 표기 원문, 값 목록으로 분기하지 말 것
+   */
+  parentUnitName: string | null;
   authenticatedAt: Date;
 }
 

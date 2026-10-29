@@ -30,6 +30,9 @@ LABEL_STUDENT_ID = "학번"
 LABEL_NAME = "이름"
 LABEL_GRADE = "학년"
 LABEL_STATUS = "사용자 상태"
+LABEL_COMPLETED_SEMESTERS = "이수 학기"
+LABEL_CERTIFIED_SEMESTERS = "인증완료 학기"
+LABEL_CERTIFICATION_STATUS = "인증여부"
 
 _WHITESPACE = re.compile(r"\s+")
 
@@ -138,13 +141,19 @@ def _th_text(row: List[_Cell]) -> str:
     return " ".join(cell.text for cell in row if cell.tag == "th").strip()
 
 
-def parse_student_info(html: str) -> SejongStudentInfo:
-    """사용자 정보 표 > 학과, 학번, 이름, 학년, 상태 (표 없으면 PARSE_ERROR)"""
+def _user_info_value_by_label(sections: List[_Section]) -> Dict[str, str]:
+    """사용자 정보 표 > {라벨: 값}"""
     value_by_label: Dict[str, str] = {}
-    for row in _find_rows(_read_sections(html), SECTION_USER_INFO):
+    for row in _find_rows(sections, SECTION_USER_INFO):
         label = _th_text(row)
         if label:
             value_by_label[label] = " ".join(_td_texts(row)).strip()
+    return value_by_label
+
+
+def parse_student_info(html: str) -> SejongStudentInfo:
+    """사용자 정보 표 > 학과, 학번, 이름, 학년, 상태 (표 없으면 PARSE_ERROR)"""
+    value_by_label = _user_info_value_by_label(_read_sections(html))
     if not value_by_label:
         raise SejongAuthError(ErrorCode.PARSE_ERROR, "Student info table not found")
     return SejongStudentInfo(
@@ -157,8 +166,9 @@ def parse_student_info(html: str) -> SejongStudentInfo:
 
 
 def parse_classic_reading(html: str) -> SejongClassicReading:
-    """고전독서 5개 표 > SejongClassicReading (칸 수 부족한 행은 건너뜀)"""
+    """고전독서 5개 표 + 사용자 정보 표의 이수·인증 학기, 인증여부 > SejongClassicReading (칸 수 부족한 행은 건너뜀)"""
     sections = _read_sections(html)
+    user_info_value_by_label = _user_info_value_by_label(sections)
 
     certifications = []
     for row in _find_rows(sections, SECTION_CERTIFICATIONS):
@@ -175,6 +185,9 @@ def parse_classic_reading(html: str) -> SejongClassicReading:
         subject_substitutions=[ClassicSubjectRecord(*cells[:5]) for cells in rows_with(SECTION_SUBJECT_SUBSTITUTIONS, 5)],
         contest_records=[ClassicContestRecord(*cells[:4]) for cells in rows_with(SECTION_CONTESTS, 4)],
         curriculum_records=[ClassicSubjectRecord(*cells[:5]) for cells in rows_with(SECTION_CURRICULUM, 5)],
+        completed_semesters=user_info_value_by_label.get(LABEL_COMPLETED_SEMESTERS, ""),
+        certified_semesters=user_info_value_by_label.get(LABEL_CERTIFIED_SEMESTERS, ""),
+        certification_status=user_info_value_by_label.get(LABEL_CERTIFICATION_STATUS, ""),
     )
 
 
@@ -228,7 +241,7 @@ def ensure_sis_logged_in(json_text: str) -> None:
 
 
 def parse_sis_user_info(json_text: str) -> SejongSisUserInfo:
-    """initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름 (dm_UserInfo 없으면 PARSE_ERROR)"""
+    """initUserInfo JSON > 학번, 이름, 학과, 이메일, 전화번호, 영문 이름, 사용자 구분 (dm_UserInfo 없으면 PARSE_ERROR)"""
     try:
         root = json.loads(json_text)
     except (TypeError, ValueError) as error:
@@ -248,4 +261,5 @@ def parse_sis_user_info(json_text: str) -> SejongSisUserInfo:
         email=_text(gam, "USER_EMAIL"),
         phone_number="-".join(part for part in phone_parts if part),
         english_name=_text(user_info, "INTG_ENG_NM").strip() or _text(sch, "NM_ENG"),
+        user_category=_text(sch, "USER_CLSF_CD_NM"),
     )

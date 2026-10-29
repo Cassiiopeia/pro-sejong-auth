@@ -2,6 +2,7 @@
 import { ErrorCode, SejongAuthError } from './errors.js';
 import type { RawOption, SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult } from './models.js';
 import { ensurePortalLoginAccepted, ensureSisLoggedIn, parseClassicReading, parseSisUserInfo, parseStudentInfo } from './parsers.js';
+import { parseParentUnitName } from './portalMainParser.js';
 import { NodeHttpsSession, TimeoutError, type HttpResponse, type RequestOptions, type Session } from './transport.js';
 import { VERSION } from './version.js';
 
@@ -16,6 +17,9 @@ export const SIS_RETURN_URL = 'sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do?p
 
 export const CLASSIC_SSO_URL = 'https://classic.sejong.ac.kr/_custom/sejong/sso/sso-return.jsp?returnUrl=https://classic.sejong.ac.kr/classic/index.do';
 export const CLASSIC_STATUS_URL = 'https://classic.sejong.ac.kr/classic/reading/status.do';
+// 포털 메인 (소속 표기 조회), 세션 만료 시 돌아오는 로그인 페이지는 form 대상 문구로 판별
+export const PORTAL_MAIN_URL = 'https://portal.sejong.ac.kr/user/index.do';
+export const PORTAL_LOGIN_PAGE_MARKER = 'login_action.jsp';
 export const SIS_SSO_URL = 'https://sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do?p=';
 export const SIS_USER_INFO_URL = 'https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do';
 export const SIS_ORIGIN = 'https://sjpt.sejong.ac.kr';
@@ -55,24 +59,29 @@ export class SejongAuthClient {
     this.sessionFactory = _sessionFactory ?? (() => new NodeHttpsSession(this.timeoutSeconds, this.sslVerification, USER_AGENT));
   }
 
-  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처 (SIS 실패는 무시하고 null) */
+  /** 통합 인증: 포털 로그인 1회 > DHC 학생 정보·고전독서 > 같은 세션으로 SIS 연락처, 포털 메인 상위 소속 (보조 조회 실패는 무시하고 null) */
   async authenticate(studentId: string, password: string): Promise<SejongAuthResult> {
     validateCredentials(studentId, password);
     const session = this.sessionFactory();
     await this.login(session, studentId, password, CLASSIC_RETURN_URL);
     const dhcResult = await this.fetchDhcWithSession(session, false);
 
-    let contact: { email: string | null; phoneNumber: string | null; englishName: string | null } =
-      { email: null, phoneNumber: null, englishName: null };
+    let contact: { email: string | null; phoneNumber: string | null; englishName: string | null; userCategory: string | null } =
+      { email: null, phoneNumber: null, englishName: null, userCategory: null };
     try {
       const sisUserInfo = parseSisUserInfo(await this.fetchSisJsonWithSession(session));
-      contact = { email: sisUserInfo.email, phoneNumber: sisUserInfo.phoneNumber, englishName: sisUserInfo.englishName };
+      contact = {
+        email: sisUserInfo.email, phoneNumber: sisUserInfo.phoneNumber, englishName: sisUserInfo.englishName,
+        userCategory: sisUserInfo.userCategory,
+      };
     } catch {
       // SIS 는 연락처 보조 조회 > 어떤 실패든 통합 결과를 막지 않음 (Java 와 동일)
     }
 
+    const parentUnitName = await this.fetchParentUnitName(session, dhcResult.major);
+
     const { rawHtml, ...dhcFields } = dhcResult;
-    return { ...dhcFields, ...contact, authenticatedAt: new Date() };
+    return { ...dhcFields, ...contact, parentUnitName, authenticatedAt: new Date() };
   }
 
   /** DHC 인증: 학생 정보 + 고전독서 (includeRaw 면 원본 HTML 포함) */
@@ -106,6 +115,19 @@ export class SejongAuthClient {
       success: true, ...parseStudentInfo(html), classicReading: parseClassicReading(html),
       authenticatedAt: new Date(), rawHtml: shouldIncludeRawHtml ? html : null,
     };
+  }
+
+  /** 같은 세션으로 포털 메인 1회 조회 > 상위 소속명 (재시도 없음, 호출 실패·세션 만료·빈 본문은 null, 요소 없음은 빈 문자열) */
+  private async fetchParentUnitName(session: Session, major: string): Promise<string | null> {
+    try {
+      const response = await call(session, 'GET', PORTAL_MAIN_URL, { headers: { Referer: PORTAL_REFERER } });
+      if (!isSuccessful(response) || response.body.length === 0) return null;
+      const html = response.body.toString('utf8');
+      if (html.includes(PORTAL_LOGIN_PAGE_MARKER)) return null;
+      return parseParentUnitName(html, major);
+    } catch {
+      return null; // 부가 정보 > 어떤 실패든 통합 결과를 막지 않음
+    }
   }
 
   /** 포털 로그인 (rtUrl sjpt) > SIS 조회 */

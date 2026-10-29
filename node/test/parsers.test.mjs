@@ -17,6 +17,26 @@ test('parseSisFixture', () => {
   assert.deepEqual(parseSisUserInfo(readFixture('sis_user_info.json')), readExpected('expected_sis.json'));
 });
 
+test('parsesClassicReadingUserInfoValues', () => {
+  const html = `<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>
+    <tr><th>이수 학기</th><td>8 학기</td></tr><tr><th>인증완료 학기</th><td>6 학기</td></tr>
+    <tr><th>인증여부</th><td>아니오(고전특강 대상자) 2099년도 1학기 대체이수</td></tr></tbody></table></div>`;
+  const reading = parseClassicReading(html);
+  assert.deepEqual([reading.completedSemesters, reading.certifiedSemesters], ['8 학기', '6 학기']);
+  assert.equal(reading.certificationStatus, '아니오(고전특강 대상자) 2099년도 1학기 대체이수');
+});
+
+test('classicReadingUserInfoValuesAreEmptyWhenLabelsMissing', () => {
+  const html = `<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>
+    <tr><th>학년</th><td>3</td></tr></tbody></table></div>`;
+  const reading = parseClassicReading(html);
+  assert.deepEqual([reading.completedSemesters, reading.certifiedSemesters, reading.certificationStatus], ['', '', '']);
+});
+
+test('sisUserCategoryIsEmptyWhenMissing', () => {
+  assert.equal(parseSisUserInfo('{"dm_UserInfo":{"INTG_USR_NO":"21011234"},"dm_UserInfoSch":{}}').userCategory, '');
+});
+
 test('decodesCommonNamedEntitiesAndIgnoresInvalidCodePoints', () => {
   // Python html.parser·Jsoup 과 같은 디코딩 (책 제목의 따옴표·말줄임표), 범위 밖 코드는 원문 유지
   const html = `<div class="b-con-box"><h4 class="b-h4-tit01">사용자 정보</h4><table class="b-board-table"><tbody>
