@@ -126,6 +126,22 @@
       "extra": {}
     }
   ],
+  "graduate_calendar": [
+    {
+      "year": "2099",
+      "month": "10",
+      "category_code": "0002",
+      "category_name": "일반대학원",
+      "title": "예시 종합시험",
+      "title_en": "Example Comprehensive Exam",
+      "start_date": "10.08",
+      "end_date": "10.15",
+      "extra": {
+        "frDtKo": "목",
+        "toDtKo": "목"
+      }
+    }
+  ],
   "dormitory_menu": [
     {
       "date": "2099-10-20",

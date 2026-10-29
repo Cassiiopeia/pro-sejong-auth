@@ -10,6 +10,11 @@ export type * from './publicDataModels.js';
 
 const SIS_BASE_URL = 'https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/';
 const HOMEPAGE_BASE_URL = 'https://www.sejong.ac.kr/kor/';
+// 대학원 사이트별 학사일정: siteId 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
+const GRADUATE_CALENDAR_URL_PREFIX = '.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp';
+// 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
+const GRADUATE_SITE_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,30}$/;
+const CALENDAR_EVENT_USED_KEYS = ['scmYear', 'scmMonth', 'collDiv', 'collDivNm', 'scmSubject', 'scmSubjectEng', 'frDt', 'toDt'];
 const DORMITORY_BASE_URL = 'https://happydorm.sejong.ac.kr/';
 const EXTRACURRICULAR_URL = 'https://do.sejong.ac.kr/ko/process/schedule/getEvents';
 
@@ -50,6 +55,7 @@ export interface SejongPublicDataOptions {
 export interface DepartmentsQuery { categoryCode: string; year: string; semesterCode: string }
 export interface LecturesQuery extends DepartmentsQuery { departmentCode?: string; courseName?: string; instructorName?: string }
 export interface CalendarQuery { start: string; end: string; categoryCode?: string }
+export interface GraduateCalendarQuery { siteId: string; year: number | string; month: number | string }
 export interface DormitoryNoticesQuery { page?: number; rows?: number; keyword?: string; location?: string }
 export interface ExtracurricularEventsQuery { start: string; end: string; category?: string }
 
@@ -103,7 +109,14 @@ const DEFAULT_CACHE_MAX_ENTRIES = 500;
 
 const requestBodyOfDataset = (searchFields: JsonObject) => JSON.stringify({ dm_search: searchFields });
 
-/** 세종대 공개 데이터 12종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
+// 학사일정 행 > 일정 (홈페이지와 대학원 사이트 공통)
+const toCalendarEvent = (row: SchoolRow): CalendarEvent => ({
+  year: toText(row.scmYear), month: toText(row.scmMonth), categoryCode: toText(row['collDiv']), categoryName: toText(row.collDivNm),
+  title: toText(row.scmSubject), titleEn: toText(row.scmSubjectEng), startDate: toText(row['frDt']), endDate: toText(row['toDt']),
+  extra: extraOf(row, CALENDAR_EVENT_USED_KEYS),
+});
+
+/** 세종대 공개 데이터 13종 조회 (캐시, 같은 요청 합치기, 실패 시 마지막 캐시 또는 빈 값) */
 export class SejongPublicData {
   readonly timeoutSeconds: number;
   readonly cacheTtlSeconds: number;
@@ -199,13 +212,23 @@ export class SejongPublicData {
   calendar({ start, end, categoryCode = DEFAULT_CALENDAR_CATEGORY_CODE }: CalendarQuery): Promise<CalendarEvent[]> {
     const query = new URLSearchParams({ mode: 'getCalendarData', start, end, collDiv: categoryCode });
     const url = `${HOMEPAGE_BASE_URL}academics/academic-calendar.do?${query}`;
-    const usedKeys = ['scmYear', 'scmMonth', 'collDiv', 'collDivNm', 'scmSubject', 'scmSubjectEng', 'frDt', 'toDt'];
     return this.fetchCached('calendar', [start, end, categoryCode], () => [], () => this.requestJson('GET', url), (body) =>
-      rowsOf(body, 'data').map((row) => ({
-        year: toText(row.scmYear), month: toText(row.scmMonth), categoryCode: toText(row['collDiv']), categoryName: toText(row.collDivNm),
-        title: toText(row.scmSubject), titleEn: toText(row.scmSubjectEng), startDate: toText(row['frDt']), endDate: toText(row['toDt']),
-        extra: extraOf(row, usedKeys),
-      })));
+      rowsOf(body, 'data').map(toCalendarEvent));
+  }
+
+  /** 대학원 사이트 학사일정 (siteId: graduate, gsi, mba, pub, tourgrad, edu, arts 등, 형태가 틀리면 INVALID_INPUT) */
+  graduateCalendar({ siteId, year, month }: GraduateCalendarQuery): Promise<CalendarEvent[]> {
+    if (!GRADUATE_SITE_ID_PATTERN.test(String(siteId ?? ''))) {
+      throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Graduate site id must be lowercase letters, digits and hyphens.');
+    }
+    const query = new URLSearchParams({ year: String(year), month: String(month), siteId });
+    const url = `https://${siteId}${GRADUATE_CALENDAR_URL_PREFIX}?${query}`;
+    return this.fetchCached('graduateCalendar', [siteId, String(year), String(month)], () => [], () => this.requestJson('GET', url), (body) => {
+      // success 거짓·없음은 실패, items 는 JSON 문자열이라 한 번 더 해석
+      if (toText(body.success).toLowerCase() !== 'true') throw new Error('graduate calendar did not report success');
+      const items = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
+      return asRows(items).map(toCalendarEvent);
+    });
   }
 
   /** 기숙사 주간 식단 (7일) */

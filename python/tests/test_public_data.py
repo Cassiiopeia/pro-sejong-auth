@@ -69,6 +69,7 @@ ALL_SOURCES = {
     SIS_BASE + "doLesndeptgroup.do": fixture_response("reference_departments.json"),
     SIS_BASE + "doList.do": fixture_response("lectures.json"),
     "https://www.sejong.ac.kr/kor/academics/academic-calendar.do": fixture_response("calendar.json"),
+    "https://graduate.sejong.ac.kr/": fixture_response("graduate_calendar.json"),
     "https://happydorm.sejong.ac.kr/food/": fixture_response("dormitory_menu.json"),
     "https://happydorm.sejong.ac.kr/bbs/": fixture_response("dormitory_notices.json"),
     "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do": fixture_response("cafeteria.json"),
@@ -84,6 +85,7 @@ CALLS = {
     "selective_domains": lambda c: c.selective_domains(),
     "lectures": lambda c: c.lectures("20", "2099", "20", department_code="9101"),
     "calendar": lambda c: c.calendar("2099-10-01", "2099-11-01"),
+    "graduate_calendar": lambda c: c.graduate_calendar("graduate", 2099, 10),
     "dormitory_menu": lambda c: c.dormitory_menu(),
     "dormitory_notices": lambda c: c.dormitory_notices(),
     "cafeteria_menu": lambda c: c.cafeteria_menu("1"),
@@ -138,6 +140,28 @@ def test_get_urls():
     assert queries[1] == {"mode": ["getMenuList"], "placeId": ["7"]}
     assert queries[2] == {"mode": ["getPlaceUserList"], "placeType": ["BUILDING"]}
     assert session.requests[0]["url"].startswith("https://www.sejong.ac.kr/kor/academics/academic-calendar.do?")
+
+
+def test_graduate_calendar_request_and_input_check():
+    client, session = create_client(ALL_SOURCES)
+    client.graduate_calendar("graduate", 2099, 10)
+    assert session.requests[0]["method"] == "GET"
+    assert session.requests[0]["url"] == ("https://graduate.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/"
+                                          "getCalendarData.jsp?year=2099&month=10&siteId=graduate")
+    for invalid_site_id in ("", "  ", "evil.example.com/x", "Graduate", None):
+        with pytest.raises(SejongAuthError) as error_info:
+            client.graduate_calendar(invalid_site_id, 2099, 10)
+        assert error_info.value.code == ErrorCode.INVALID_INPUT
+    assert len(session.requests) == 1  # 잘못된 입력은 요청 없음
+
+
+def test_graduate_calendar_success_false_is_failure_and_empty_month_is_not():
+    client, _ = create_client({"https://": json_response('{"success": false, "items": "[]"}')})
+    assert client.graduate_calendar("graduate", 2099, 1) == []
+    client, session = create_client({"https://": json_response('{"success": true, "items": "[]"}')})
+    assert client.graduate_calendar("arts", 2099, 1) == []
+    client.graduate_calendar("arts", 2099, 1)
+    assert len(session.requests) == 1  # 빈 달은 정상 응답이라 캐시됨
 
 
 def test_form_requests():

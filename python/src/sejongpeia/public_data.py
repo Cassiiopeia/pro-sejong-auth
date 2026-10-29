@@ -4,6 +4,7 @@
 
 import json
 import logging
+import re
 import threading
 import time
 import urllib.parse
@@ -22,6 +23,10 @@ LOGGER = logging.getLogger(__name__)
 
 SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/"
 ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do"
+# 대학원 사이트별 학사일정: {site_id} 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
+GRADUATE_CALENDAR_URL = "https://{site_id}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp"
+# 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
+GRADUATE_SITE_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,30}")
 CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do"
 CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do"
 DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do"
@@ -155,6 +160,18 @@ def _to_calendar_event(row):
     return CalendarEvent(*_fields(row, *names), _extra_of(row, set(names)))
 
 
+def _to_graduate_calendar_events(body) -> List[CalendarEvent]:
+    """대학원 달력 응답 > 일정 목록 (success 거짓·없음, items 가 문자열 JSON 도 배열도 아니면 실패)"""
+    if not isinstance(body, dict) or _text(body.get("success")).lower() != "true":
+        raise ValueError("graduate calendar did not report success")
+    items = body["items"]
+    if isinstance(items, str):
+        items = json.loads(items)  # items 는 JSON 문자열이라 한 번 더 해석
+    if not isinstance(items, list):
+        raise TypeError("items is not a list")
+    return [_to_calendar_event(row) for row in items]
+
+
 def _to_dormitory_menu_days(body) -> List[DormitoryMenuDay]:
     """root[0] 의 fo_*1..7 > 7일치 (root 없음·배열 아님·빈 root 는 실패)"""
     row = _object_of(_first_root_row(body))
@@ -211,7 +228,7 @@ def _year_of(date_text: str) -> str:
 
 
 class SejongPublicData:
-    """공개 데이터 클라이언트: 메서드 12개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
+    """공개 데이터 클라이언트: 메서드 13개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
 
     def __init__(self, timeout_seconds: float = 10, cache_ttl_seconds: float = 86400, ssl_verification: bool = True,
                  failure_cache_seconds: float = 60, cache_max_entries: int = 500,
@@ -261,6 +278,15 @@ class SejongPublicData:
         query = urllib.parse.urlencode({"mode": "getCalendarData", "start": start, "end": end, "collDiv": category_code})
         return self._fetch(("calendar", category_code, start, end), "GET", f"{ACADEMIC_CALENDAR_URL}?{query}", None, None,
                            lambda body: [_to_calendar_event(row) for row in _dataset(body, "data")], [])
+
+    def graduate_calendar(self, site_id: str, year: int, month: int) -> List[CalendarEvent]:
+        """대학원 사이트 학사일정 (site_id: graduate, gsi, mba, pub, tourgrad, edu, arts 등, 형태가 틀리면 INVALID_INPUT)"""
+        if not GRADUATE_SITE_ID_PATTERN.fullmatch(str(site_id or "")):
+            raise SejongAuthError(ErrorCode.INVALID_INPUT, "Graduate site id must be lowercase letters, digits and hyphens")
+        query = urllib.parse.urlencode({"year": year, "month": month, "siteId": site_id})
+        return self._fetch(("graduate_calendar", site_id, year, month), "GET",
+                           f"{GRADUATE_CALENDAR_URL.format(site_id=site_id)}?{query}", None, None,
+                           _to_graduate_calendar_events, [])
 
     def dormitory_menu(self, location: str = "SJ") -> List[DormitoryMenuDay]:
         return self._fetch(("dormitory_menu", location), "POST", DORMITORY_MENU_URL, {"locgbn": location}, FORM_CONTENT_TYPE,

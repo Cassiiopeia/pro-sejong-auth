@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "startDay": 4,
+  "lastDay": 31,
+  "dayList": [
+    {
+      "mon": 1,
+      "tue": 2
+    }
+  ],
+  "items": "[{\"scmYear\": 2099, \"scmMonth\": 10, \"collDiv\": \"0002\", \"collDivNm\": \"일반대학원\", \"scmSubject\": \"예시 종합시험\", \"scmSubjectEng\": \"Example Comprehensive Exam\", \"frDt\": \"10.08\", \"toDt\": \"10.15\", \"frDtKo\": \"목\", \"toDtKo\": \"목\"}]"
+}

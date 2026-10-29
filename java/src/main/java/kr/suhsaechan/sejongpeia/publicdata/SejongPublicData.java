@@ -16,7 +16,7 @@ import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
 /**
- * 로그인 없는 학교 공개 데이터 조회 12종: 학사 코드, 강의, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
+ * 로그인 없는 학교 공개 데이터 조회 13종: 학사 코드, 강의, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
  * 메서드당 요청 1건 > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 lectures 입력 검증뿐)
  */
 public class SejongPublicData {
@@ -27,6 +27,10 @@ public class SejongPublicData {
 
   private static final String SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/";
   private static final String ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do";
+  // 대학원 사이트별 학사일정: siteId 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
+  private static final String GRADUATE_CALENDAR_PATH = ".sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp";
+  // 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
+  private static final java.util.regex.Pattern GRADUATE_SITE_ID_PATTERN = java.util.regex.Pattern.compile("[a-z0-9][a-z0-9-]{0,30}");
   private static final String CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do";
   private static final String CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do";
   private static final String DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do";
@@ -117,6 +121,18 @@ public class SejongPublicData {
     return fetcher.fetch(cacheKeyOf("calendar", categoryCode, startDate, endDate),
         new PublicDataRequest("GET", ACADEMIC_CALENDAR_URL + "?" + query, null, null),
         listOf("data", PublicDataMapper::toCalendarEvent), List.of());
+  }
+
+  /** 대학원 사이트 학사일정 (siteId: graduate, gsi, mba, pub, tourgrad, edu, arts 등, 형태가 틀리면 INVALID_INPUT) */
+  public List<CalendarEvent> graduateCalendar(String siteId, int year, int month) {
+    if (siteId == null || !GRADUATE_SITE_ID_PATTERN.matcher(siteId).matches()) {
+      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT,
+          "Graduate site id must be lowercase letters, digits and hyphens");
+    }
+    String query = queryOf("year", String.valueOf(year), "month", String.valueOf(month), "siteId", siteId);
+    return fetcher.fetch(cacheKeyOf("graduateCalendar", siteId, String.valueOf(year), String.valueOf(month)),
+        new PublicDataRequest("GET", "https://" + siteId + GRADUATE_CALENDAR_PATH + "?" + query, null, null),
+        PublicDataMapper::toGraduateCalendarEvents, List.of());
   }
 
   public List<DormitoryMenuDay> dormitoryMenu() {

@@ -222,6 +222,7 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 | 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
 | 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `course_types`, `selective_domains` |
 | 학사일정 | `calendar` |
+| 대학원 학사일정 (사이트별) | `graduate_calendar` |
 | 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
 | 학식 메뉴, 캠퍼스 장소 | `cafeteria_menu`, `campus_places` |
 | 비교과 프로그램 일정 | `extracurricular_events` |
