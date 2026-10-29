@@ -39,23 +39,18 @@ The SIS lecture-timetable screen (`sjpt.sejong.ac.kr/app/ext/SueOpenTimeQ.jsp`) 
 
 Read-only checks with the library transport (about 1 request per second) and one browser session. Items marked "from the issue" were recorded in the issue earlier and were not re-run here.
 
-### Syllabus / course overview (#44): not adopted (rendered report only)
+### Syllabus / course overview (#44): overview adopted, instructor syllabus not
 
 Second pass 2026-10-30 (read-only, login-free; the screen was driven in a browser and the report calls were replayed once each with the library transport).
 
-- Request chain of the `교과목개요` and `수업계획서` link columns (both identical in shape):
+- The `교과목개요` and `수업계획서` link columns do not call a data endpoint. They open a report viewer:
   1. `POST /sch/sch/ext/SueOpenPlanR/doListPdfMake.do` (`수업계획서` only) with `psOrgnClsfCd`, `psYear`, `psSmtCd`, `psCuriNo`, `psDeptCd`, `psClass`, `psOpenDiv`. It returns one `dl_mainList` row with the PDF-build status (`OZ_PDF_MAKE_YN`, `OZ_PDF_MAKE_DT`, plus an employee number field). No syllabus text.
-  2. `GET /cmn/sys/ozReport.do` (a shell page), then the OZ report server `oz.sejong.ac.kr/oz80`: `POST ozhviewer/ozhSvgViewer.jsp`, `POST server?newFrame` (JSON body with the report name and arguments) > `server?checkStatus` > `server?getPage`. The answer is an **SVG drawing** of the page (`image/svg+xml`).
-  3. Report names and arguments: `교과목개요` is `/sch/sue/SueOpenPlanSummaryR.ozr`, arguments `psOrgnClsfCd`, `psYear`, `psSmtCd`, `psCuriNo`, `psDeptCd`, `psClass` (all six come from the lecture list row: `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `CURI_NO`, `DEPT_CD`, `CLASS`). Works without login or cookies.
-- What the SVG holds: for `교과목개요`, text drawn in a fixed table (labels `교과목명 / Course Title`, `(국문)`, `(영문)`, `교과목 개요`) with the overview text **split into drawn lines** at the box width. No personal data seen.
-- What `수업계획서` holds: a multi-page form that includes the instructor's name and office / contact lines. Personal data, so it must not be redistributed by default.
-- The viewer script (`OZJSSVGViewer.js`) only knows the page formats `svg`, `pdf` and `mht`; there is no data format such as JSON or CSV on this path (the CSV / TXT export is a viewer button on a rendered report).
-- Why it is still not adopted:
-  - The only source for the overview is a drawing. Reading it means parsing SVG text positions and re-joining lines that were wrapped by the layout; where a line ended is not in the data, so the original paragraph cannot be restored exactly.
-  - A fixed table layout and a vendor protocol (four calls with a server-issued token) would become the contract. A change of the report template breaks it silently.
-  - `수업계획서` is not possible without redistributing staff names and contacts.
-- Not tried: guessing other report names or arguments, or the viewer's export button.
-- Conclusion: hold. If the maintainer accepts a rendered-report reader for the overview only, the call recipe above is complete.
+  2. `GET /cmn/sys/ozReport.do` (a shell page), then the OZ report server `oz.sejong.ac.kr/oz80`: `POST ozhviewer/ozhSvgViewer.jsp`, `POST server?newFrame` (JSON body with the report name and arguments) > `server?checkStatus` > `server?getPage`. The answer is an **SVG drawing** of the page.
+  3. `교과목개요` is the report `/sch/sue/SueOpenPlanSummaryR.ozr` with arguments `psOrgnClsfCd`, `psYear`, `psSmtCd`, `psCuriNo`, `psDeptCd`, `psClass` (all from the lecture list row). It works without login or cookies, but it is only a drawing: text split into lines at the box width.
+- `수업계획서` is a multi-page form that includes the instructor's name and office / contact lines. Personal data, so it must not be redistributed by default. Not implemented.
+- **The overview text is also served as JSON.** The department curriculum popup of the main site (`GET www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=<CURI_NO>&deptNo=<DEPT_CD>`, found in that page's script `/_custom/sejong/_app/curriculum-kor/script.js`) returns a row whose `remark` is the course overview. For one course, `remark` was identical to the text of the OZ `교과목개요` report apart from the report's line breaks. It needs the header `Accept: application/json` (404 without it), no login, no `menuCd`.
+- Result: adopted as `curriculum_courses(department_code, course_number)` (see [PUBLIC_DATA.md](PUBLIC_DATA.md)), `remark` > `overview`. Limits found: only courses in a degree department's curriculum come back (courses of the liberal-arts college department and the graduate department that were tried returned an empty `items`), and the overview is the curriculum's text for the current curriculum year, not a per-section, per-instructor text.
+- The viewer script (`OZJSSVGViewer.js`) only knows the page formats `svg`, `pdf` and `mht`; no JSON or CSV path. Other report names and arguments, and the viewer's export button, were not tried.
 
 ### Library shelf position and cover (#60): not adopted (input only from HTML and XML)
 
@@ -64,11 +59,14 @@ Second pass 2026-10-30 (read-only, login-free; the screen was driven in a browse
 - `POST /openapi/thumbnail` (`isbn`, `sysdiv`, `ctrl`) returns JSON `smallUrl`, `largeUrl`, but the addresses point to a third-party shopping image host, not to a school resource.
 - Conclusion: a clean API would need HTML search parsing plus XML parsing. Not adopted. `callNoBrowsing` and `recommender` were not re-run.
 
-### Department curriculum (#67): hold (menu number only in HTML)
+### Department curriculum (#67): one-course lookup adopted, list not
 
-- Re-checked: the department page defines its site menu number in an inline script (`"menuCd":"<number>"`) and in menu links (`id="menu-<number>"`). There is no JSON that maps a department to its menu number.
-- From the issue (not re-run): the curriculum JSON (`getCurriculumListKor.do`) is served per department site, and `deptCd` in it equals the intro page `deptNo`; whether it equals the SIS `DEPT_CD` was not compared.
-- Conclusion: needs HTML to find `menuCd`. Hold. A low-level call where the caller supplies `menuCd` is possible later but gives little value without the mapping.
+Second pass 2026-10-30.
+
+- The curriculum **list** (`GET www.sejong.ac.kr/curriculum/getCurriculumListKor.do?menuCd&siteId&years&deptNo`) decides the department from `menuCd` and ignores `deptNo` (checked: the same `menuCd` with two different `deptNo` returned the same department; a blank `menuCd` is answered with `success: false`). `menuCd` exists only in page HTML (`"menuCd":"<number>"`, menu links `id="menu-<number>"`; about 1,000 menu entries on the site, no JSON menu tree found). Walking `menuCd` numbers was not done. Still no code-to-`menuCd` mapping, so the list is not adopted.
+- The curriculum **single course** lookup `getCurriculumOneKor.do?curiNo&deptNo` needs no `menuCd`. Its `deptNo` is the SIS `DEPT_CD` (`3513` and `3517` returned the department names 컴퓨터공학과 and AI로봇학과, both codes are in the timetable department list), so `deptCd` of the curriculum JSON and `DEPT_CD` are the same code system for these departments. It returns the course's suggested year and semester, course type, credits and hours, and the course overview.
+- Result: adopted as `curriculum_courses(department_code, course_number)`. A whole curriculum can be assembled by looking up each course of the department's lecture list (one request per course), but no list method is provided.
+- Wider coverage of `deptCd` versus `DEPT_CD` was not measured (two departments).
 
 ### `sos` organization chart and department intro (#86): not adopted
 
@@ -108,12 +106,13 @@ Checked 2026-10-30. Measured against the 2026/2 undergraduate department list (1
 
 | Group | Covered by the library | Not covered, reason |
 |---|---|---|
-| Organization, terms, departments, lectures | SIS timetable JSON (#36, #43) | syllabus text is a rendered report, and the syllabus form holds staff contacts (#44) |
+| Organization, terms, departments, lectures | SIS timetable JSON (#36, #43) | the instructor syllabus holds staff contacts and is a rendered report (#44) |
 | Calendar, campus map, cafeteria, extracurricular events | JSON sources (#45, #65, #66, #69) | none |
 | Dormitory menu and notices | JSON (#59) | none |
 | Graduate school calendar | JSON (#61) | none |
 | Library | none | search is HTML, holdings XML (#60) |
-| Faculty, department curriculum | none | personal data and HTML-only menu number (#62, #67) |
+| Faculty | none | personal data and HTML-only menu number (#62) |
+| Department curriculum | single course by department code (#67), includes the course overview (#44) | whole-curriculum list needs a menu number found only in HTML |
 | Notices (university, admissions, rnd, safety, volunteer, career), program lists, classic books | none | HTML only |
 | Seats, study rooms, personal records | none | login required (#46 for personal records) |
 
