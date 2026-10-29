@@ -1,5 +1,5 @@
 # Python 패키지 PyPI 배포 (deploy 브랜치 push = 릴리스, Trusted Publishing: 토큰 저장 없음)
-# PyPI 설정: owner Cassiiopeia, repo pro-sejong-auth, workflow PROJECT-SEJONG-PYPI-PUBLISH.yml, environment pypi
+# PyPI 설정: owner Cassiiopeia, repo pro-sejongpeia, workflow PROJECT-SEJONG-PYPI-PUBLISH.yml, environment pypi
 name: PROJECT-SEJONG-PYPI-PUBLISH
 
 on:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/pro-sejong-auth
+      url: https://pypi.org/p/pro-sejongpeia
     permissions:
       id-token: write
     steps:

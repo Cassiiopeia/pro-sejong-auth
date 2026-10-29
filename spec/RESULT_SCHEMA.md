@@ -73,6 +73,6 @@ Java also keeps the deprecated `INVALID_CREDENTIALS`, which is never thrown and 
 
 | Setting | Java | Python | Node | Default |
 |---|---|---|---|---|
-| timeout | `sejong.auth.timeout-seconds` | `timeout_seconds` | `timeoutSeconds` | 10 |
-| retries | `sejong.auth.max-retry` | `max_retry` | `maxRetry` | 3 |
-| certificate check | `sejong.auth.ssl-verification` | `ssl_verification` | `sslVerification` | true |
+| timeout | `sejongpeia.timeout-seconds` | `timeout_seconds` | `timeoutSeconds` | 10 |
+| retries | `sejongpeia.max-retry` | `max_retry` | `maxRetry` | 3 |
+| certificate check | `sejongpeia.ssl-verification` | `ssl_verification` | `sslVerification` | true |

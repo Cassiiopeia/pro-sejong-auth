@@ -12,8 +12,8 @@
 
 **공개 이슈로 올리지 마세요.** GitHub에서 비공개로 신고해 주세요.
 
-1. 이 레포의 [Security 탭](https://github.com/Cassiiopeia/pro-sejong-auth/security)으로 이동
-2. **Report a vulnerability** 클릭 ([바로가기](https://github.com/Cassiiopeia/pro-sejong-auth/security/advisories/new))
+1. 이 레포의 [Security 탭](https://github.com/Cassiiopeia/pro-sejongpeia/security)으로 이동
+2. **Report a vulnerability** 클릭 ([바로가기](https://github.com/Cassiiopeia/pro-sejongpeia/security/advisories/new))
 3. 문제 내용, 영향 버전, 재현 방법 작성
 
 실제 학번, 비밀번호, 개인정보는 절대 넣지 말고 예시값을 쓰세요.
@@ -33,7 +33,7 @@
 This library handles Sejong University portal passwords, so security reports are taken seriously.
 
 - **Supported versions**: only the latest released version (see the Maven Central, PyPI and npm badges in the [README](README.en.md)) receives security fixes.
-- **Reporting**: do not open a public issue. Report privately from the [Security tab](https://github.com/Cassiiopeia/pro-sejong-auth/security) via **Report a vulnerability** ([direct link](https://github.com/Cassiiopeia/pro-sejong-auth/security/advisories/new)). Describe the issue, affected version and steps to reproduce.
+- **Reporting**: do not open a public issue. Report privately from the [Security tab](https://github.com/Cassiiopeia/pro-sejongpeia/security) via **Report a vulnerability** ([direct link](https://github.com/Cassiiopeia/pro-sejongpeia/security/advisories/new)). Describe the issue, affected version and steps to reproduce.
 - Never include real student IDs, passwords or other personal data. Use placeholders.
 - You can expect a first response within 7 days. Once a fix is released, the advisory is published with credit to the reporter unless you prefer to stay anonymous.
 - **Scope**: this library's code, for example leaking passwords or personal data through logs, exceptions or results, unsafe TLS handling, or session mix-ups between calls. Vulnerabilities in the Sejong University portal itself are out of scope; report those to the university.

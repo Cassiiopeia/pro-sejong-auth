@@ -9,16 +9,16 @@
 ## 이슈 먼저
 
 - 버그: 에러 코드(`SejongAuthException.getErrorCode()`)와 사용한 메서드를 적어 주세요. 학번·비밀번호·개인정보는 절대 올리지 마세요.
-- 포털이 바뀌어 인증이 깨졌다면 [데모](https://cassiiopeia.github.io/pro-sejong-auth/#demo)로 먼저 재현 여부를 확인해 주세요.
+- 포털이 바뀌어 인증이 깨졌다면 [데모](https://cassiiopeia.github.io/pro-sejongpeia/#demo)로 먼저 재현 여부를 확인해 주세요.
 - 큰 변경은 PR 전에 이슈로 방향을 맞춥니다.
 
 ## 레포 구성
 
 | 폴더 | 내용 |
 |---|---|
-| `java/` | Java / Spring Boot 라이브러리 (`kr.suhsaechan:sejong-univ-auth`) |
-| `python/` | Python 패키지 (`pro-sejong-auth`, import `sejong_auth`) |
-| `node/` | Node.js 패키지 (`pro-sejong-auth`, TypeScript) |
+| `java/` | Java / Spring Boot 라이브러리 (`kr.suhsaechan:sejongpeia`) |
+| `python/` | Python 패키지 (`pro-sejongpeia`, import `sejongpeia`) |
+| `node/` | Node.js 패키지 (`pro-sejongpeia`, TypeScript) |
 | `spec/` | 공통 계약: 포털 흐름, 결과 스키마, 모든 언어 테스트가 쓰는 개인정보 제거 응답 샘플 |
 
 세 언어는 버전 번호 하나를 같이 씁니다 (`version.yml`, 릴리스 워크플로우가 갱신).

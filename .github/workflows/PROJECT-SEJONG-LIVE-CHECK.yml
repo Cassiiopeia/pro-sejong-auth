@@ -23,7 +23,7 @@ env:
 
 jobs:
   live-check:
-    if: github.repository == 'Cassiiopeia/pro-sejong-auth'
+    if: github.repository == 'Cassiiopeia/pro-sejongpeia'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

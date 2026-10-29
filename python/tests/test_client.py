@@ -3,7 +3,7 @@
 import pytest
 from conftest import FakeSession, ok, status
 
-from sejong_auth import ErrorCode, SejongAuthClient, SejongAuthError
+from sejongpeia import ErrorCode, SejongAuthClient, SejongAuthError
 
 LOGIN = "https://portal.sejong.ac.kr/jsp/login/login_action.jsp"
 CLASSIC_SSO = "https://classic.sejong.ac.kr/_custom/sejong/sso/sso-return.jsp"

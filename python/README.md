@@ -1,19 +1,19 @@
-# pro-sejong-auth (Python)
+# pro-sejongpeia (Python)
 
 **세종대 로그인 API (Python)** · Sejong University login API
 
-한국어 | [English](https://github.com/Cassiiopeia/pro-sejong-auth/blob/main/README.en.md)
+한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
 학번과 포털 비밀번호로 세종대 재학생 여부를 확인하고 학과, 학년, 고전독서 인증, 연락처를 가져옵니다. 표준 라이브러리 외 의존성이 없습니다.
 
-**[▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejong-auth/#demo)** · 호출 한 번에 포털 로그인 한 번 (약 0.8초) · Java·Node 패키지와 같은 결과 · 비밀번호가 틀리면 바로 멈춤 · 매일 실제 포털로 점검
+**[▶ 브라우저에서 바로 체험하기](https://cassiiopeia.github.io/pro-sejongpeia/#demo)** · 호출 한 번에 포털 로그인 한 번 (약 0.8초) · Java·Node 패키지와 같은 결과 · 비밀번호가 틀리면 바로 멈춤 · 매일 실제 포털로 점검
 
 ```bash
-pip install pro-sejong-auth
+pip install pro-sejongpeia
 ```
 
 ```python
-from sejong_auth import authenticate, SejongAuthError, ErrorCode
+from sejongpeia import authenticate, SejongAuthError, ErrorCode
 
 try:
     result = authenticate("21011234", "비밀번호")
@@ -39,8 +39,8 @@ except SejongAuthError as error:
 
 Python 3.9 이상. 세종대학교 공식 제품이 아닙니다.
 
-문서, 라이브 데모, Java·Node 버전: https://cassiiopeia.github.io/pro-sejong-auth/
+문서, 라이브 데모, Java·Node 버전: https://cassiiopeia.github.io/pro-sejongpeia/
 
 ## English
 
-Verify a Sejong University student with a student ID and portal password, and get their major, year, classic-reading certification and contact info. The API above is the same in English; error messages are in English. Full English docs: [README.en.md](https://github.com/Cassiiopeia/pro-sejong-auth/blob/main/README.en.md).
+Verify a Sejong University student with a student ID and portal password, and get their major, year, classic-reading certification and contact info. The API above is the same in English; error messages are in English. Full English docs: [README.en.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md).

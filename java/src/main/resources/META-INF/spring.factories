@@ -1,1 +1,1 @@
-org.springframework.boot.env.EnvironmentPostProcessor=kr.suhsaechan.sejong.auth.config.SejongTlsEnvironmentPostProcessor
+org.springframework.boot.env.EnvironmentPostProcessor=kr.suhsaechan.sejongpeia.config.SejongTlsEnvironmentPostProcessor

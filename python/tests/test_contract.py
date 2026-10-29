@@ -4,8 +4,8 @@ import json
 
 from conftest import FIXTURE_DIRECTORY
 
-from sejong_auth import client, parsers, transport
-from sejong_auth.errors import DEFAULT_MESSAGE_BY_CODE
+from sejongpeia import client, parsers, transport
+from sejongpeia.errors import DEFAULT_MESSAGE_BY_CODE
 
 CONTRACT = json.loads((FIXTURE_DIRECTORY.parent / "contract.json").read_text(encoding="utf-8"))
 
