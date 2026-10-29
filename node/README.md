@@ -44,6 +44,7 @@ try {
 | 단과대·학과 코드 (소속 분류, 학기별) | `organizationCategories`, `terms`, `departments` |
 | 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `courseTypes`, `selectiveDomains` |
 | 학사일정 | `calendar` |
+| 대학원 학사일정 (사이트별) | `graduateCalendar` |
 | 기숙사 식단·공지 | `dormitoryMenu`, `dormitoryNotices` |
 | 학식 메뉴, 캠퍼스 장소 | `cafeteriaMenu`, `campusPlaces` |
 | 비교과 프로그램 일정 | `extracurricularEvents` |

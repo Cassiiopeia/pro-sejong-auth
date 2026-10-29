@@ -70,6 +70,14 @@ FIXTURES = {
              "scmSubjectEng": "Example Exam Period", "frDt": "2099-10-20", "toDt": "2099-10-26"},
         ],
     },
+    # 대학원 사이트별 달력: items 는 JSON 문자열 (한 번 더 해석), frDt·toDt 는 MM.dd
+    "graduate_calendar.json": {
+        "success": True, "startDay": 4, "lastDay": 31, "dayList": [{"mon": 1, "tue": 2}],
+        "items": json.dumps([
+            {"scmYear": 2099, "scmMonth": 10, "collDiv": "0002", "collDivNm": "일반대학원", "scmSubject": "예시 종합시험",
+             "scmSubjectEng": "Example Comprehensive Exam", "frDt": "10.08", "toDt": "10.15", "frDtKo": "목", "toDtKo": "목"},
+        ], ensure_ascii=False),
+    },
     "dormitory_menu.json": {
         "root": [{**{f"fo_date{i}": f"2099-10-{19 + i}" for i in range(1, 8)},
                   **{f"fo_menu_mor{i}": f"조식{i}" for i in range(1, 8)}, **{f"fo_menu_lun{i}": f"중식{i}" for i in range(1, 8)},
@@ -138,6 +146,10 @@ def map_all() -> dict:
                  "title": text(r["scmSubject"]), "title_en": text(r["scmSubjectEng"]), "start_date": r["frDt"], "end_date": r["toDt"],
                  "extra": extra_of(r, {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"})}
                 for r in f["calendar.json"]["data"]]
+    graduate_calendar = [{"year": text(r["scmYear"]), "month": text(r["scmMonth"]), "category_code": r["collDiv"], "category_name": text(r["collDivNm"]),
+                          "title": text(r["scmSubject"]), "title_en": text(r["scmSubjectEng"]), "start_date": r["frDt"], "end_date": r["toDt"],
+                          "extra": extra_of(r, {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"})}
+                         for r in json.loads(f["graduate_calendar.json"]["items"])]
     row = f["dormitory_menu.json"]["root"][0]
     dorm_menu = [{"date": row[f"fo_date{i}"], "breakfast": text(row[f"fo_menu_mor{i}"]), "lunch": text(row[f"fo_menu_lun{i}"]),
                   "dinner": text(row[f"fo_menu_eve{i}"]), "alternative": text(row[f"fo_sub_menu{i}"])} for i in range(1, 8)]
@@ -156,7 +168,7 @@ def map_all() -> dict:
                "url": text(r["data"].get("url")), "description": text(r["data"].get("description")), "location": text(r["data"].get("location"))}
               for r in f["extracurricular_events.json"]["events"]]
     return {"organization_categories": orgn, "terms": terms, "departments": depts, "course_types": course_types, "selective_domains": domains,
-            "lectures": lectures, "calendar": calendar, "dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices,
+            "lectures": lectures, "calendar": calendar, "graduate_calendar": graduate_calendar, "dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices,
             "cafeteria_menu": cafeteria, "campus_places": places, "extracurricular_events": events}
 
 

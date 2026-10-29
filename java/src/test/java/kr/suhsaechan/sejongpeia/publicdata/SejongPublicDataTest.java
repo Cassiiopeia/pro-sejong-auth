@@ -150,6 +150,28 @@ class SejongPublicDataTest {
   }
 
   @Test
+  void graduate_calendar_matches_expected_and_follows_request_contract() {
+    assertMatches("graduate_calendar", publicData.graduateCalendar("graduate", 2099, 10));
+    assertEquals("GET", caller.lastRequest().getHttpMethod());
+    assertEquals("https://graduate.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp"
+        + "?year=2099&month=10&siteId=graduate", caller.lastRequest().getUrl());
+  }
+
+  @Test
+  void graduate_calendar_rejects_bad_site_id_and_isolates_success_false() {
+    for (String badSiteId : new String[] {"", "  ", "evil.example.com/x", "Graduate", null}) {
+      SejongAuthException exception = assertThrows(SejongAuthException.class,
+          () -> publicData.graduateCalendar(badSiteId, 2099, 10));
+      assertEquals(SejongAuthErrorCode.INVALID_INPUT, exception.getErrorCode());
+    }
+    assertEquals(0, caller.callCount.get());
+    caller.bodyOverride = "{\"success\":false,\"items\":\"[]\"}";
+    assertTrue(new SejongPublicData(caller, clock, CACHE_TIME_TO_LIVE).graduateCalendar("graduate", 2099, 1).isEmpty());
+    caller.bodyOverride = "{\"success\":true,\"items\":\"[]\"}";
+    assertTrue(new SejongPublicData(caller, clock, CACHE_TIME_TO_LIVE).graduateCalendar("arts", 2099, 1).isEmpty());
+  }
+
+  @Test
   void dormitory_menu_matches_expected() {
     assertMatches("dormitory_menu", publicData.dormitoryMenu());
   }
@@ -410,6 +432,8 @@ class SejongPublicDataTest {
       return readFixture("lectures.json");
     } else if (url.contains("academic-calendar.do")) {
       return readFixture("calendar.json");
+    } else if (url.contains("calendar-graduate")) {
+      return readFixture("graduate_calendar.json");
     } else if (url.contains("indexFoodList.do")) {
       return readFixture("dormitory_menu.json");
     } else if (url.contains("getBbsList.do")) {

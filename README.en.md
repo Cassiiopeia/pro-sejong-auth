@@ -220,6 +220,7 @@ Public school data in the same shape, no student ID or password needed. The thre
 | College and department codes (by category and term) | `organization_categories`, `terms`, `departments` |
 | Lectures (search by department, course name, instructor) | `lectures`, `course_types`, `selective_domains` |
 | Academic calendar | `calendar` |
+| Graduate school calendar (per site) | `graduate_calendar` |
 | Dormitory menu and notices | `dormitory_menu`, `dormitory_notices` |
 | Cafeteria menu, campus places | `cafeteria_menu`, `campus_places` |
 | Extracurricular program schedule | `extracurricular_events` |

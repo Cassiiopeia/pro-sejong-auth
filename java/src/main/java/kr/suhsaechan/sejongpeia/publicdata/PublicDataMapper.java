@@ -6,7 +6,9 @@ import static kr.suhsaechan.sejongpeia.publicdata.PublicDataRowReader.integer;
 import static kr.suhsaechan.sejongpeia.publicdata.PublicDataRowReader.requireArray;
 import static kr.suhsaechan.sejongpeia.publicdata.PublicDataRowReader.text;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -88,6 +90,29 @@ final class PublicDataMapper {
         .startDate(text(row, "frDt")).endDate(text(row, "toDt"))
         .extra(extraOf(row, Set.of("scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt")))
         .build();
+  }
+
+  /** 대학원 달력: success 거짓·없음은 실패, items 는 JSON 문자열이라 한 번 더 해석 (문자열도 배열도 아니면 실패) */
+  static List<CalendarEvent> toGraduateCalendarEvents(JsonNode root) {
+    if (!"true".equalsIgnoreCase(text(root, "success"))) {
+      throw new IllegalStateException("graduate calendar did not report success");
+    }
+    JsonNode items = root.get("items");
+    try {
+      if (items != null && items.isTextual()) {
+        items = new ObjectMapper().readTree(items.asText());
+      }
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("graduate calendar items is not json", e);
+    }
+    if (items == null || !items.isArray()) {
+      throw new IllegalStateException("expected array missing : items");
+    }
+    List<CalendarEvent> events = new ArrayList<>();
+    for (JsonNode row : items) {
+      events.add(toCalendarEvent(row));
+    }
+    return List.copyOf(events);
   }
 
   /** 기숙사 식단: root[0] 의 fo_*1..7 > 7일 */

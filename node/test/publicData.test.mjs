@@ -26,6 +26,7 @@ const fixtureNameByUrlPrefix = {
   [`${SIS}doLesndeptgroup.do`]: 'reference_departments.json',
   [`${SIS}doList.do`]: 'lectures.json',
   [`${HOMEPAGE}academics/academic-calendar.do`]: 'calendar.json',
+  'https://graduate.sejong.ac.kr/': 'graduate_calendar.json',
   [`${DORMITORY}food/indexFoodList.do`]: 'dormitory_menu.json',
   [`${DORMITORY}bbs/getBbsList.do`]: 'dormitory_notices.json',
   [`${HOMEPAGE}unilife/cafeteria-info.do`]: 'cafeteria.json',
@@ -61,6 +62,7 @@ const callBySource = {
   selectiveDomains: (p) => p.selectiveDomains(),
   lectures: (p) => p.lectures({ ...TERM, departmentCode: '9101' }),
   calendar: (p) => p.calendar({ start: '2099-10-01', end: '2099-10-31' }),
+  graduateCalendar: (p) => p.graduateCalendar({ siteId: 'graduate', year: 2099, month: 10 }),
   dormitoryMenu: (p) => p.dormitoryMenu(),
   dormitoryNotices: (p) => p.dormitoryNotices(),
   cafeteriaMenu: (p) => p.cafeteriaMenu(1),
@@ -129,6 +131,23 @@ test('request shapes follow the contract', async () => {
   assert.deepEqual(Object.fromEntries(new URLSearchParams(events.body)), {
     cid: 'eco', category: 'a', start: '2098-12-01', end: '2099-01-31', start_year: '2098', end_year: '2099',
   });
+});
+
+test('graduateCalendar request, input check and success flag', async () => {
+  const { publicData, requests } = createPublicData();
+  await publicData.graduateCalendar({ siteId: 'graduate', year: 2099, month: 10 });
+  assert.equal(requests[0].method, 'GET');
+  assert.equal(requests[0].url, 'https://graduate.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year=2099&month=10&siteId=graduate');
+  for (const siteId of ['', '  ', 'evil.example.com/x', 'Graduate', undefined]) {
+    assert.throws(() => publicData.graduateCalendar({ siteId, year: 2099, month: 10 }), (error) => error instanceof SejongAuthError && error.code === ErrorCode.INVALID_INPUT);
+  }
+  assert.equal(requests.length, 1);
+  const failed = createPublicData({ outcome: () => ({ status: 200, body: '{"success":false,"items":"[]"}' }) });
+  assert.deepEqual(await failed.publicData.graduateCalendar({ siteId: 'graduate', year: 2099, month: 1 }), []);
+  const emptyMonth = createPublicData({ outcome: () => ({ status: 200, body: '{"success":true,"items":"[]"}' }) });
+  await emptyMonth.publicData.graduateCalendar({ siteId: 'arts', year: 2099, month: 1 });
+  await emptyMonth.publicData.graduateCalendar({ siteId: 'arts', year: 2099, month: 1 });
+  assert.equal(emptyMonth.requests.length, 1);
 });
 
 test('cache: fresh entry makes no request, expired entry refreshes', async () => {

@@ -33,6 +33,7 @@ DORMITORY_DAY_FIELDS = tuple(f"{prefix}{day}" for day in range(1, 8)
 SOURCES: Dict[str, Tuple[str, Tuple[str, ...], bool]] = {
     "lectures": ("dl_main", ("CURI_NO", "CLASS", "CURI_NM", "LESN_TIME", "LESN_EMP", "DEPT_CD"), True),
     "calendar": ("data", ("collDiv", "scmSubject", "frDt", "toDt"), True),
+    "graduate_calendar": ("items", ("collDiv", "scmSubject", "frDt", "toDt"), True),
     "dormitory_menu": ("root", DORMITORY_DAY_FIELDS, False),
     "dormitory_notices": ("root", ("topList", "list", "totalCount"), False),
     "cafeteria": ("items", ("placeId", "placeName", "menuName", "price"), True),
@@ -51,6 +52,14 @@ def find_source_problems(source_name: str, body: object) -> List[str]:
         # STACK_TRACE 는 내부 정보라 출력하지 않음
         return [f"{source_name}: _SUBMIT_ERROR_"]
     rows = body.get(container_key)
+    if source_name == "graduate_calendar":
+        # success 플래그 확인, items 는 JSON 문자열이라 한 번 더 해석
+        if body.get("success") is not True:
+            return [f"{source_name}: success is not true"]
+        try:
+            rows = json.loads(rows) if isinstance(rows, str) else rows
+        except ValueError:
+            return [f"{source_name}: items is not JSON"]
     if not isinstance(rows, list):
         return [f"{source_name}: container {container_key} missing (keys={sorted(body)[:6]})"]
     if not rows:
@@ -115,9 +124,12 @@ def build_live_requests(session: UrllibSession) -> Dict[str, Callable[[], object
     calendar_query = urllib.parse.urlencode({"mode": "getCalendarData", **month_query, "collDiv": "0001"})
     cafeteria_query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": SAMPLE_PLACE_ID})
     campus_query = urllib.parse.urlencode({"mode": "getPlaceUserList", "placeType": ""})
+    graduate_query = urllib.parse.urlencode({"year": "2026", "month": "10", "siteId": "graduate"})
     return {
         "lectures": lambda: lectures_request(session),
         "calendar": lambda: request_json(session, "GET", f"{module.ACADEMIC_CALENDAR_URL}?{calendar_query}"),
+        "graduate_calendar": lambda: request_json(
+            session, "GET", f"{module.GRADUATE_CALENDAR_URL.format(site_id='graduate')}?{graduate_query}"),
         "dormitory_menu": lambda: request_json(session, "POST", module.DORMITORY_MENU_URL, {"locgbn": "SJ"}),
         "dormitory_notices": lambda: request_json(session, "POST", module.DORMITORY_NOTICE_URL, {
             "cPage": 1, "rows": 3, "bbs_locgbn": "SJ", "bbs_id": "notice", "sType": "subject", "sWord": ""}),
@@ -129,7 +141,7 @@ def build_live_requests(session: UrllibSession) -> Dict[str, Callable[[], object
 
 
 def load_fixture_bodies() -> Dict[str, object]:
-    file_by_source = {"lectures": "lectures", "calendar": "calendar", "dormitory_menu": "dormitory_menu",
+    file_by_source = {"lectures": "lectures", "calendar": "calendar", "graduate_calendar": "graduate_calendar", "dormitory_menu": "dormitory_menu",
                       "dormitory_notices": "dormitory_notices", "cafeteria": "cafeteria",
                       "campus_places": "campus_places", "extracurricular_events": "extracurricular_events"}
     return {name: json.loads((FIXTURE_DIRECTORY / f"{file}.json").read_text(encoding="utf-8"))
@@ -154,6 +166,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                 continue
             source_problems = find_source_problems(source_name, body)
             row_count = len(body.get(SOURCES[source_name][0]) or []) if isinstance(body, dict) else 0
+            if source_name == "graduate_calendar":
+                row_count = len(json.loads(body["items"])) if isinstance(body.get("items"), str) else 0
             print(f"[probe-public] {source_name}: rows={row_count} {'DRIFT' if source_problems else 'ok'}")
             problems += source_problems
     for problem in problems:
