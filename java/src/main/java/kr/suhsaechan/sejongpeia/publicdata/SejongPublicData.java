@@ -16,8 +16,8 @@ import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
 /**
- * 로그인 없는 학교 공개 데이터 조회 14종: 학사 코드, 강의, 학과 교육과정, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
- * 메서드당 요청 1건 > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 잘못된 입력뿐: curriculumCourses, graduateCalendar)
+ * 로그인 없는 학교 공개 데이터 조회 15종: 학사 코드, 강의, 학과 교육과정, 학사 일정, 기숙사, 학식, 캠퍼스 장소, 비교과
+ * 메서드당 요청 1건 (cafeteriaPlaces 만 최대 10건) > 메모리 캐시, 상류 실패는 마지막 캐시 또는 빈 값 (예외는 잘못된 입력뿐: curriculumCourses, graduateCalendar)
  */
 public class SejongPublicData {
 
@@ -34,6 +34,8 @@ public class SejongPublicData {
   // 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
   private static final java.util.regex.Pattern GRADUATE_SITE_ID_PATTERN = java.util.regex.Pattern.compile("[a-z0-9][a-z0-9-]{0,30}");
   private static final String CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do";
+  // 학교에 식당 목록 API가 없어 번호 1~10을 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
+  private static final List<String> CAFETERIA_PROBE_PLACE_IDS = List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
   private static final String CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do";
   private static final String DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do";
   private static final String DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do";
@@ -173,6 +175,18 @@ public class SejongPublicData {
     return fetcher.fetch(cacheKeyOf("cafeteriaMenu", placeId),
         new PublicDataRequest("GET", CAFETERIA_URL + "?" + query, null, null),
         listOf("items", PublicDataMapper::toCafeteriaMenuItem), List.of());
+  }
+
+  /**
+   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~10의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음)
+   */
+  public List<CafeteriaPlace> cafeteriaPlaces() {
+    List<PublicDataRequest> requests = CAFETERIA_PROBE_PLACE_IDS.stream()
+        .map(placeId -> new PublicDataRequest("GET", CAFETERIA_URL + "?" + queryOf("mode", "getMenuList", "placeId", placeId), null, null))
+        .toList();
+    return fetcher.fetchInSequence(cacheKeyOf("cafeteriaPlaces"), requests,
+        responses -> PublicDataMapper.toCafeteriaPlaces(CAFETERIA_PROBE_PLACE_IDS, responses), List.of());
   }
 
   public List<CampusPlace> campusPlaces() {

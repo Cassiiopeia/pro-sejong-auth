@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .errors import ErrorCode, SejongAuthError
 from .public_data_models import (
-    CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay,
+    CafeteriaMenuItem, CafeteriaPlace, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay,
     DormitoryNotice, DormitoryNotices, ExtracurricularEvent, Lecture, OrganizationCategory,
     SelectiveDomain, Term,
 )
@@ -30,6 +30,8 @@ GRADUATE_CALENDAR_URL = "https://{site_id}.sejong.ac.kr/_custom/sejong/_app/cale
 # 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
 GRADUATE_SITE_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,30}")
 CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do"
+# 학교에 식당 목록 API가 없어 번호 1~10을 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
+CAFETERIA_PROBE_PLACE_IDS = tuple(str(place_id) for place_id in range(1, 11))
 CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do"
 DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do"
 DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do"
@@ -219,6 +221,25 @@ def _to_cafeteria_menu_item(row):
                                       "mealTypeId", "mealName", "menuName", "price"))
 
 
+# 메뉴 응답 행의 알려진 필드 (extra 에는 이 밖의 필드만)
+CAFETERIA_MENU_FIELD_NAMES = {"placeId", "placeName", "buildingName", "location", "menuDate", "day", "mealTypeId",
+                              "mealName", "menuName", "price"}
+
+
+def _to_cafeteria_places(bodies_by_place_id: Dict[str, Any]) -> List[CafeteriaPlace]:
+    """번호별 메뉴 응답 > 식당 목록 (메뉴가 있는 번호만, 첫 행의 식당 정보, 같은 식당 번호는 한 번만)"""
+    places: Dict[str, CafeteriaPlace] = {}
+    for requested_place_id, body in bodies_by_place_id.items():
+        first_row = next((row for row in _dataset(body, "items") if isinstance(row, dict)), None)
+        if first_row is None:
+            continue
+        place_id, name, building_name, location = _fields(first_row, "placeId", "placeName", "buildingName", "location")
+        place_id = place_id or requested_place_id
+        places.setdefault(place_id, CafeteriaPlace(place_id, name, building_name, location,
+                                                   _extra_of(first_row, CAFETERIA_MENU_FIELD_NAMES)))
+    return list(places.values())
+
+
 def _to_campus_place(row):
     row = _object_of(row)
     used_fields = {"id", "placeName", "placeNameEn", "placeType", "welfareCategory", "latitude", "longitude",
@@ -243,7 +264,7 @@ def _year_of(date_text: str) -> str:
 
 
 class SejongPublicData:
-    """공개 데이터 클라이언트: 메서드 14개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
+    """공개 데이터 클라이언트: 메서드 15개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
 
     def __init__(self, timeout_seconds: float = 10, cache_ttl_seconds: float = 86400, ssl_verification: bool = True,
                  failure_cache_seconds: float = 60, cache_max_entries: int = 500,
@@ -324,6 +345,17 @@ class SejongPublicData:
         return self._fetch(("cafeteria_menu", place_id), "GET", f"{CAFETERIA_URL}?{query}", None, None,
                            lambda body: [_to_cafeteria_menu_item(row) for row in _dataset(body, "items")], [])
 
+    def cafeteria_places(self) -> List[CafeteriaPlace]:
+        """학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~10의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+        하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음)"""
+        def load_places() -> List[CafeteriaPlace]:
+            bodies_by_place_id = {}
+            for place_id in CAFETERIA_PROBE_PLACE_IDS:  # 순서대로 한 건씩, 병렬 요청 없음
+                query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": place_id})
+                bodies_by_place_id[place_id] = self._request_json("GET", f"{CAFETERIA_URL}?{query}", None, None)
+            return _to_cafeteria_places(bodies_by_place_id)
+        return self._cached_call(("cafeteria_places",), load_places, [])
+
     def campus_places(self, place_type: str = "") -> List[CampusPlace]:
         query = urllib.parse.urlencode({"mode": "getPlaceUserList", "placeType": place_type})
         return self._fetch(("campus_places", place_type), "GET", f"{CAMPUS_MAP_URL}?{query}", None, None,
@@ -345,7 +377,12 @@ class SejongPublicData:
 
     def _fetch(self, cache_key: Tuple, method: str, url: str, payload: Optional[Dict], content_type: Optional[str],
                convert: Callable[[Any], Any], empty_value: Any) -> Any:
-        """캐시 확인 > 요청 > 변환 > 캐시 저장, 상류 실패는 마지막 캐시(만료 포함) 또는 빈 값 (같은 키는 한 번에 한 요청)"""
+        """요청 1건 > 변환 (캐시와 실패 격리는 _cached_call)"""
+        return self._cached_call(cache_key, lambda: convert(self._request_json(method, url, payload, content_type)),
+                                 empty_value)
+
+    def _cached_call(self, cache_key: Tuple, load_value: Callable[[], Any], empty_value: Any) -> Any:
+        """캐시 확인 > 조회 > 캐시 저장, 상류 실패는 마지막 캐시(만료 포함) 또는 빈 값 (같은 키는 한 번에 한 조회)"""
         with self._lock_for(cache_key):
             cached = self._cache.get(cache_key)
             if cached is not None:
@@ -354,7 +391,7 @@ class SejongPublicData:
                 if self._clock() - stored_at < valid_seconds:  # 성공 캐시 또는 실패 기억이 유효하면 요청 없음
                     return self._copy_of(cached_value)
             try:
-                value = convert(self._request_json(method, url, payload, content_type))
+                value = load_value()
             except Exception as error:  # 상류 실패 전부 격리 (서버 내부 정보 로그 금지, 예외 종류만)
                 LOGGER.warning("[sejong public data] upstream failed (%s) : %s", cache_key[0], type(error).__name__)
                 if cached is not None and not cached[2]:

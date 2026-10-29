@@ -43,7 +43,7 @@ function createPublicData({ options = {}, outcome, delayMilliseconds = 0 } = {})
     async request(method, url, requestOptions = {}) {
       requests.push({ method, url, headers: requestOptions.headers, body: requestOptions.body });
       if (delayMilliseconds) await new Promise((resolve) => setTimeout(resolve, delayMilliseconds));
-      const current = typeof outcome === 'function' ? outcome() : outcome;
+      const current = typeof outcome === 'function' ? outcome(url) : outcome;
       if (current instanceof Error) throw current;
       if (current) return { status: current.status, body: Buffer.from(current.body, 'utf8') };
       const prefix = Object.keys(fixtureNameByUrlPrefix).find((candidate) => url.startsWith(candidate));
@@ -68,6 +68,7 @@ const callBySource = {
   dormitoryMenu: (p) => p.dormitoryMenu(),
   dormitoryNotices: (p) => p.dormitoryNotices(),
   cafeteriaMenu: (p) => p.cafeteriaMenu(1),
+  cafeteriaPlaces: (p) => p.cafeteriaPlaces(),
   campusPlaces: (p) => p.campusPlaces(),
   extracurricularEvents: (p) => p.extracurricularEvents({ start: '2099-10-01', end: '2099-10-31' }),
 };
@@ -262,6 +263,38 @@ test('lectures without any filter lists the whole semester with one request', as
   assert.equal(requests.length, 1);
   const search = JSON.parse(requests[0].body).dm_search;
   assert.deepEqual([search.DEPT_CD, search.CURI_NM, search.EMP_NM], ['', '', '']);
+});
+
+// 식당 번호 > 메뉴 행 목록 (없는 번호는 빈 목록)
+const cafeteriaPlaceOutcome = (rowsByPlaceId, failingPlaceId) => (url) => {
+  const placeId = new URL(url).searchParams.get('placeId');
+  if (placeId === failingPlaceId) return new Error('down');
+  return { status: 200, body: JSON.stringify({ items: rowsByPlaceId[placeId] ?? [] }) };
+};
+const cafeteriaRow = (placeId, placeName, extraFields = {}) => ({ placeId, placeName, buildingName: '예시관', location: 'B1층', menuName: '예시메뉴', price: 1000, ...extraFields });
+
+test('cafeteriaPlaces collects each place once in id order with bounded requests', async () => {
+  const rowsByPlaceId = { 6: [cafeteriaRow(6, '여섯째')], 1: [cafeteriaRow(1, '첫째', { mealTypeId: 1 }), cafeteriaRow(1, '첫째')], 3: [cafeteriaRow(3, '셋째', { operatingHours: '예시' })] };
+  const { publicData, requests } = createPublicData({ outcome: cafeteriaPlaceOutcome(rowsByPlaceId) });
+  const places = await publicData.cafeteriaPlaces();
+  assert.deepEqual(places.map((place) => [place.placeId, place.placeName]), [['1', '첫째'], ['3', '셋째'], ['6', '여섯째']]);
+  assert.deepEqual([places[0].extra, places[1].extra], [{}, { operatingHours: '예시' }]);
+  assert.deepEqual(requests.map((request) => new URL(request.url).searchParams.get('placeId')), Array.from({ length: 10 }, (_, index) => String(index + 1)));
+  await publicData.cafeteriaPlaces();
+  assert.equal(requests.length, 10); // 캐시 유효 중에는 요청 없음
+});
+
+test('cafeteriaPlaces: one failed request fails the whole list and keeps the stale value', async () => {
+  let failingPlaceId;
+  const outcome = (url) => cafeteriaPlaceOutcome({ 1: [cafeteriaRow(1, '첫째')] }, failingPlaceId)(url);
+  const { publicData, clock } = createPublicData({ options: { cacheTtlSeconds: 10 }, outcome });
+  const first = await publicData.cafeteriaPlaces();
+  assert.equal(first.length, 1);
+  failingPlaceId = '4';
+  clock.now += 11_000;
+  assert.deepEqual(await publicData.cafeteriaPlaces(), first); // 일부만 성공한 목록을 새 값으로 저장하지 않음
+  const freshClient = createPublicData({ outcome });
+  assert.deepEqual(await freshClient.publicData.cafeteriaPlaces(), []);
 });
 
 test('concurrent calls with the same arguments share one request', async () => {

@@ -226,7 +226,7 @@ Public school data in the same shape, no student ID or password needed. The thre
 | Academic calendar | `calendar` |
 | Graduate school calendar (per site) | `graduate_calendar` |
 | Dormitory menu and notices | `dormitory_menu`, `dormitory_notices` |
-| Cafeteria menu, campus places | `cafeteria_menu`, `campus_places` |
+| Cafeteria list and menu, campus places | `cafeteria_places`, `cafeteria_menu`, `campus_places` |
 | Extracurricular program schedule | `extracurricular_events` |
 
 ```python
@@ -256,7 +256,7 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 - **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change. School fields that are not mapped land in `extra`.
 - **One source failing never breaks the rest.** On failure you get the last cached value or an empty list, not an exception (only invalid input raises).
 - Results are cached in memory for 24 hours and identical requests are sent once. Please be gentle with the school's servers.
-- Cafeteria numbers for `cafeteria_menu` are the school's own (checked 2026-10-30: ids 1, 3, 4, 5 and 6 have menus; the result's `place_name` tells which cafeteria). Details in [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
+- `cafeteria_places` lists the cafeterias (number, name, building, location). The school has no list endpoint, so the list is built from the menu answers for numbers 1 to 10: a cafeteria with no menu that day can be missing, and one refresh makes up to 10 requests, one after the other (cached for 24 hours). `meal_type_id` 1 is lunch and 2 is dinner; fixed-menu cafeterias leave it empty. Details in [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
 - The lecture search handles the awkward parts for you, such as the school requiring every filter key in the request. With department, course name and instructor all empty it returns the whole term in one call (about 2,800 undergraduate rows and 2.4 MB for 2026/2, so prefer one department at a time when you can).
 
 ## Result fields

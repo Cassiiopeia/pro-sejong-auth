@@ -48,7 +48,7 @@ try {
 | 학사일정 | `calendar` |
 | 대학원 학사일정 (사이트별) | `graduateCalendar` |
 | 기숙사 식단·공지 | `dormitoryMenu`, `dormitoryNotices` |
-| 학식 메뉴, 캠퍼스 장소 | `cafeteriaMenu`, `campusPlaces` |
+| 학식 식당 목록·메뉴, 캠퍼스 장소 | `cafeteriaPlaces`, `cafeteriaMenu`, `campusPlaces` |
 | 비교과 프로그램 일정 | `extracurricularEvents` |
 
 ```js

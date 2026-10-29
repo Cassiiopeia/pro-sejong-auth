@@ -94,7 +94,7 @@ FIXTURES = {
     "cafeteria.json": {
         "items": [
             {"buildingName": "예시관", "location": "6층", "placeId": 1, "placeName": "예시식당", "menuDate": "2099-10-20", "day": "월",
-             "mealTypeId": 2, "mealName": "중식", "menuName": "예시메뉴", "price": 5500},
+             "mealTypeId": 1, "mealName": "중식", "menuName": "예시메뉴", "price": 5500, "newField": "x"},
             {"buildingName": "예시관", "location": "6층", "placeId": 1, "placeName": "예시식당", "menuDate": None, "day": None,
              "mealTypeId": None, "mealName": None, "menuName": "고정메뉴", "price": 4000},
         ],
@@ -176,6 +176,12 @@ def map_all() -> dict:
     cafeteria = [{"building_name": text(r["buildingName"]), "location": text(r["location"]), "place_id": text(r["placeId"]), "place_name": text(r["placeName"]),
                   "date": text(r["menuDate"]), "day": text(r["day"]), "meal_type_id": text(r["mealTypeId"]), "meal_name": text(r["mealName"]),
                   "menu_name": text(r["menuName"]), "price": text(r["price"])} for r in f["cafeteria.json"]["items"]]
+    # 식당 목록: 번호 1~10 요청이 모두 이 fixture 를 받는 경우 > 같은 식당 번호는 한 번만, 첫 행의 식당 정보
+    menu_used = {"placeId", "placeName", "buildingName", "location", "menuDate", "day", "mealTypeId", "mealName", "menuName", "price"}
+    cafeteria_places = []
+    for r in f["cafeteria.json"]["items"][:1]:
+        cafeteria_places.append({"place_id": text(r["placeId"]), "place_name": text(r["placeName"]), "building_name": text(r["buildingName"]),
+                                 "location": text(r["location"]), "extra": extra_of(r, menu_used)})
     places = [{"id": text(r["id"]), "name": text(r["placeName"]), "name_en": text(r["placeNameEn"]), "place_type": text(r["placeType"]),
                "category": text(r["welfareCategory"]), "latitude": float(r["latitude"]), "longitude": float(r["longitude"]), "info": text(r["placeInfo"]),
                "phone": text(r["telNum"]), "description": text(r["description"]),
@@ -186,7 +192,7 @@ def map_all() -> dict:
               for r in f["extracurricular_events.json"]["events"]]
     return {"organization_categories": orgn, "terms": terms, "departments": depts, "course_types": course_types, "selective_domains": domains,
             "lectures": lectures, "curriculum_courses": curriculum_courses, "calendar": calendar, "graduate_calendar": graduate_calendar, "dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices,
-            "cafeteria_menu": cafeteria, "campus_places": places, "extracurricular_events": events}
+            "cafeteria_menu": cafeteria, "cafeteria_places": cafeteria_places, "campus_places": places, "extracurricular_events": events}
 
 
 def main() -> None:

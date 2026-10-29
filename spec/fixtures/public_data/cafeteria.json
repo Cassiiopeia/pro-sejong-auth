@@ -7,10 +7,11 @@
       "placeName": "예시식당",
       "menuDate": "2099-10-20",
       "day": "월",
-      "mealTypeId": 2,
+      "mealTypeId": 1,
       "mealName": "중식",
       "menuName": "예시메뉴",
-      "price": 5500
+      "price": 5500,
+      "newField": "x"
     },
     {
       "buildingName": "예시관",

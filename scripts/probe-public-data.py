@@ -40,7 +40,8 @@ SOURCES: Dict[str, Tuple[str, Tuple[str, ...], bool]] = {
     "graduate_calendar": ("items", ("collDiv", "scmSubject", "frDt", "toDt"), True),
     "dormitory_menu": ("root", DORMITORY_DAY_FIELDS, False),
     "dormitory_notices": ("root", ("topList", "list", "totalCount"), False),
-    "cafeteria": ("items", ("placeId", "placeName", "menuName", "price"), True),
+    # buildingName, location: cafeteria_places 가 식당 정보로 읽는 필드
+    "cafeteria": ("items", ("placeId", "placeName", "buildingName", "location", "menuName", "price"), True),
     "campus_places": ("items", ("id", "placeName", "latitude", "longitude", "placeType"), False),
     "extracurricular_events": ("events", ("id", "title", "start", "end", "category_title", "data"), True),
 }
