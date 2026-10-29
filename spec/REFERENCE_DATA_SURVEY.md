@@ -107,7 +107,7 @@ Checked 2026-10-30. Measured against the 2026/2 undergraduate department list (1
 | Group | Covered by the library | Not covered, reason |
 |---|---|---|
 | Organization, terms, departments, lectures | SIS timetable JSON (#36, #43) | the instructor syllabus holds staff contacts and is a rendered report (#44) |
-| Calendar, campus map, cafeteria, extracurricular events | JSON sources (#45, #65, #66, #69) | none |
+| Calendar, campus map, cafeteria, extracurricular events | JSON sources (#45, #65, #66, #69, #102) | cafeteria: no list endpoint, the list is built from menu answers for numbers 1 to 10; one card (`빅베어레스토랑`) has no menu number |
 | Dormitory menu and notices | JSON (#59) | none |
 | Graduate school calendar | JSON (#61) | none |
 | Library | none | search is HTML, holdings XML (#60) |

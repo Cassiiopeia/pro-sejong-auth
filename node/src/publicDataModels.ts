@@ -32,6 +32,7 @@ export interface CafeteriaMenuItem {
   buildingName: string; location: string; placeId: string; placeName: string; date: string; day: string;
   mealTypeId: string; mealName: string; menuName: string; price: string;
 }
+export interface CafeteriaPlace { placeId: string; placeName: string; buildingName: string; location: string; extra: ExtraFields }
 export interface CampusPlace {
   id: string; name: string; nameEn: string; placeType: string; category: string; latitude: number; longitude: number;
   info: string; phone: string; description: string; extra: ExtraFields;

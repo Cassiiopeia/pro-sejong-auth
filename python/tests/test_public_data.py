@@ -91,6 +91,7 @@ CALLS = {
     "dormitory_menu": lambda c: c.dormitory_menu(),
     "dormitory_notices": lambda c: c.dormitory_notices(),
     "cafeteria_menu": lambda c: c.cafeteria_menu("1"),
+    "cafeteria_places": lambda c: c.cafeteria_places(),
     "campus_places": lambda c: c.campus_places(),
     "extracurricular_events": lambda c: c.extracurricular_events("2099-10-01", "2099-11-01"),
 }
@@ -261,6 +262,52 @@ def test_concurrent_calls_share_one_request():
         thread.join()
     assert len(session.requests) == 1
     assert len(results) == 5
+
+
+# ---- 식당 목록
+class CafeteriaPlaceSession:
+    """식당 번호 > 메뉴 행 목록 (없는 번호는 빈 목록), 요청 기록"""
+
+    def __init__(self, rows_by_place_id, failing_place_id=None):
+        self.rows_by_place_id = rows_by_place_id
+        self.failing_place_id = failing_place_id
+        self.place_ids = []
+
+    def request(self, method, url, *, data=None, headers=None):
+        place_id = parse_qs(urlparse(url).query)["placeId"][0]
+        self.place_ids.append(place_id)
+        if place_id == self.failing_place_id:
+            raise OSError("down")
+        return json_response(json.dumps({"items": self.rows_by_place_id.get(place_id, [])}, ensure_ascii=False))
+
+
+def cafeteria_row(place_id, place_name, **over):
+    return {"placeId": int(place_id), "placeName": place_name, "buildingName": "예시관", "location": "B1층", "menuName": "예시메뉴",
+            "price": 1000, **over}
+
+
+def test_cafeteria_places_collects_each_place_once_in_id_order_with_bounded_requests():
+    session = CafeteriaPlaceSession({"6": [cafeteria_row(6, "여섯째")], "1": [cafeteria_row(1, "첫째", mealTypeId=1), cafeteria_row(1, "첫째")],
+                                     "3": [cafeteria_row(3, "셋째", operatingHours="예시")]})
+    client = SejongPublicData(_session_factory=lambda: session)
+    places = client.cafeteria_places()
+    assert [(place.place_id, place.place_name) for place in places] == [("1", "첫째"), ("3", "셋째"), ("6", "여섯째")]
+    assert places[1].extra == {"operatingHours": "예시"} and places[0].extra == {}
+    assert session.place_ids == [str(number) for number in range(1, 11)]  # 순서대로 한 번씩, 10건 한도
+    client.cafeteria_places()
+    assert len(session.place_ids) == 10  # 캐시 유효 중에는 요청 없음
+
+
+def test_cafeteria_places_one_failed_request_fails_the_whole_list_and_keeps_stale_value():
+    clock = FakeClock()
+    session = CafeteriaPlaceSession({"1": [cafeteria_row(1, "첫째")]})
+    client = SejongPublicData(cache_ttl_seconds=10, _session_factory=lambda: session, _clock=clock)
+    first = client.cafeteria_places()
+    session.failing_place_id = "4"
+    clock.now += 11
+    assert client.cafeteria_places() == first  # 일부만 성공한 목록을 새 값으로 저장하지 않음
+    fresh_client = SejongPublicData(_session_factory=lambda: session)
+    assert fresh_client.cafeteria_places() == []
 
 
 # ---- 실패 격리

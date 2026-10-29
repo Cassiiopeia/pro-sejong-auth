@@ -1,7 +1,7 @@
 // 공개 데이터(로그인 없는 소스) 조회: 요청 > JSON 파싱 > 매핑 > 캐시, 업스트림 실패는 마지막 캐시 또는 빈 값 (spec/PUBLIC_DATA.md)
 import { ErrorCode, SejongAuthError } from './errors.js';
 import type {
-  CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay, DormitoryNotice, DormitoryNotices,
+  CafeteriaMenuItem, CafeteriaPlace, CalendarEvent, CampusPlace, CourseType, CurriculumCourse, Department, DormitoryMenuDay, DormitoryNotice, DormitoryNotices,
   ExtraFields, ExtracurricularEvent, Lecture, OrganizationCategory, SelectiveDomain, Term,
 } from './publicDataModels.js';
 import { NodeHttpsSession, USER_AGENT, type Session } from './transport.js';
@@ -35,6 +35,10 @@ const SIS_SUBMIT_ERROR_KEY = '_SUBMIT_ERROR_';
 const LECTURE_EMPTY_FILTERS = Object.fromEntries(
   ['SMT_NM', 'CURI_TYPE_CD', 'SLT_DOMAIN_CD', 'CURI_NO', 'CLASS', 'SLT_DEPT_CD', 'PLAN_REG_YN', 'CORS_SCHE_GRP_CD'].map((key) => [key, '']),
 );
+// 학교에 식당 목록 API가 없어 번호 1~10을 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
+const CAFETERIA_PROBE_PLACE_IDS = Array.from({ length: 10 }, (_, index) => String(index + 1));
+// 메뉴 응답 행의 알려진 필드 (식당 extra 에는 이 밖의 필드만)
+const CAFETERIA_MENU_USED_KEYS = ['placeId', 'placeName', 'buildingName', 'location', 'menuDate', 'day', 'mealTypeId', 'mealName', 'menuName', 'price'];
 const DORMITORY_DAYS_PER_WEEK = 7;
 const DEFAULT_CALENDAR_CATEGORY_CODE = '0001';
 const DEFAULT_DORMITORY_LOCATION = 'SJ';
@@ -294,6 +298,36 @@ export class SejongPublicData {
         date: toText(row.menuDate), day: toText(row.day), mealTypeId: toText(row.mealTypeId), mealName: toText(row.mealName),
         menuName: toText(row.menuName), price: toText(row.price),
       })));
+  }
+
+  /**
+   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~10의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
+   * 하나라도 실패하면 목록 전체를 실패로 보고 마지막 캐시 또는 빈 목록 (일부만 하루 캐시하지 않음)
+   */
+  cafeteriaPlaces(): Promise<CafeteriaPlace[]> {
+    const requestAllPlaceIds = async (): Promise<JsonObject> => {
+      const responses: JsonObject[] = [];
+      for (const placeId of CAFETERIA_PROBE_PLACE_IDS) { // 순서대로 한 건씩, 병렬 요청 없음
+        const url = `${HOMEPAGE_BASE_URL}unilife/cafeteria-info.do?${new URLSearchParams({ mode: 'getMenuList', placeId })}`;
+        responses.push(await this.requestJson('GET', url));
+      }
+      return { responses };
+    };
+    return this.fetchCached('cafeteriaPlaces', [], () => [], requestAllPlaceIds, (body) => {
+      // 번호 순서대로 첫 행의 식당 정보, 같은 식당 번호는 한 번만
+      const placeById = new Map<string, CafeteriaPlace>();
+      (body.responses as JsonObject[]).forEach((response, index) => {
+        const firstRow = rowsOf(response, 'items').find((row) => Object.keys(row).length > 0);
+        if (!firstRow) return;
+        const placeId = toText(firstRow.placeId) || CAFETERIA_PROBE_PLACE_IDS[index];
+        if (placeById.has(placeId)) return;
+        placeById.set(placeId, {
+          placeId, placeName: toText(firstRow.placeName), buildingName: toText(firstRow.buildingName), location: toText(firstRow.location),
+          extra: extraOf(firstRow, CAFETERIA_MENU_USED_KEYS),
+        });
+      });
+      return [...placeById.values()];
+    });
   }
 
   /** 캠퍼스 시설 */

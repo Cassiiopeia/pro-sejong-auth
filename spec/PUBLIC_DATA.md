@@ -10,7 +10,7 @@ Sources the school serves without login (verified 2026-10-30, details in [REFERE
 | Node | `new SejongPublicData({ timeoutSeconds, cacheTtlSeconds, failureCacheSeconds, cacheMaxEntries, sslVerification })` (exported from the package) | `camelCase` |
 | Java | `kr.suhsaechan.sejongpeia.publicdata.SejongPublicData` (Spring bean via auto-configuration, also constructible) | `camelCase`, Lombok models |
 
-The expected JSON uses `snake_case` keys; the Node and Java tests convert names before comparing. Every model also has `extra` (a map of string to string) except the dormitory and cafeteria models.
+The expected JSON uses `snake_case` keys; the Node and Java tests convert names before comparing. Every model also has `extra` (a map of string to string) except the dormitory models and `CafeteriaMenuItem`.
 
 ## Methods (name in Python; Node and Java use camelCase)
 
@@ -28,6 +28,7 @@ The expected JSON uses `snake_case` keys; the Node and Java tests convert names 
 | `dormitory_menu(location="SJ")` | `POST https://happydorm.sejong.ac.kr/food/indexFoodList.do` form `locgbn=<location>`, `root[0]` holds `fo_*1..7` | list `dormitory_menu` (7 days) |
 | `dormitory_notices(page=1, rows=10, keyword="", location="SJ")` | `POST https://happydorm.sejong.ac.kr/bbs/getBbsList.do` form `cPage`, `rows`, `bbs_locgbn`, `bbs_id=notice`, `sType=subject`, `sWord` | object `dormitory_notices` |
 | `cafeteria_menu(place_id)` | `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<id>`, array `items` | list `cafeteria_menu` |
+| `cafeteria_places()` | **No list endpoint exists** (see "Cafeteria places" below), so the list is built from the menu answers: `GET .../cafeteria-info.do?mode=getMenuList&placeId=<n>` for `n` = 1 to 10, one after the other (never in parallel), array `items`. Per answer the first row gives one place: `placeId` > `place_id`, `placeName` > `place_name`, `buildingName` > `building_name`, `location` > `location`; `extra` holds the row's other fields except the menu fields (`menuDate`, `day`, `mealTypeId`, `mealName`, `menuName`, `price`). An id with no rows adds nothing; the same `placeId` is listed once; the result is in id order. **One failed request fails the whole list** (last cached value or empty list), so a partial list is never cached for a day. Up to 10 requests per refresh, the only method with more than one | list `cafeteria_places` |
 | `campus_places(place_type="")` | `GET https://www.sejong.ac.kr/kor/intro/campus-map.do?mode=getPlaceUserList&placeType=<type>`, array `items` | list `campus_places` |
 | `extracurricular_events(start, end, category="")` | `POST https://do.sejong.ac.kr/ko/process/schedule/getEvents` form `cid=eco`, `category`, `start`, `end`, `start_year`, `end_year` (year of each date), array `events` | list `extracurricular_events` |
 
@@ -53,12 +54,21 @@ SIS requests: header `Content-Type: application/json; charset="UTF-8"`, `Accept:
 - Only invalid input raises: `curriculum_courses` with a blank department code or course number, and `graduate_calendar` with a malformed site id (`INVALID_INPUT`, no request). `lectures` never raises for its filters.
 - Failures are remembered briefly: after a failed fetch with no cached value, the same call returns the empty value without a request for `failure_cache_seconds` (default 60). A stale cached value is still returned on failure.
 - The cache holds at most `cache_max_entries` (default 500) entries; when full the oldest entry is evicted. Per-key locks are released with their entries (no unbounded growth, callers may pass user-typed search text).
-- Concurrent calls with the same arguments share one request. At most one request per call (`lectures`, `calendar`, `graduate_calendar` and the others are single requests).
+- Concurrent calls with the same arguments share one request. At most one request per call (`lectures`, `calendar`, `graduate_calendar` and the others are single requests), except `cafeteria_places` (up to 10 requests, one after the other, see its row).
 - Tests run on fixtures through an injectable transport and an injectable clock; no school server in unit tests. Live shape checks are done by `scripts/probe-reference-data.py`.
 
-## Cafeteria place ids
+## Cafeteria places
 
-`cafeteria_menu(place_id)` takes the school's own cafeteria number; the library carries no list of them. Checked 2026-10-30 by calling ids 0 to 8: ids 1, 3, 4, 5 and 6 returned menus (each id is one cafeteria, `place_name` and `building_name` tell which), the others returned an empty list. An empty list also happens for a cafeteria with no menu that day, so an empty result does not prove the id is invalid. Ids can change, so check by calling.
+`cafeteria_menu(place_id)` takes the school's own cafeteria number; the library carries no table of them. Checked 2026-10-30:
+
+- **There is no list endpoint.** The cafeteria page (`cafeteria-info.do`) only calls `mode=getMenuList&placeId=<n>`; its script keeps the mapping from a card to numbers in a fixed table (the card "계절밥상" uses number 1, "진관키친" 3, and the card "산들푸드" shows the stalls 4, 5 and 6 together), and the card list itself is page HTML, which the library does not parse. `mode=getPlaceList` and `mode=getCafeteriaList` answer 404. The campus map list (`campus_places`, category `식당`) has its own ids (not the cafeteria numbers) and no link between the two.
+- Calling numbers 0 to 12 once each: 1, 3, 4, 5 and 6 returned menus (`place_name`/`building_name`/`location` of the rows tell which cafeteria: 1 군자관 6층, 3 진관홀 B1층, 4 to 6 학생회관 B1층), the others returned an empty list. One cafeteria card of the page (`빅베어레스토랑`) has no menu number at all, so it can never appear in this list.
+- `cafeteria_places()` therefore calls numbers 1 to 10 and lists the ones that answer with rows. Limits to know: a cafeteria whose menu is empty on that day (a weekly menu not yet posted, a holiday) is missing until the next refresh (cache `cache_ttl_seconds`, default one day); a cafeteria numbered above 10 is not found; the fixed-menu stalls (3 to 6) always have rows, the weekly one (1) does not always. An empty `cafeteria_menu` list does not prove an id is invalid, and the library never guesses a name from a number.
+- The numbers the school page uses, taken from its script on 2026-10-30: 1 (weekly menu, lunch and dinner), 3, 4, 5, 6 (fixed menus). Ids can change, so ask `cafeteria_places()` instead of storing them.
+
+### `meal_type_id` (`mealTypeId`)
+
+Only the weekly menu (number 1) has dates and meal types: `meal_type_id` `1` with `meal_name` `중식` (lunch) and `2` with `석식` (dinner) (seen 2026-10-30; the school page draws 1 as lunch and 2 as dinner and ignores other values). Fixed-menu rows (numbers 3 to 6) have no date, day or meal type: those fields are null and become empty strings. The library does not translate the number; use `meal_name`, which the school sends.
 
 ## Not in scope here
 

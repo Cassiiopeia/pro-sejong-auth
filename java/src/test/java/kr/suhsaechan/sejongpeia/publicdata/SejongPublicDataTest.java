@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.exception.SejongAuthException;
+import kr.suhsaechan.sejongpeia.publicdata.model.CafeteriaPlace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
@@ -54,6 +55,10 @@ class SejongPublicDataTest {
     volatile int statusCode = 200;
     volatile String bodyOverride;
     volatile boolean isConnectionBroken;
+    // 이 문자열이 URL 에 있는 요청만 연결 실패
+    volatile String brokenUrlPart;
+    // 있으면 fixture 대신 이 함수의 본문을 응답
+    volatile java.util.function.Function<PublicDataRequest, String> bodyProvider;
     volatile CountDownLatch holdLatch;
 
     @Override
@@ -69,10 +74,11 @@ class SejongPublicDataTest {
           Thread.currentThread().interrupt();
         }
       }
-      if (isConnectionBroken) {
+      if (isConnectionBroken || (brokenUrlPart != null && request.getUrl().contains(brokenUrlPart))) {
         throw new IOException("connection refused");
       }
-      String body = bodyOverride != null ? bodyOverride : fixtureBodyOf(request);
+      String body = bodyProvider != null ? bodyProvider.apply(request)
+          : bodyOverride != null ? bodyOverride : fixtureBodyOf(request);
       return new PublicDataHttpResponse(statusCode, body);
     }
 
@@ -206,6 +212,57 @@ class SejongPublicDataTest {
   @Test
   void cafeteria_menu_matches_expected() {
     assertMatches("cafeteria_menu", publicData.cafeteriaMenu("1"));
+  }
+
+  @Test
+  void cafeteria_places_match_expected() {
+    assertMatches("cafeteria_places", publicData.cafeteriaPlaces());
+  }
+
+  @Test
+  void cafeteria_places_collects_each_place_once_in_id_order_with_bounded_requests() throws Exception {
+    caller.bodyProvider = request -> {
+      String placeId = request.getUrl().substring(request.getUrl().lastIndexOf('=') + 1);
+      return switch (placeId) {
+        case "1" -> cafeteriaBody(cafeteriaRow(1, "첫째", ""), cafeteriaRow(1, "첫째", ""));
+        case "3" -> cafeteriaBody(cafeteriaRow(3, "셋째", ",\"operatingHours\":\"예시\""));
+        case "6" -> cafeteriaBody(cafeteriaRow(6, "여섯째", ""));
+        default -> "{\"items\":[]}";
+      };
+    };
+    List<CafeteriaPlace> places = publicData.cafeteriaPlaces();
+    assertEquals(List.of("1", "3", "6"), places.stream().map(CafeteriaPlace::getPlaceId).toList());
+    assertEquals(List.of("첫째", "셋째", "여섯째"), places.stream().map(CafeteriaPlace::getPlaceName).toList());
+    assertEquals(java.util.Map.of(), places.get(0).getExtra());
+    assertEquals(java.util.Map.of("operatingHours", "예시"), places.get(1).getExtra());
+    // 번호 1~10을 순서대로 한 번씩
+    List<String> requestedUrls = caller.requests.stream().map(PublicDataRequest::getUrl).toList();
+    assertEquals(10, requestedUrls.size());
+    for (int number = 1; number <= 10; number++) {
+      assertTrue(requestedUrls.get(number - 1).endsWith("&placeId=" + number), requestedUrls.get(number - 1));
+    }
+    publicData.cafeteriaPlaces();
+    assertEquals(10, caller.callCount.get()); // 캐시 유효 중에는 요청 없음
+  }
+
+  @Test
+  void cafeteria_places_one_failed_request_fails_the_whole_list_and_keeps_stale_value() {
+    List<CafeteriaPlace> first = publicData.cafeteriaPlaces();
+    assertEquals(1, first.size());
+    caller.brokenUrlPart = "placeId=4";
+    clock.advanceSeconds(CACHE_TIME_TO_LIVE.getSeconds() + 1);
+    // 일부만 성공한 목록을 새 값으로 저장하지 않음
+    assertEquals(first.get(0).getPlaceId(), publicData.cafeteriaPlaces().get(0).getPlaceId());
+    assertTrue(new SejongPublicData(caller, clock, CACHE_TIME_TO_LIVE).cafeteriaPlaces().isEmpty());
+  }
+
+  private static String cafeteriaRow(int placeId, String placeName, String extraFields) {
+    return "{\"placeId\":" + placeId + ",\"placeName\":\"" + placeName + "\",\"buildingName\":\"예시관\",\"location\":\"B1층\","
+        + "\"menuName\":\"예시메뉴\",\"price\":1000" + extraFields + "}";
+  }
+
+  private static String cafeteriaBody(String... rows) {
+    return "{\"items\":[" + String.join(",", rows) + "]}";
   }
 
   @Test

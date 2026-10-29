@@ -10,7 +10,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import kr.suhsaechan.sejongpeia.publicdata.model.*;
@@ -22,6 +24,9 @@ import kr.suhsaechan.sejongpeia.publicdata.model.*;
 final class PublicDataMapper {
 
   private static final int DORMITORY_MENU_DAY_COUNT = 7;
+  // 메뉴 응답 행의 알려진 필드 (식당 extra 에는 이 밖의 필드만)
+  private static final Set<String> CAFETERIA_MENU_FIELDS = Set.of("placeId", "placeName", "buildingName", "location",
+      "menuDate", "day", "mealTypeId", "mealName", "menuName", "price");
 
   private PublicDataMapper() {
   }
@@ -156,6 +161,31 @@ final class PublicDataMapper {
         .placeId(text(row, "placeId")).placeName(text(row, "placeName")).date(text(row, "menuDate")).day(text(row, "day"))
         .mealTypeId(text(row, "mealTypeId")).mealName(text(row, "mealName")).menuName(text(row, "menuName"))
         .price(text(row, "price")).build();
+  }
+
+  /** 번호별 메뉴 응답 > 식당 목록 (메뉴가 있는 번호만, 첫 행의 식당 정보, 같은 식당 번호는 한 번만) */
+  static List<CafeteriaPlace> toCafeteriaPlaces(List<String> requestedPlaceIds, List<JsonNode> responses) {
+    Map<String, CafeteriaPlace> placeById = new LinkedHashMap<>();
+    for (int index = 0; index < responses.size(); index++) {
+      JsonNode firstRow = firstObjectRow(requireArray(responses.get(index), "items"));
+      if (firstRow == null) {
+        continue;
+      }
+      String placeId = text(firstRow, "placeId").isEmpty() ? requestedPlaceIds.get(index) : text(firstRow, "placeId");
+      placeById.putIfAbsent(placeId, CafeteriaPlace.builder().placeId(placeId).placeName(text(firstRow, "placeName"))
+          .buildingName(text(firstRow, "buildingName")).location(text(firstRow, "location"))
+          .extra(extraOf(firstRow, CAFETERIA_MENU_FIELDS)).build());
+    }
+    return List.copyOf(placeById.values());
+  }
+
+  private static JsonNode firstObjectRow(JsonNode rows) {
+    for (JsonNode row : rows) {
+      if (row.isObject()) {
+        return row;
+      }
+    }
+    return null;
   }
 
   static CampusPlace toCampusPlace(JsonNode row) {

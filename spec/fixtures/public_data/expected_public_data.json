@@ -247,7 +247,7 @@
       "place_name": "예시식당",
       "date": "2099-10-20",
       "day": "월",
-      "meal_type_id": "2",
+      "meal_type_id": "1",
       "meal_name": "중식",
       "menu_name": "예시메뉴",
       "price": "5500"
@@ -263,6 +263,17 @@
       "meal_name": "",
       "menu_name": "고정메뉴",
       "price": "4000"
+    }
+  ],
+  "cafeteria_places": [
+    {
+      "place_id": "1",
+      "place_name": "예시식당",
+      "building_name": "예시관",
+      "location": "6층",
+      "extra": {
+        "newField": "x"
+      }
     }
   ],
   "campus_places": [

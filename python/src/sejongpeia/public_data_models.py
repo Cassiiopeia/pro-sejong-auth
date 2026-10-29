@@ -155,6 +155,15 @@ class CafeteriaMenuItem:
 
 
 @dataclass(frozen=True)
+class CafeteriaPlace:
+    place_id: str
+    place_name: str
+    building_name: str
+    location: str
+    extra: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class CampusPlace:
     id: str
     name: str

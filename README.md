@@ -228,7 +228,7 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 | 학사일정 | `calendar` |
 | 대학원 학사일정 (사이트별) | `graduate_calendar` |
 | 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
-| 학식 메뉴, 캠퍼스 장소 | `cafeteria_menu`, `campus_places` |
+| 학식 식당 목록·메뉴, 캠퍼스 장소 | `cafeteria_places`, `cafeteria_menu`, `campus_places` |
 | 비교과 프로그램 일정 | `extracurricular_events` |
 
 ```python
@@ -258,7 +258,7 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 - **학교 값을 그대로** 돌려줍니다. 코드표나 이름 매핑을 라이브러리에 박아 두지 않아서 학과가 바뀌어도 코드를 고칠 필요가 없습니다. 쓰지 않은 학교 필드는 `extra`에 담깁니다.
 - **한 곳이 실패해도 나머지는 그대로**입니다. 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (잘못된 입력값만 예외).
 - 결과를 메모리에 24시간 캐시하고, 같은 요청은 한 번만 보냅니다. 학교 서버에 부담을 주지 않도록 쓰세요.
-- 학식 `cafeteria_menu`의 식당 번호는 학교 값 그대로입니다 (2026-10-30 확인: 1, 3, 4, 5, 6번에 메뉴가 있고, 어느 식당인지는 결과의 `place_name`으로 알 수 있습니다). 자세한 내용은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
+- 학식 `cafeteria_places`가 식당 번호·이름·건물·위치 목록을 줍니다. 학교에 식당 목록 API가 없어 번호 1~10의 메뉴 응답에서 모은 목록이라, 그날 메뉴가 비어 있는 식당은 빠질 수 있고 한 번 갱신에 최대 10건을 순서대로 요청합니다 (결과는 24시간 캐시). 식사 구분 `meal_type_id`는 1이 중식, 2가 석식이며 고정 메뉴 식당은 비어 있습니다. 자세한 내용은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
 - 개설강좌 조회는 학교가 모든 필터 키를 요구하는 등 직접 맞추기 까다로운 부분을 라이브러리가 처리합니다. 학과·과목명·교수명을 모두 비우면 그 학기 전체를 한 번에 받습니다 (학부 2026/2학기 약 2,800행, 응답 2.4MB이므로 가능하면 학과 단위로 조회하세요).
 
 ## 결과 필드

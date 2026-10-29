@@ -6,7 +6,10 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -41,8 +44,24 @@ final class PublicDataFetcher {
     this.cacheMaxEntries = Math.max(1, cacheMaxEntries);
   }
 
-  @SuppressWarnings("unchecked")
+  /** 요청 1건 > 변환 */
   <T> T fetch(String cacheKey, PublicDataRequest request, Function<JsonNode, T> mapper, T emptyValue) {
+    return fetchProduced(cacheKey, () -> mapper.apply(requestJson(request)), emptyValue);
+  }
+
+  /** 요청 여러 건을 순서대로 한 건씩 > 응답 목록 변환 (하나라도 실패하면 전체 실패) */
+  <T> T fetchInSequence(String cacheKey, List<PublicDataRequest> requests, Function<List<JsonNode>, T> mapper, T emptyValue) {
+    return fetchProduced(cacheKey, () -> {
+      List<JsonNode> responses = new ArrayList<>();
+      for (PublicDataRequest request : requests) {
+        responses.add(requestJson(request));
+      }
+      return mapper.apply(responses);
+    }, emptyValue);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> T fetchProduced(String cacheKey, Callable<T> producer, T emptyValue) {
     // 유효 캐시(값 또는 최근 실패 기억)면 요청 없음
     CachedValue cached = findCached(cacheKey);
     if (cached != null && isFresh(cached)) {
@@ -57,7 +76,7 @@ final class PublicDataFetcher {
     // 예외 외의 Throwable(Error 등)로 죽어도 대기자는 만료 캐시 또는 빈 값을 받음
     Object outcome = staleOrEmpty(cacheKey, emptyValue);
     try {
-      T result = load(cacheKey, request, mapper, emptyValue);
+      T result = load(cacheKey, producer, emptyValue);
       outcome = result;
       return result;
     } finally {
@@ -66,9 +85,9 @@ final class PublicDataFetcher {
     }
   }
 
-  private <T> T load(String cacheKey, PublicDataRequest request, Function<JsonNode, T> mapper, T emptyValue) {
+  private <T> T load(String cacheKey, Callable<T> producer, T emptyValue) {
     try {
-      T value = mapper.apply(requestJson(request));
+      T value = producer.call();
       putCached(cacheKey, new CachedValue(value, false, clock.instant()));
       return value;
     } catch (Exception e) {

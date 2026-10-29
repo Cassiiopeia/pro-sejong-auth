@@ -46,7 +46,7 @@ except SejongAuthError as error:
 | 학사일정 | `calendar` |
 | 대학원 학사일정 (사이트별) | `graduate_calendar` |
 | 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
-| 학식 메뉴, 캠퍼스 장소 | `cafeteria_menu`, `campus_places` |
+| 학식 식당 목록·메뉴, 캠퍼스 장소 | `cafeteria_places`, `cafeteria_menu`, `campus_places` |
 | 비교과 프로그램 일정 | `extracurricular_events` |
 
 ```python
