@@ -205,6 +205,10 @@ class SejongPublicDataTest {
     assertEquals("예시", search.get("CURI_NM").asText());
     assertEquals("", search.get("EMP_NM").asText());
     assertEquals("KOR", search.get("LANG_CHK").asText());
+    // 학교가 필터 키 전체를 요구함 (하나라도 빠지면 _SUBMIT_ERROR_)
+    for (String key : List.of("SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD")) {
+      assertTrue(search.has(key), key);
+    }
     assertTrue(caller.lastRequest().getUrl().endsWith("/doList.do"));
   }
 

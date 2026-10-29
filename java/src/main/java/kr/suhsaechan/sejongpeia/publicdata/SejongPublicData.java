@@ -21,6 +21,10 @@ import kr.suhsaechan.sejongpeia.publicdata.model.*;
  */
 public class SejongPublicData {
 
+  // 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
+  private static final List<String> LECTURE_EMPTY_FILTER_KEYS = List.of(
+      "SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD");
+
   private static final String SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/";
   private static final String ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do";
   private static final String CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do";
@@ -95,6 +99,7 @@ public class SejongPublicData {
           "At least one of department code, course name, instructor name is required");
     }
     Map<String, String> search = termSearch(categoryCode, year, semesterCode);
+    LECTURE_EMPTY_FILTER_KEYS.forEach(key -> search.put(key, ""));
     search.put("DEPT_CD", nullToEmpty(departmentCode));
     search.put("CURI_NM", nullToEmpty(courseName));
     search.put("EMP_NM", nullToEmpty(instructorName));

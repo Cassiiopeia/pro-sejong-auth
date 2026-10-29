@@ -104,7 +104,9 @@ test('request shapes follow the contract', async () => {
   assert.equal(terms.headers['Content-Type'], 'application/json; charset="UTF-8"');
   assert.equal(terms.headers.Accept, 'application/json');
 
+  // 학교가 필터 키 전체를 요구함 (하나라도 빠지면 _SUBMIT_ERROR_)
   assert.deepEqual(JSON.parse(lectures.body).dm_search, {
+    SMT_NM: '', CURI_TYPE_CD: '', SLT_DOMAIN_CD: '', CURI_NO: '', CLASS: '', SLT_DEPT_CD: '', PLAN_REG_YN: '', CORS_SCHE_GRP_CD: '',
     ORGN_CLSF_CD: '20', YEAR: '2099', SMT_CD: '20', YEAR_SMT: '2099/20', DEPT_CD: '9101', CURI_NM: '과목', EMP_NM: '교수', LANG_CHK: 'KOR',
   });
 
