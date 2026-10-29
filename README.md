@@ -84,6 +84,7 @@
 - [빠른 시작: Python](#빠른-시작-python)
 - [빠른 시작: Node.js](#빠른-시작-nodejs)
 - [기능](#기능)
+- [로그인 없이 쓰는 학교 데이터](#로그인-없이-쓰는-학교-데이터)
 - [결과 필드](#결과-필드)
 - [에러 코드](#에러-코드)
 - [설정](#설정)
@@ -223,6 +224,46 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
         + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
 }
 ```
+
+## 로그인 없이 쓰는 학교 데이터
+
+학번·비밀번호 없이 학교가 공개로 내려주는 정보를 같은 모양으로 받습니다. 세 언어가 같은 메서드와 같은 결과를 가집니다. 계약은 [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)입니다.
+
+| 정보 | 메서드 (Python / Node·Java는 camelCase) |
+|---|---|
+| 단과대·학과 코드 (소속 분류, 학기별) | `organization_categories`, `terms`, `departments` |
+| 개설강좌 (학과·과목명·교수명으로 검색) | `lectures`, `course_types`, `selective_domains` |
+| 학사일정 | `calendar` |
+| 기숙사 식단·공지 | `dormitory_menu`, `dormitory_notices` |
+| 학식 메뉴, 캠퍼스 장소 | `cafeteria_menu`, `campus_places` |
+| 비교과 프로그램 일정 | `extracurricular_events` |
+
+```python
+from sejongpeia import SejongPublicData
+
+public_data = SejongPublicData()
+departments = public_data.departments("20", "2026", "20")          # 학부, 2026년 2학기
+lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
+```
+
+```javascript
+import { SejongPublicData } from 'pro-sejongpeia';
+
+const publicData = new SejongPublicData();
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' });
+const lectures = await publicData.lectures({ categoryCode: '20', year: '2026', semesterCode: '20', departmentCode: departments[0].code });
+```
+
+```java
+SejongPublicData publicData = new SejongPublicData();   // Spring에서는 빈으로 주입
+List<Department> departments = publicData.departments("20", "2026", "20");
+List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
+```
+
+- **학교 값을 그대로** 돌려줍니다. 코드표나 이름 매핑을 라이브러리에 박아 두지 않아서 학과가 바뀌어도 코드를 고칠 필요가 없습니다. 쓰지 않은 학교 필드는 `extra`에 담깁니다.
+- **한 곳이 실패해도 나머지는 그대로**입니다. 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (검색 조건이 하나도 없는 `lectures`만 예외).
+- 결과를 메모리에 24시간 캐시하고, 같은 요청은 한 번만 보냅니다. 학교 서버에 부담을 주지 않도록 쓰세요.
+- 개설강좌 조회는 학교가 모든 필터 키를 요구하는 등 직접 맞추기 까다로운 부분을 라이브러리가 처리합니다.
 
 ## 결과 필드
 
