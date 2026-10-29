@@ -6,6 +6,8 @@
 
 보안 취약점은 공개 이슈로 올리지 말고 [SECURITY.md](SECURITY.md)의 비공개 신고를 이용해 주세요.
 
+질문과 제안은 이슈 대신 Discussions에, 어디에 무엇을 올릴지는 [SUPPORT.md](SUPPORT.md)를 봐 주세요. 참여자는 [행동 강령](CODE_OF_CONDUCT.md)을 따릅니다. 처음이라면 `good first issue`, 도움이 필요한 이슈는 `help wanted`, 새 학교 정보 출처 제안은 `data-source` 라벨을 찾아보세요.
+
 ## 이슈 먼저
 
 - 버그: 에러 코드(`SejongAuthException.getErrorCode()`)와 사용한 메서드를 적어 주세요. 학번·비밀번호·개인정보는 절대 올리지 마세요.

@@ -6,6 +6,8 @@ Bug reports, fixes for portal changes and docs improvements are all welcome. Iss
 
 Please do not report security vulnerabilities in public issues. Use the private reporting described in [SECURITY.md](SECURITY.md).
 
+Ask questions and share ideas in Discussions rather than issues; [SUPPORT.en.md](SUPPORT.en.md) explains what goes where. Participants follow the [Code of Conduct](CODE_OF_CONDUCT.en.md). Look for the `good first issue` label if you are new, `help wanted` for issues that need a hand, and `data-source` for proposals of new school data sources.
+
 ## Start with an issue
 
 - Bugs: include the error code (`SejongAuthException.getErrorCode()`) and the method you called. Never post student IDs, passwords or other personal data.
