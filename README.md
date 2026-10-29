@@ -47,6 +47,9 @@
 | 포털 로그인 폼과 SSO 리다이렉트를 직접 분석 | `authenticate()`가 로그인과 SSO 과정을 처리 |
 | 세종대 도메인 3곳의 세션 쿠키를 직접 관리 | 호출마다 쿠키 관리, 따로 저장할 것 없음 |
 | 포털의 오래된 암호화 방식과 방화벽을 직접 통과 | 언어별로 처리됨 ([spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
+| 최신 JDK·OpenSSL 기본 설정이 막는, 포털이 유일하게 허용하는 암호(`TLS_RSA_WITH_AES_256_CBC_SHA`)를 언어마다 다르게 풀기 | Java(JVM 설정), Python, Node 모두 처리하고 Spring Boot는 시작할 때 자동 적용 |
+| 기본 라이브러리 User-Agent를 방화벽이 막고, 없으면 일부 사이트가 404를 돌려주는 문제 | 식별 가능한 User-Agent를 자동으로 보냄 |
+| 틀린 비밀번호를 재시도하면 계정이 잠기는 문제 | 틀린 비밀번호와 잠금은 재시도 없이 즉시 실패 |
 | HTML 표(DHC)와 JSON API(SIS)를 직접 파싱 | 정리된 결과 객체 |
 | 200 응답 속 포털 판정(비밀번호 오류, 계정 잠금)을 직접 판별 | `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED`로 즉시 실패 |
 | 학생 정보 따로, 연락처 따로 두 번 로그인 | 호출 한 번에 포털 로그인 한 번 |

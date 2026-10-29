@@ -47,6 +47,9 @@ session cookies, legacy TLS and HTML/JSON parsing. Same features, same results i
 | Reverse-engineer the portal login form and SSO redirects | `authenticate()` handles the login and SSO chain |
 | Keep session cookies across three Sejong domains | Cookies managed per call, nothing to store |
 | Get past the portal's legacy TLS cipher and firewall | Handled per language (see [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md)) |
+| Re-enable the only cipher the portal accepts (`TLS_RSA_WITH_AES_256_CBC_SHA`), which current JDK and OpenSSL defaults block, differently in each language | Handled in Java (JVM setting), Python and Node, and applied automatically at startup in Spring Boot |
+| Work around a firewall that blocks default library User-Agents (and sites that answer 404 without one) | Sends an identifying User-Agent automatically |
+| Avoid locking the account by retrying a wrong password | Wrong password and locked account fail immediately, with no retry |
 | Parse HTML tables (DHC) and a JSON API (SIS) | Typed results |
 | Read the portal's verdict from a 200 response (wrong password, locked account) | Fails fast with `AUTHENTICATION_FAILED` / `ACCOUNT_LOCKED` |
 | Log in once for student info, again for contacts | One portal login per call for both |
