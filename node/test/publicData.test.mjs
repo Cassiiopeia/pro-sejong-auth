@@ -141,24 +141,27 @@ test('cache: fresh entry makes no request, expired entry refreshes', async () =>
   await publicData.terms('20');
   await publicData.terms('30');
   assert.equal(requests.length, 4);
-});
-
-test('cached result is not affected by caller mutation', async () => {
-  const { publicData } = createPublicData();
+  // 호출자가 결과를 바꿔도 캐시는 그대로
   (await publicData.courseTypes())[0].name = 'changed';
   assert.equal((await publicData.courseTypes())[0].name, expected.courseTypes[0].name);
 });
 
-test('failure returns expired cache, or empty value without cache', async () => {
+test('failure returns expired cache, or remembers failure briefly without cache', async () => {
   let currentOutcome;
-  const { publicData, requests, clock } = createPublicData({ options: { cacheTtlSeconds: 10 }, outcome: () => currentOutcome });
-  currentOutcome = undefined;
+  const { publicData, requests, clock } = createPublicData({ options: { cacheTtlSeconds: 10, failureCacheSeconds: 30 }, outcome: () => currentOutcome });
   const first = await publicData.cafeteriaMenu(1);
   clock.now += 20_000;
   currentOutcome = new Error('connection reset');
   assert.deepEqual(await publicData.cafeteriaMenu(1), first);
   assert.equal(requests.length, 2);
+  // 캐시 없는 실패: 기억 시간 동안 요청 없이 빈 값, 지나면 재시도
   assert.deepEqual(await publicData.cafeteriaMenu(2), []);
+  assert.deepEqual(await publicData.cafeteriaMenu(2), []);
+  assert.equal(requests.length, 3);
+  clock.now += 31_000;
+  currentOutcome = undefined;
+  assert.equal((await publicData.cafeteriaMenu(2)).length > 0, true);
+  assert.equal(requests.length, 4);
 });
 
 const failureOutcomes = {
@@ -169,16 +172,48 @@ const failureOutcomes = {
   'submit error object': () => ({ status: 200, body: '{"_SUBMIT_ERROR_":{"STACK_TRACE":"internal secret"}}' }),
 };
 
-for (const [label, makeOutcome] of Object.entries(failureOutcomes)) {
-  test(`failure isolation: ${label}`, async () => {
+test('failure isolation: every failure kind returns an empty value', async () => {
+  for (const [label, makeOutcome] of Object.entries(failureOutcomes)) {
     for (const [sourceName, call] of Object.entries(callBySource)) {
       const { publicData } = createPublicData({ outcome: makeOutcome });
-      const result = await call(publicData);
       const emptyValue = sourceName === 'dormitoryNotices' ? { total: 0, pinned: [], items: [] } : [];
-      assert.deepEqual(result, emptyValue, sourceName);
+      assert.deepEqual(await call(publicData), emptyValue, `${label} / ${sourceName}`);
     }
-  });
-}
+  }
+});
+
+const okBody = (body) => () => ({ status: 200, body: JSON.stringify(body) });
+
+test('rows with missing or null fields survive with empty defaults', async () => {
+  const campus = createPublicData({ outcome: okBody({ items: [{ id: 1, latitude: '', longitude: null }, 'odd'] }) });
+  assert.deepEqual((await campus.publicData.campusPlaces()).map((place) => [place.id, place.name, place.latitude, place.longitude]), [['1', '', 0, 0], ['', '', 0, 0]]);
+  const calendar = createPublicData({ outcome: okBody({ data: [{}] }) });
+  assert.deepEqual((await calendar.publicData.calendar({ start: 'a', end: 'b' }))[0].startDate, '');
+});
+
+test('dormitory notices without list parts mean no results', async () => {
+  const { publicData } = createPublicData({ outcome: okBody({ root: [{}] }) });
+  assert.deepEqual(await publicData.dormitoryNotices(), { total: 0, pinned: [], items: [] });
+  const rows = createPublicData({ outcome: okBody({ root: [{ list: [{ seq: 3 }], totalCount: [{}] }] }) });
+  assert.deepEqual(await rows.publicData.dormitoryNotices(), { total: 0, pinned: [], items: [{ id: '3', title: '', date: '', views: 0, fileName: '' }] });
+});
+
+test('extra converts scalars to text and non-scalars to compact JSON', async () => {
+  const { publicData } = createPublicData({ outcome: okBody({ dl_code_orgn: [{ COM_CD: 1, CD_NM: 'n', A: 5, B: true, C: { x: 1, y: [2] }, D: [1, 2] }] }) });
+  assert.deepEqual((await publicData.organizationCategories())[0].extra, { A: '5', B: 'true', C: '{"x":1,"y":[2]}', D: '[1,2]' });
+});
+
+test('cache keeps at most cacheMaxEntries and evicts the oldest', async () => {
+  const { publicData, requests } = createPublicData({ options: { cacheMaxEntries: 2 } });
+  await publicData.terms('1');
+  await publicData.terms('2');
+  await publicData.terms('3');
+  assert.equal(requests.length, 3);
+  await publicData.terms('3');
+  assert.equal(requests.length, 3);
+  await publicData.terms('1');
+  assert.equal(requests.length, 4);
+});
 
 test('lectures without any filter raises INVALID_INPUT and sends no request', () => {
   const { publicData, requests } = createPublicData();
