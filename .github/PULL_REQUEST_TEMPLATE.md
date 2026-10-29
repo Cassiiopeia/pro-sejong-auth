@@ -15,5 +15,5 @@
 - [ ] README 한국어·영어
 - [ ] `python/README.md`, `node/README.md`
 - [ ] `spec/` 계약 문서, `spec/contract.json`, 합성 fixture
-- [ ] 소개 사이트(`gh-pages`)는 릴리즈 뒤에 반영할 일을 이슈에 남김
+- [ ] 소개 사이트(`website/`)의 해당 문서 쪽을 같은 PR에서 갱신
 - [ ] 패키지 설명과 키워드, 릴리즈 노트 한 줄

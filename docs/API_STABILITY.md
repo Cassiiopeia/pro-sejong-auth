@@ -60,7 +60,7 @@ Java의 `auth.client.*`, `auth.parser.*`는 Spring 없이 쓸 때 [README](../RE
 | 요청 주소, 포털 판정 → 에러 코드 대응 등 공유 값 | [spec/contract.json](../spec/contract.json)이 단일 원본이고, 언어별 contract 테스트가 자기 상수와 비교 |
 | 에러 코드 10개 (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED` 등)와 의미 | [spec/RESULT_SCHEMA.md](../spec/RESULT_SCHEMA.md), contract 테스트 |
 | 인증 결과 필드와 의미 (표기만 다름) | RESULT_SCHEMA, 개인정보를 제거한 응답 샘플(`spec/fixtures/`)에 대한 기대값 테스트 |
-| 공개 데이터 메서드 14종과 결과 필드, 값 규칙 (없는 값은 빈 문자열, 실패 격리, 캐시) | [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md), 같은 기대 결과 파일(`expected_public_data.json`)과 세 언어 비교 |
+| 공개 데이터 메서드 15종과 결과 필드, 값 규칙 (없는 값은 빈 문자열, 실패 격리, 캐시) | [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md), 같은 기대 결과 파일(`expected_public_data.json`)과 세 언어 비교 |
 | 인증과 공개 데이터가 서로 의존하지 않음 | 의존 규칙 테스트 (Python, Node, Java 각각) |
 | 실제 포털에서의 결과 | 매일 세 언어로 실제 로그인하는 점검, 필드별 해시 비교(`scripts/verify-live.sh`) |
 
