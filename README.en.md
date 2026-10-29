@@ -2,7 +2,7 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="pro-sejongpeia: Sejong University login and student data in one call" width="880">
+<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="pro-sejongpeia: the Sejong University integrated library, portal login and public school data" width="880">
 
 # pro-sejongpeia
 
@@ -23,21 +23,6 @@
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ### [▶ Try it live in your browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo)
-
-<!-- TODO(#50): 시안을 고르면 이 블록 삭제 -->
-<details>
-<summary>Banner drafts (temporary)</summary>
-
-This block is removed once a draft is chosen in issue #50. The banner above is draft A.
-
-<img src="docs/assets/banner/banner-a-crimson.en.svg" alt="a-crimson" width="720"><br>
-<img src="docs/assets/banner/banner-b-terminal.en.svg" alt="b-terminal" width="720"><br>
-<img src="docs/assets/banner/banner-c-flow.en.svg" alt="c-flow" width="720"><br>
-<img src="docs/assets/banner/banner-d-checklist.en.svg" alt="d-checklist" width="720"><br>
-<img src="docs/assets/banner/banner-e-languages.en.svg" alt="e-languages" width="720"><br>
-<img src="docs/assets/banner/banner-f-minimal.en.svg" alt="f-minimal" width="720"><br>
-
-</details>
 
 </div>
 
