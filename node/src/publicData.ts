@@ -1,11 +1,10 @@
 // 공개 데이터(로그인 없는 소스) 조회: 요청 > JSON 파싱 > 매핑 > 캐시, 업스트림 실패는 마지막 캐시 또는 빈 값 (spec/PUBLIC_DATA.md)
-import { USER_AGENT } from './client.js';
 import { ErrorCode, SejongAuthError } from './errors.js';
 import type {
   CafeteriaMenuItem, CalendarEvent, CampusPlace, CourseType, Department, DormitoryMenuDay, DormitoryNotice, DormitoryNotices,
   ExtraFields, ExtracurricularEvent, Lecture, OrganizationCategory, SelectiveDomain, Term,
 } from './publicDataModels.js';
-import { NodeHttpsSession, type Session } from './transport.js';
+import { NodeHttpsSession, USER_AGENT, type Session } from './transport.js';
 
 export type * from './publicDataModels.js';
 

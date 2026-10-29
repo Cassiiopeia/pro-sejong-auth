@@ -1,8 +1,12 @@
 // HTTP 세션: 인증 1회당 쿠키 저장소 1개, 포털 레거시 TLS, 리다이렉트 자동 (Node 기본 모듈만)
 import * as https from 'node:https';
 
+import { VERSION } from './version.js';
+
 // 포털은 TLS_RSA_WITH_AES_256_CBC_SHA 만 제공 > 기본 cipher 목록에 추가 (spec/PORTAL_FLOW.md)
 export const PORTAL_CIPHERS = 'DEFAULT:AES256-SHA:@SECLEVEL=1';
+// 모든 요청이 쓰는 식별 User-Agent (기본 에이전트는 포털 방화벽이 차단)
+export const USER_AGENT = `pro-sejongpeia-node/${VERSION}`;
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
 const MAX_REDIRECTS = 10;
 

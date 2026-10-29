@@ -13,7 +13,7 @@ from .errors import ErrorCode, SejongAuthError
 from .models import SejongAuthResult, SejongDhcAuthResult, SejongSisAuthResult
 from .parsers import ensure_portal_login_accepted, ensure_sis_logged_in, parse_classic_reading, parse_sis_user_info, parse_student_info
 from .portal_main_parser import parse_parent_unit_name
-from .transport import HttpResponse, UrllibSession, create_ssl_context
+from .transport import USER_AGENT, HttpResponse, UrllibSession, create_ssl_context
 
 # 라이브러리 로거: 출력 방식은 사용하는 앱이 설정
 LOGGER = logging.getLogger("sejongpeia")
@@ -40,7 +40,6 @@ SIS_EMPTY_ADD_PARAM = base64.b64encode(
     urllib.parse.quote_plus('{"_runIntgUsrNo":"","_runPgLoginDt":"","_runningSejong":""}').encode("utf-8")
 ).decode("ascii")
 
-USER_AGENT = f"pro-sejongpeia-python/{__version__}"
 HTTP_UNAUTHORIZED = 401
 
 
