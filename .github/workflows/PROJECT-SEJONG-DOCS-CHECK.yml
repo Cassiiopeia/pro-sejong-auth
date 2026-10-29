@@ -1,0 +1,23 @@
+# 문서 점검 (마크다운 변경 시): 깨진 상대 링크, 언어별 문서 쌍의 전환 링크 누락
+name: PROJECT-SEJONG-DOCS-CHECK
+
+on:
+  push:
+    branches: ["main", "deploy"]
+    paths: ["**.md", "scripts/check-docs.py", ".github/workflows/PROJECT-SEJONG-DOCS-CHECK.yml"]
+  pull_request:
+    paths: ["**.md", "scripts/check-docs.py", ".github/workflows/PROJECT-SEJONG-DOCS-CHECK.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check docs
+        run: python scripts/check-docs.py
