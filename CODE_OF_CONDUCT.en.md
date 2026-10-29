@@ -28,6 +28,6 @@ This applies to every space of this project: issues, pull requests, comments and
 
 ## Reporting and enforcement
 
-Please report unacceptable behavior to the repository owner. Contact: (to be set by the repository owner)
+Please report unacceptable behavior to the repository owner. Instead of a public issue, send a [private report](https://github.com/Cassiiopeia/pro-sejongpeia/security/advisories/new) (Security tab > Report a vulnerability) with `[Code of Conduct]` at the start of the title. Only the repository owner can see it.
 
 Maintainers may edit or remove comments, issues and contributions that go against this code, and may limit participation after repeated problems. Reporters' details are kept private.
