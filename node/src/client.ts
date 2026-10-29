@@ -87,7 +87,10 @@ export class SejongAuthClient {
     let contact: { email: string | null; phoneNumber: string | null; englishName: string | null; userCategory: string | null } =
       { email: null, phoneNumber: null, englishName: null, userCategory: null };
     let sisJson: string | null = null;
-    let schoolCodes: Partial<SejongSisSchoolCodes> & { extra: Record<string, string> | null } = { extra: null };
+    // SIS 실패 시 코드 필드 전부 null (키 누락 방지)
+    let schoolCodes = {
+      ...Object.fromEntries(Object.keys(SIS_CODE_KEYS_BY_FIELD).map((fieldName) => [fieldName, null])), extra: null,
+    } as unknown as Partial<SejongSisSchoolCodes> & { extra: Record<string, string> | null };
     try {
       sisJson = await this.fetchSisJsonWithSession(session);
       const sisUserInfo = parseSisUserInfo(sisJson);

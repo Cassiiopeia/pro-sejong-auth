@@ -112,7 +112,7 @@ jobs:
         id: probe
         run: python3 scripts/probe-reference-data.py
 
-      # 공개 데이터 7곳 형태 점검 (앞 단계가 실패해도 실행)
+      # 공개 데이터 8곳 형태 점검 (앞 단계가 실패해도 실행)
       - name: Probe public data sources (no login)
         id: probe_public
         if: always()

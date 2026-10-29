@@ -52,7 +52,7 @@ SIS_MENU_SYSTEM_DIV = "SCH"
 SIS_SCHEDULE_PROGRAM_KEY = "SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ"
 SIS_SCHEDULE_SYSTEM_KEY = "SCH"
 SIS_JSON_CONTENT_TYPE = 'application/json; charset="UTF-8"'
-SIS_YEAR_PATTERN = re.compile(r"\d{4}")
+SIS_YEAR_PATTERN = re.compile(r"[0-9]{4}")  # 전각 등 유니코드 숫자 제외 (Java·Node 와 동일)
 SIS_MONTH_PATTERN = re.compile(r"(0?[1-9]|1[0-2])?")  # 빈 문자열은 연간 전체
 
 HTTP_UNAUTHORIZED = 401

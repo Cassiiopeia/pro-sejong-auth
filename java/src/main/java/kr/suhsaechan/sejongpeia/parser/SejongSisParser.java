@@ -116,7 +116,7 @@ public class SejongSisParser {
       periods.add(new SisBusinessPeriod(getTextValue(row, "PERIOD"), getTextValue(row, "START_DT"), getTextValue(row, "TO_DT"),
           getTextValue(row, "SCHEDULE"), getTextValue(row, "CORS_SCHE_GRP_CD_NM"), getTextValue(row, "TARGET_AUTH"),
           getTextValue(row, "SYS_NM"), getTextValue(row, "YEAR_SMT"), getTextValue(row, "TMS"), getTextValue(row, "ORGN_CLSF_CD"),
-          getTextValue(row, "PRT_ORD"), Map.copyOf(extra)));
+          getTextValue(row, "PRT_ORD"), java.util.Collections.unmodifiableMap(extra)));
     }
     return List.copyOf(periods);
   }

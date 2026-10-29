@@ -155,8 +155,8 @@ class SejongAuthResult:
     locale: Optional[str] = None
     extra: Optional[Dict[str, str]] = None
     # include_raw=True 일 때만: DHC 원문 HTML, SIS 원문 JSON (SIS 조회 실패 시 None), 세션값·접속 IP 포함이라 외부 전달 금지
-    raw_html: Optional[str] = None
-    raw_json: Optional[str] = None
+    raw_html: Optional[str] = field(default=None, repr=False)
+    raw_json: Optional[str] = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -171,7 +171,7 @@ class SejongDhcAuthResult:
     status: str
     classic_reading: SejongClassicReading
     authenticated_at: datetime
-    raw_html: Optional[str] = None
+    raw_html: Optional[str] = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -189,7 +189,7 @@ class SejongSisAuthResult:
     english_name: str
     user_category: str
     authenticated_at: datetime
-    raw_json: Optional[str] = None
+    raw_json: Optional[str] = field(default=None, repr=False)
     department_code: str = ""
     organization_classification_code: str = ""
     enrollment_status_code: str = ""

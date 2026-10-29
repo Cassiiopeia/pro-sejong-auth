@@ -104,8 +104,8 @@ public class SuhSejongAuthEngine {
     SejongSisSchoolFields schoolFields = null;
     try {
       String json = sisClient.fetchInitUserInfoJson(session);
-      sisJson = json;
       sisParser.ensureLoggedIn(json);
+      sisJson = json;
       email = sisParser.parseEmail(json);
       phoneNumber = sisParser.parsePhoneNumber(json);
       englishName = sisParser.parseEnglishName(json);

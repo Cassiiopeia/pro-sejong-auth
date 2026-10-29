@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""공개 데이터 소스 7곳 형태 점검 (개설강좌, 학사일정, 기숙사 식단·공지, 학식, 캠퍼스맵, 비교과) - 로그인·계정 불필요
+"""공개 데이터 소스 8곳 형태 점검 (개설강좌, 학사일정, 기숙사 식단·공지, 학식, 캠퍼스맵, 비교과) - 로그인·계정 불필요
 
-  실제 호출:   python3 scripts/probe-public-data.py          (요청 7건, 1초 간격)
+  실제 호출:   python3 scripts/probe-public-data.py          (요청 8건, 1초 간격)
   오프라인:    python3 scripts/probe-public-data.py --offline (spec/fixtures/public_data 로 검사 로직만 확인)
   종료 코드: 0 정상, 1 형태 변경 감지 (spec/PUBLIC_DATA.md 와 세 언어 구현을 함께 고칠 것)
 네트워크 오류·시간 초과는 SKIP 으로 출력만 하고 실패로 보지 않음 (라이브러리는 실패를 격리하므로 형태 변경만 잡음)
@@ -140,6 +140,17 @@ def build_live_requests(session: UrllibSession) -> Dict[str, Callable[[], object
     }
 
 
+def _count_graduate_calendar_items(body: object) -> int:
+    """대학원 학사일정 items(JSON 문자열) 건수, 깨져 있으면 0 (형태 문제는 find_source_problems 가 보고)"""
+    items = body.get("items") if isinstance(body, dict) else None
+    if not isinstance(items, str):
+        return 0
+    try:
+        return len(json.loads(items))
+    except ValueError:
+        return 0
+
+
 def load_fixture_bodies() -> Dict[str, object]:
     file_by_source = {"lectures": "lectures", "calendar": "calendar", "graduate_calendar": "graduate_calendar", "dormitory_menu": "dormitory_menu",
                       "dormitory_notices": "dormitory_notices", "cafeteria": "cafeteria",
@@ -167,7 +178,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             source_problems = find_source_problems(source_name, body)
             row_count = len(body.get(SOURCES[source_name][0]) or []) if isinstance(body, dict) else 0
             if source_name == "graduate_calendar":
-                row_count = len(json.loads(body["items"])) if isinstance(body.get("items"), str) else 0
+                row_count = _count_graduate_calendar_items(body)
             print(f"[probe-public] {source_name}: rows={row_count} {'DRIFT' if source_problems else 'ok'}")
             problems += source_problems
     for problem in problems:

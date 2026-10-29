@@ -50,6 +50,8 @@ test('integratedSisFailureReturnsDhcWithNullContacts', async () => {
   assert.equal(result.success, true);
   assert.equal(result.name, '홍길동');
   assert.deepEqual([result.email, result.phoneNumber, result.englishName, result.userCategory], [null, null, null, null]);
+  // 코드 필드도 키 누락이 아니라 null (Java·Python 과 동일)
+  assert.deepEqual([result.departmentCode, result.roleCode, result.extra], [null, null, null]);
 });
 
 test('integratedSuccessMergesDhcAndSis', async () => {
