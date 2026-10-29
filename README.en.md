@@ -248,6 +248,7 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get
 - **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change. School fields that are not mapped land in `extra`.
 - **One source failing never breaks the rest.** On failure you get the last cached value or an empty list, not an exception (only `lectures` with no search condition raises).
 - Results are cached in memory for 24 hours and identical requests are sent once. Please be gentle with the school's servers.
+- Cafeteria numbers for `cafeteria_menu` are the school's own (checked 2026-10-30: ids 1, 3, 4, 5 and 6 have menus; the result's `place_name` tells which cafeteria). Details in [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
 - The lecture search handles the awkward parts for you, such as the school requiring every filter key in the request.
 
 ## Result fields
