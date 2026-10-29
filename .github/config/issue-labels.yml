@@ -53,3 +53,19 @@
 - name: data-source
   color: 0E8A16
   description: 새 학교 정보 출처 제안
+
+- name: dependencies
+  color: 0366D6
+  description: 의존성 업데이트 (Dependabot)
+
+- name: github_actions
+  color: "000000"
+  description: GitHub Actions 업데이트 (Dependabot)
+
+- name: java
+  color: FFA221
+  description: Java 코드 변경
+
+- name: javascript
+  color: 168700
+  description: JavaScript 코드 변경
