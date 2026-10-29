@@ -320,23 +320,50 @@ class SejongPublicDataTest {
     caller.isConnectionBroken = true;
     assertTrue(publicData.campusPlaces().isEmpty());
     assertTrue(publicData.extracurricularEvents("2099-10-01", "2099-10-31").isEmpty());
-  }
-
-  @Test
-  void failed_dormitory_notices_return_zero_total_and_empty_lists() {
-    caller.isConnectionBroken = true;
     var notices = publicData.dormitoryNotices();
     assertEquals(0, notices.getTotal());
-    assertTrue(notices.getPinned().isEmpty());
-    assertTrue(notices.getItems().isEmpty());
+    assertTrue(notices.getPinned().isEmpty() && notices.getItems().isEmpty());
   }
 
   @Test
-  void failed_result_is_not_cached() {
+  void failure_is_remembered_briefly_and_then_retried() {
     caller.isConnectionBroken = true;
     assertTrue(publicData.courseTypes().isEmpty());
     caller.isConnectionBroken = false;
+    // 실패 기억 60초 안: 요청 없이 빈 값
+    clock.advanceSeconds(59);
+    assertTrue(publicData.courseTypes().isEmpty());
+    assertEquals(1, caller.callCount.get());
+    // 기억 만료 후 재시도
+    clock.advanceSeconds(2);
     assertEquals(1, publicData.courseTypes().size());
+    assertEquals(2, caller.callCount.get());
+  }
+
+  @Test
+  void dormitory_notices_without_result_arrays_are_empty_not_failure() {
+    caller.bodyOverride = "{\"root\":[{}]}";
+    var notices = publicData.dormitoryNotices();
+    assertEquals(0, notices.getTotal());
+    assertTrue(notices.getItems().isEmpty());
+    // 정상 응답으로 캐시됨 (실패 기억 아님): 만료 후 재요청 없이 같은 결과
+    publicData.dormitoryNotices();
+    assertEquals(1, caller.callCount.get());
+  }
+
+  @Test
+  void cache_evicts_oldest_entry_when_full() {
+    SejongPublicData smallCache = new SejongPublicData(caller, clock, CACHE_TIME_TO_LIVE, Duration.ofSeconds(60), 2);
+    smallCache.cafeteriaMenu("1");
+    smallCache.cafeteriaMenu("2");
+    smallCache.cafeteriaMenu("3");
+    assertEquals(3, caller.callCount.get());
+    smallCache.cafeteriaMenu("3");
+    smallCache.cafeteriaMenu("2");
+    assertEquals(3, caller.callCount.get());
+    // 가장 오래된 "1" 은 제거돼 다시 요청
+    smallCache.cafeteriaMenu("1");
+    assertEquals(4, caller.callCount.get());
   }
 
   // ---- 입력 검증

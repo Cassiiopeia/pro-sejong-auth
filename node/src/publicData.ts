@@ -32,6 +32,10 @@ export interface SejongPublicDataOptions {
   timeoutSeconds?: number;
   /** 캐시 유효 시간 (초, 기본 86400) */
   cacheTtlSeconds?: number;
+  /** 캐시 없는 상태의 실패 기억 시간 (초, 기본 60) */
+  failureCacheSeconds?: number;
+  /** 캐시 최대 항목 수 (기본 500, 초과 시 가장 오래된 항목 제거) */
+  cacheMaxEntries?: number;
   /** 인증서 검증 (기본 true) */
   sslVerification?: boolean;
   /** @internal 테스트용 세션 주입 */
@@ -46,10 +50,20 @@ export interface CalendarQuery { start: string; end: string; categoryCode?: stri
 export interface DormitoryNoticesQuery { page?: number; rows?: number; keyword?: string; location?: string }
 export interface ExtracurricularEventsQuery { start: string; end: string; category?: string }
 
-interface CacheEntry { value: unknown; storedAtMilliseconds: number }
+// isFailure: 캐시 없이 실패해 빈 값을 잠시 기억하는 항목
+interface CacheEntry { value: unknown; storedAtMilliseconds: number; isFailure: boolean }
 
-// 학교 값 > 문자열 (null 은 빈 문자열)
-const toText = (value: unknown): string => (value === null || value === undefined ? '' : String(value));
+// 학교 값 > 문자열 (null 은 빈 문자열, 객체·배열은 공백 없는 JSON)
+const toText = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+};
+
+// 학교 값 > 숫자 (비었거나 숫자가 아니면 0)
+const toNumber = (value: unknown): number => {
+  const parsed = typeof value === 'number' ? value : Number.parseFloat(toText(value));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 // 매핑에 쓰지 않은 필드를 원문 문자열로 (빈 값과 제외 목록 필드는 뺌)
 function extraOf(row: SchoolRow, usedKeys: string[]): ExtraFields {
@@ -58,31 +72,31 @@ function extraOf(row: SchoolRow, usedKeys: string[]): ExtraFields {
   for (const key of Object.keys(row).sort()) {
     const value = row[key];
     if (used.has(key) || EXTRA_DENYLIST.has(key) || value === null || value === undefined || value === '') continue;
-    extra[key] = String(value);
+    extra[key] = toText(value);
   }
   return extra;
 }
 
-// 필수 필드 (없으면 형태 불일치로 보고 실패 처리)
-function requiredText(row: SchoolRow, key: string): string {
-  const value = row[key];
-  if (value === null || value === undefined) throw new Error(`missing field ${key}`);
-  return String(value);
-}
+const isObject = (value: unknown): value is JsonObject => typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const asObject = (value: unknown): JsonObject => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('expected object');
-  return value as JsonObject;
-};
+// 행이 객체가 아니면 빈 행으로 (행은 버리지 않음)
+const asObject = (value: unknown): JsonObject => (isObject(value) ? value : {});
 
+// 컨테이너가 배열이 아니면 실패
 function asRows(value: unknown): SchoolRow[] {
   if (!Array.isArray(value)) throw new Error('expected array');
   return value.map(asObject);
 }
 
+// 없거나 배열이 아니면 빈 목록 (결과 없음)
+const asRowsOrEmpty = (value: unknown): SchoolRow[] => (Array.isArray(value) ? value.map(asObject) : []);
+
 const rowsOf = (body: JsonObject, key: string): SchoolRow[] => asRows(body[key]);
 
 const toCount = (value: unknown): number => Number.parseInt(toText(value), 10) || 0;
+
+const DEFAULT_FAILURE_CACHE_SECONDS = 60;
+const DEFAULT_CACHE_MAX_ENTRIES = 500;
 
 const requestBodyOfDataset = (searchFields: JsonObject) => JSON.stringify({ dm_search: searchFields });
 
@@ -90,6 +104,8 @@ const requestBodyOfDataset = (searchFields: JsonObject) => JSON.stringify({ dm_s
 export class SejongPublicData {
   readonly timeoutSeconds: number;
   readonly cacheTtlSeconds: number;
+  readonly failureCacheSeconds: number;
+  readonly cacheMaxEntries: number;
   readonly sslVerification: boolean;
   private readonly sessionFactory: () => Session;
   private readonly nowMilliseconds: () => number;
@@ -97,9 +113,14 @@ export class SejongPublicData {
   private readonly cacheByKey = new Map<string, CacheEntry>();
   private readonly pendingByKey = new Map<string, Promise<unknown>>();
 
-  constructor({ timeoutSeconds = 10, cacheTtlSeconds = 86400, sslVerification = true, _sessionFactory, _nowMilliseconds }: SejongPublicDataOptions = {}) {
+  constructor({
+    timeoutSeconds = 10, cacheTtlSeconds = 86400, failureCacheSeconds = DEFAULT_FAILURE_CACHE_SECONDS, cacheMaxEntries = DEFAULT_CACHE_MAX_ENTRIES,
+    sslVerification = true, _sessionFactory, _nowMilliseconds,
+  }: SejongPublicDataOptions = {}) {
     this.timeoutSeconds = timeoutSeconds;
     this.cacheTtlSeconds = cacheTtlSeconds;
+    this.failureCacheSeconds = failureCacheSeconds;
+    this.cacheMaxEntries = cacheMaxEntries;
     this.sslVerification = sslVerification;
     this.sessionFactory = _sessionFactory ?? (() => new NodeHttpsSession(this.timeoutSeconds, this.sslVerification, USER_AGENT));
     this.nowMilliseconds = _nowMilliseconds ?? Date.now;
@@ -108,7 +129,7 @@ export class SejongPublicData {
   /** 기관 구분 (학부, 대학원 등) */
   organizationCategories(): Promise<OrganizationCategory[]> {
     return this.fetchSisDataset('organizationCategories', 'doOnload.do', {}, 'dl_code_orgn', (row) => ({
-      code: requiredText(row, 'COM_CD'), name: requiredText(row, 'CD_NM'), nameEn: toText(row.CD_NM_ENG),
+      code: toText(row['COM_CD']), name: toText(row['CD_NM']), nameEn: toText(row.CD_NM_ENG),
       extra: extraOf(row, ['COM_CD', 'CD_NM', 'CD_NM_ENG']),
     }));
   }
@@ -116,8 +137,8 @@ export class SejongPublicData {
   /** 학기 목록 */
   terms(categoryCode: string): Promise<Term[]> {
     return this.fetchSisDataset('terms', 'doYearsmtlist.do', { ORGN_CLSF_CD: categoryCode }, 'dl_code_yearSmt', (row) => ({
-      year: requiredText(row, 'YEAR'), semesterCode: requiredText(row, 'SMT_CD'), code: requiredText(row, 'YEAR_SMT_CD'),
-      name: requiredText(row, 'YEAR_SMT_NM'), extra: extraOf(row, ['YEAR', 'SMT_CD', 'YEAR_SMT_CD', 'YEAR_SMT_NM']),
+      year: toText(row['YEAR']), semesterCode: toText(row['SMT_CD']), code: toText(row['YEAR_SMT_CD']),
+      name: toText(row['YEAR_SMT_NM']), extra: extraOf(row, ['YEAR', 'SMT_CD', 'YEAR_SMT_CD', 'YEAR_SMT_NM']),
     }), [categoryCode]);
   }
 
@@ -125,7 +146,7 @@ export class SejongPublicData {
   departments({ categoryCode, year, semesterCode }: DepartmentsQuery): Promise<Department[]> {
     const usedKeys = ['DEPT_CD', 'DEPT_LEVEL_CD', 'DEPT_L_CD', 'DEPT_L_PRINT', 'DEPT_M_CD', 'DEPT_M_PRINT', 'DEPT_S_CD', 'DEPT_S_PRINT', 'DEPT_NM_ENG'];
     return this.fetchSisDataset('departments', 'doLesndeptgroup.do', termSearchFields(categoryCode, year, semesterCode), 'dl_code_dept', (row) => ({
-      code: requiredText(row, 'DEPT_CD'), level: requiredText(row, 'DEPT_LEVEL_CD'),
+      code: toText(row['DEPT_CD']), level: toText(row['DEPT_LEVEL_CD']),
       collegeCode: toText(row.DEPT_L_CD), collegeName: toText(row.DEPT_L_PRINT),
       unitCode: toText(row.DEPT_M_CD), unitName: toText(row.DEPT_M_PRINT),
       majorCode: toText(row.DEPT_S_CD), majorName: toText(row.DEPT_S_PRINT), nameEn: toText(row.DEPT_NM_ENG),
@@ -136,7 +157,7 @@ export class SejongPublicData {
   /** 이수 구분 (공필, 전필 등) */
   courseTypes(): Promise<CourseType[]> {
     return this.fetchSisDataset('courseTypes', 'doOnload.do', {}, 'dl_code_curiType', (row) => ({
-      code: requiredText(row, 'CURI_TYPE_CD'), name: requiredText(row, 'CURI_TYPE_CD_NM'), categoryCode: toText(row.ORGN_CLSF_CD),
+      code: toText(row['CURI_TYPE_CD']), name: toText(row['CURI_TYPE_CD_NM']), categoryCode: toText(row.ORGN_CLSF_CD),
       extra: extraOf(row, ['CURI_TYPE_CD', 'CURI_TYPE_CD_NM', 'ORGN_CLSF_CD']),
     }));
   }
@@ -144,7 +165,7 @@ export class SejongPublicData {
   /** 선택 교양 영역 */
   selectiveDomains(): Promise<SelectiveDomain[]> {
     return this.fetchSisDataset('selectiveDomains', 'doOnload.do', {}, 'dl_code_sltDomain', (row) => ({
-      code: requiredText(row, 'COM_CD'), name: requiredText(row, 'CD_NM'), nameEn: toText(row.CD_NM_ENG),
+      code: toText(row['COM_CD']), name: toText(row['CD_NM']), nameEn: toText(row.CD_NM_ENG),
       extra: extraOf(row, ['COM_CD', 'CD_NM', 'CD_NM_ENG']),
     }));
   }
@@ -160,7 +181,7 @@ export class SejongPublicData {
       'LESN_TIME', 'LESN_ROOM', 'LESN_EMP', 'STUDENT_YEAR', 'CURI_LANG_CD', 'CURI_LANG_NM', 'DEPT_CD', 'SCH_DEPT_ALIAS', 'MANAGE_DEPT_NM', 'REMARK', 'YEAR', 'SMT_CD'];
     const searchFields = { ...termSearchFields(categoryCode, year, semesterCode), DEPT_CD: departmentCode, CURI_NM: courseName, EMP_NM: instructorName, LANG_CHK: 'KOR' };
     return this.fetchSisDataset('lectures', 'doList.do', searchFields, 'dl_main', (row) => ({
-      courseNumber: requiredText(row, 'CURI_NO'), section: requiredText(row, 'CLASS'), name: requiredText(row, 'CURI_NM'),
+      courseNumber: toText(row['CURI_NO']), section: toText(row['CLASS']), name: toText(row['CURI_NM']),
       courseTypeCode: toText(row.CURI_TYPE_CD), courseTypeName: toText(row.CURI_TYPE_CD_NM),
       domainCode: toText(row.SLT_DOMAIN_CD), domainName: toText(row.SLT_DOMAIN_CD_NM),
       credits: toText(row.CDT), hours: toText(row.TM_NUM), totalHours: toText(row.TOT_TM_NUM), schedule: toText(row.LESN_TIME),
@@ -178,8 +199,8 @@ export class SejongPublicData {
     const usedKeys = ['scmYear', 'scmMonth', 'collDiv', 'collDivNm', 'scmSubject', 'scmSubjectEng', 'frDt', 'toDt'];
     return this.fetchCached('calendar', [start, end, categoryCode], () => [], () => this.requestJson('GET', url), (body) =>
       rowsOf(body, 'data').map((row) => ({
-        year: toText(row.scmYear), month: toText(row.scmMonth), categoryCode: requiredText(row, 'collDiv'), categoryName: toText(row.collDivNm),
-        title: toText(row.scmSubject), titleEn: toText(row.scmSubjectEng), startDate: requiredText(row, 'frDt'), endDate: requiredText(row, 'toDt'),
+        year: toText(row.scmYear), month: toText(row.scmMonth), categoryCode: toText(row['collDiv']), categoryName: toText(row.collDivNm),
+        title: toText(row.scmSubject), titleEn: toText(row.scmSubjectEng), startDate: toText(row['frDt']), endDate: toText(row['toDt']),
         extra: extraOf(row, usedKeys),
       })));
   }
@@ -193,7 +214,7 @@ export class SejongPublicData {
       return Array.from({ length: DORMITORY_DAYS_PER_WEEK }, (_, index) => {
         const dayNumber = index + 1;
         return {
-          date: requiredText(row, `fo_date${dayNumber}`), breakfast: toText(row[`fo_menu_mor${dayNumber}`]), lunch: toText(row[`fo_menu_lun${dayNumber}`]),
+          date: toText(row[`fo_date${dayNumber}`]), breakfast: toText(row[`fo_menu_mor${dayNumber}`]), lunch: toText(row[`fo_menu_lun${dayNumber}`]),
           dinner: toText(row[`fo_menu_eve${dayNumber}`]), alternative: toText(row[`fo_sub_menu${dayNumber}`]),
         };
       });
@@ -204,16 +225,16 @@ export class SejongPublicData {
   dormitoryNotices({ page = 1, rows = 10, keyword = '', location = DEFAULT_DORMITORY_LOCATION }: DormitoryNoticesQuery = {}): Promise<DormitoryNotices> {
     const form = new URLSearchParams({ cPage: String(page), rows: String(rows), bbs_locgbn: location, bbs_id: 'notice', sType: 'subject', sWord: keyword });
     const toNotice = (row: SchoolRow): DormitoryNotice => ({
-      id: requiredText(row, 'seq'), title: toText(row.subject), date: toText(row.regdate), views: toCount(row.visitcnt), fileName: toText(row.file_name1),
+      id: toText(row['seq']), title: toText(row.subject), date: toText(row.regdate), views: toCount(row.visitcnt), fileName: toText(row.file_name1),
     });
     return this.fetchCached('dormitoryNotices', [page, rows, keyword, location], () => ({ total: 0, pinned: [], items: [] }),
       () => this.requestJson('POST', `${DORMITORY_BASE_URL}bbs/getBbsList.do`, form), (body) => {
-        const block = rowsOf(body, 'root')[0];
-        if (!block) throw new Error('empty root');
+        // root 만 필수, 나머지가 없으면 결과 없음
+        const block = rowsOf(body, 'root')[0] ?? {};
         return {
-          total: toCount(asRows(block.totalCount)[0]?.cnt),
-          pinned: asRows(block.topList).map(toNotice),
-          items: asRows(block.list).map(toNotice),
+          total: toCount(asRowsOrEmpty(block.totalCount)[0]?.cnt),
+          pinned: asRowsOrEmpty(block.topList).map(toNotice),
+          items: asRowsOrEmpty(block.list).map(toNotice),
         };
       });
   }
@@ -235,12 +256,9 @@ export class SejongPublicData {
     const usedKeys = ['id', 'placeName', 'placeNameEn', 'placeType', 'welfareCategory', 'latitude', 'longitude', 'placeInfo', 'telNum', 'description'];
     return this.fetchCached('campusPlaces', [placeType], () => [], () => this.requestJson('GET', url), (body) =>
       rowsOf(body, 'items').map((row) => {
-        const latitude = Number(row.latitude);
-        const longitude = Number(row.longitude);
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error('invalid coordinates');
         return {
-          id: requiredText(row, 'id'), name: toText(row.placeName), nameEn: toText(row.placeNameEn), placeType: toText(row.placeType),
-          category: toText(row.welfareCategory), latitude, longitude, info: toText(row.placeInfo), phone: toText(row.telNum),
+          id: toText(row['id']), name: toText(row.placeName), nameEn: toText(row.placeNameEn), placeType: toText(row.placeType),
+          category: toText(row.welfareCategory), latitude: toNumber(row.latitude), longitude: toNumber(row.longitude), info: toText(row.placeInfo), phone: toText(row.telNum),
           description: toText(row.description), extra: extraOf(row, usedKeys),
         };
       }));
@@ -252,9 +270,9 @@ export class SejongPublicData {
     const form = new URLSearchParams({ cid: 'eco', category, start, end, start_year: yearOf(start), end_year: yearOf(end) });
     return this.fetchCached('extracurricularEvents', [start, end, category], () => [], () => this.requestJson('POST', EXTRACURRICULAR_URL, form), (body) =>
       rowsOf(body, 'events').map((row) => {
-        const detail = row.data === null || row.data === undefined ? {} : asObject(row.data);
+        const detail = asObject(row.data);
         return {
-          id: requiredText(row, 'id'), title: toText(row.title), start: toText(row.start), end: toText(row.end), categoryTitle: toText(row.category_title),
+          id: toText(row['id']), title: toText(row.title), start: toText(row.start), end: toText(row.end), categoryTitle: toText(row.category_title),
           url: toText(detail.url), description: toText(detail.description), location: toText(detail.location),
         };
       }));
@@ -269,30 +287,50 @@ export class SejongPublicData {
       (body) => rowsOf(body, datasetName).map(mapRow));
   }
 
-  // 캐시 확인 > 같은 키 진행 중 요청 공유 > 요청·파싱 > 캐시 저장, 실패 시 마지막 캐시 또는 빈 값
+  // 캐시 확인 > 같은 키 진행 중 요청 공유 > 요청·파싱 > 캐시 저장, 실패 시 마지막 캐시 또는 빈 값(캐시 없으면 잠시 기억)
   private fetchCached<T>(methodName: string, cacheArguments: unknown[], createEmptyValue: () => T, request: () => Promise<JsonObject>, parse: (body: JsonObject) => T): Promise<T> {
     const cacheKey = `${methodName}|${JSON.stringify(cacheArguments)}`;
     const cachedEntry = this.cacheByKey.get(cacheKey);
-    if (cachedEntry && this.nowMilliseconds() - cachedEntry.storedAtMilliseconds < this.cacheTtlSeconds * 1000) {
-      return Promise.resolve(structuredClone(cachedEntry.value) as T);
+    if (cachedEntry) {
+      const validSeconds = cachedEntry.isFailure ? this.failureCacheSeconds : this.cacheTtlSeconds;
+      if (this.nowMilliseconds() - cachedEntry.storedAtMilliseconds < validSeconds * 1000) {
+        return Promise.resolve(structuredClone(cachedEntry.value) as T);
+      }
     }
     const pendingRequest = this.pendingByKey.get(cacheKey);
     if (pendingRequest) return pendingRequest.then((value) => structuredClone(value) as T);
 
-    const newRequest = (async (): Promise<T> => {
+    // 만료된 실패 기억은 마지막 값이 아님
+    const lastValueEntry = cachedEntry && !cachedEntry.isFailure ? cachedEntry : undefined;
+    let newRequest: Promise<T> | undefined;
+    newRequest = (async (): Promise<T> => {
       try {
         const value = parse(await request());
-        this.cacheByKey.set(cacheKey, { value, storedAtMilliseconds: this.nowMilliseconds() });
+        this.storeEntry(cacheKey, { value, storedAtMilliseconds: this.nowMilliseconds(), isFailure: false });
         return value;
       } catch {
         // 업스트림 실패는 내부 정보 없이 마지막 캐시(만료 포함) 또는 빈 값
-        return cachedEntry ? (cachedEntry.value as T) : createEmptyValue();
+        if (lastValueEntry) return lastValueEntry.value as T;
+        const emptyValue = createEmptyValue();
+        this.storeEntry(cacheKey, { value: emptyValue, storedAtMilliseconds: this.nowMilliseconds(), isFailure: true });
+        return emptyValue;
       } finally {
-        this.pendingByKey.delete(cacheKey);
+        if (this.pendingByKey.get(cacheKey) === newRequest) this.pendingByKey.delete(cacheKey);
       }
     })();
     this.pendingByKey.set(cacheKey, newRequest);
     return newRequest.then((value) => structuredClone(value) as T);
+  }
+
+  // 캐시 저장 (가득 차면 가장 오래된 항목과 그 진행 중 요청 제거)
+  private storeEntry(cacheKey: string, entry: CacheEntry): void {
+    this.cacheByKey.delete(cacheKey);
+    this.cacheByKey.set(cacheKey, entry);
+    while (this.cacheByKey.size > this.cacheMaxEntries) {
+      const oldestKey = this.cacheByKey.keys().next().value as string;
+      this.cacheByKey.delete(oldestKey);
+      this.pendingByKey.delete(oldestKey);
+    }
   }
 
   // 요청 1건: 2xx 아님, JSON 아님, _SUBMIT_ERROR_ 는 예외 (호출부가 실패 격리)
@@ -305,7 +343,9 @@ export class SejongPublicData {
     });
     if (response.status < 200 || response.status >= 300) throw new Error(`status ${response.status}`);
     // happydorm 은 JSON 을 text/html 로 보내므로 항상 본문을 JSON 으로 파싱
-    const body = asObject(JSON.parse(response.body.toString('utf8')));
+    const parsed: unknown = JSON.parse(response.body.toString('utf8'));
+    if (!isObject(parsed)) throw new Error('expected object');
+    const body = parsed;
     if (SIS_SUBMIT_ERROR_KEY in body) throw new Error('school reported an error');
     return body;
   }

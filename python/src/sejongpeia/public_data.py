@@ -7,6 +7,7 @@ import logging
 import threading
 import time
 import urllib.parse
+from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .client import USER_AGENT
@@ -40,17 +41,52 @@ EXTRA_DENYLIST = frozenset({
 
 
 def _text(value: Any) -> str:
-    """null > 빈 문자열, 그 외 문자열"""
-    return "" if value is None else str(value)
+    """스칼라 > 문자열 (null > 빈 문자열, bool > true/false, 숫자 > 평범한 십진 표기, dict·list > 압축 JSON)"""
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, float):
+        return str(int(value)) if value.is_integer() else format(Decimal(repr(value)), "f")
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    return str(value)
+
+
+def _int_of(value: Any) -> int:
+    """숫자로 읽을 수 없으면 0"""
+    try:
+        return int(float(value))
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
+def _float_of(value: Any) -> float:
+    """숫자로 읽을 수 없으면 0.0"""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _object_of(value: Any) -> Dict[str, Any]:
+    """객체가 아니면 빈 객체 (이상한 행도 버리지 않음)"""
+    return value if isinstance(value, dict) else {}
+
+
+def _fields(row: Any, *names: str) -> List[str]:
+    """행에서 필드 여러 개를 문자열로 (없거나 null 이면 빈 문자열)"""
+    row = _object_of(row)
+    return [_text(row.get(name)) for name in names]
 
 
 def _extra_of(row: Dict[str, Any], used_fields: set) -> Dict[str, str]:
-    """매핑에 쓰지 않은 필드 원문 (null·빈 값·제외 목록 필드 뺌)"""
+    """매핑에 쓰지 않은 필드 (null·빈 값·제외 목록 필드 뺌, 비스칼라는 압축 JSON)"""
     return {key: _text(value) for key, value in sorted(row.items())
             if key not in used_fields and key not in EXTRA_DENYLIST and value not in (None, "")}
 
 
-def _dataset(body: Any, dataset_name: str) -> List[Dict[str, Any]]:
+def _dataset(body: Any, dataset_name: str) -> List[Any]:
     """응답에서 기대 배열 추출 (없거나 배열이 아니면 KeyError·TypeError > 실패 격리)"""
     rows = body[dataset_name]
     if not isinstance(rows, list):
@@ -58,99 +94,113 @@ def _dataset(body: Any, dataset_name: str) -> List[Dict[str, Any]]:
     return rows
 
 
-# ---- 행 > 모델 변환 (필드 대응은 spec/PUBLIC_DATA.md)
+def _first_root_row(body: Any) -> Any:
+    """기숙사 응답은 항상 root 한 행 (빈 root 는 비정상 응답이라 실패)"""
+    rows = _dataset(body, "root")
+    if not rows:
+        raise ValueError("empty root")
+    return rows[0]
+
+
+# ---- 행 > 모델 변환 (필드 대응은 spec/PUBLIC_DATA.md, 모든 필드는 느슨하게 읽음)
 def _to_organization_category(row):
-    return OrganizationCategory(row["COM_CD"], row["CD_NM"], _text(row.get("CD_NM_ENG")),
+    row = _object_of(row)
+    return OrganizationCategory(*_fields(row, "COM_CD", "CD_NM", "CD_NM_ENG"),
                                 _extra_of(row, {"COM_CD", "CD_NM", "CD_NM_ENG"}))
 
 
 def _to_term(row):
-    return Term(row["YEAR"], row["SMT_CD"], row["YEAR_SMT_CD"], row["YEAR_SMT_NM"],
+    row = _object_of(row)
+    return Term(*_fields(row, "YEAR", "SMT_CD", "YEAR_SMT_CD", "YEAR_SMT_NM"),
                 _extra_of(row, {"YEAR", "SMT_CD", "YEAR_SMT_CD", "YEAR_SMT_NM"}))
 
 
 def _to_department(row):
-    used_fields = {"DEPT_CD", "DEPT_LEVEL_CD", "DEPT_L_CD", "DEPT_L_PRINT", "DEPT_M_CD", "DEPT_M_PRINT",
-                   "DEPT_S_CD", "DEPT_S_PRINT", "DEPT_NM_ENG"}
-    return Department(row["DEPT_CD"], row["DEPT_LEVEL_CD"], _text(row["DEPT_L_CD"]), _text(row["DEPT_L_PRINT"]),
-                      _text(row["DEPT_M_CD"]), _text(row["DEPT_M_PRINT"]), _text(row["DEPT_S_CD"]),
-                      _text(row["DEPT_S_PRINT"]), _text(row["DEPT_NM_ENG"]), _extra_of(row, used_fields))
+    row = _object_of(row)
+    names = ("DEPT_CD", "DEPT_LEVEL_CD", "DEPT_L_CD", "DEPT_L_PRINT", "DEPT_M_CD", "DEPT_M_PRINT",
+             "DEPT_S_CD", "DEPT_S_PRINT", "DEPT_NM_ENG")
+    return Department(*_fields(row, *names), _extra_of(row, set(names)))
 
 
 def _to_course_type(row):
-    return CourseType(row["CURI_TYPE_CD"], row["CURI_TYPE_CD_NM"], _text(row["ORGN_CLSF_CD"]),
-                      _extra_of(row, {"CURI_TYPE_CD", "CURI_TYPE_CD_NM", "ORGN_CLSF_CD"}))
+    row = _object_of(row)
+    names = ("CURI_TYPE_CD", "CURI_TYPE_CD_NM", "ORGN_CLSF_CD")
+    return CourseType(*_fields(row, *names), _extra_of(row, set(names)))
 
 
 def _to_selective_domain(row):
-    return SelectiveDomain(row["COM_CD"], row["CD_NM"], _text(row.get("CD_NM_ENG")),
+    row = _object_of(row)
+    return SelectiveDomain(*_fields(row, "COM_CD", "CD_NM", "CD_NM_ENG"),
                            _extra_of(row, {"COM_CD", "CD_NM", "CD_NM_ENG"}))
 
 
-LECTURE_USED_FIELDS = {
+# Lecture 생성자 인자 순서와 같음
+LECTURE_FIELD_NAMES = (
     "CURI_NO", "CLASS", "CURI_NM", "CURI_TYPE_CD", "CURI_TYPE_CD_NM", "SLT_DOMAIN_CD", "SLT_DOMAIN_CD_NM", "CDT",
     "TM_NUM", "TOT_TM_NUM", "LESN_TIME", "LESN_ROOM", "LESN_EMP", "STUDENT_YEAR", "CURI_LANG_CD", "CURI_LANG_NM",
     "DEPT_CD", "SCH_DEPT_ALIAS", "MANAGE_DEPT_NM", "REMARK", "YEAR", "SMT_CD",
-}
+)
 
 
 def _to_lecture(row):
-    return Lecture(
-        row["CURI_NO"], row["CLASS"], row["CURI_NM"], _text(row["CURI_TYPE_CD"]), _text(row["CURI_TYPE_CD_NM"]),
-        _text(row["SLT_DOMAIN_CD"]), _text(row["SLT_DOMAIN_CD_NM"]), _text(row["CDT"]), _text(row["TM_NUM"]),
-        _text(row["TOT_TM_NUM"]), _text(row["LESN_TIME"]), _text(row["LESN_ROOM"]), _text(row["LESN_EMP"]),
-        _text(row["STUDENT_YEAR"]), _text(row["CURI_LANG_CD"]), _text(row["CURI_LANG_NM"]), _text(row["DEPT_CD"]),
-        _text(row["SCH_DEPT_ALIAS"]), _text(row["MANAGE_DEPT_NM"]), _text(row["REMARK"]), _text(row["YEAR"]),
-        _text(row["SMT_CD"]), _extra_of(row, LECTURE_USED_FIELDS))
+    row = _object_of(row)
+    return Lecture(*_fields(row, *LECTURE_FIELD_NAMES), _extra_of(row, set(LECTURE_FIELD_NAMES)))
 
 
 def _to_calendar_event(row):
-    used_fields = {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"}
-    return CalendarEvent(_text(row["scmYear"]), _text(row["scmMonth"]), row["collDiv"], _text(row["collDivNm"]),
-                         _text(row["scmSubject"]), _text(row["scmSubjectEng"]), row["frDt"], row["toDt"],
-                         _extra_of(row, used_fields))
+    row = _object_of(row)
+    names = ("scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt")
+    return CalendarEvent(*_fields(row, *names), _extra_of(row, set(names)))
 
 
 def _to_dormitory_menu_days(body) -> List[DormitoryMenuDay]:
-    """root[0] 의 fo_*1..7 > 7일치 (날짜 없으면 KeyError)"""
-    row = body["root"][0]
-    return [DormitoryMenuDay(row[f"fo_date{day}"], _text(row[f"fo_menu_mor{day}"]), _text(row[f"fo_menu_lun{day}"]),
-                             _text(row[f"fo_menu_eve{day}"]), _text(row[f"fo_sub_menu{day}"])) for day in range(1, 8)]
+    """root[0] 의 fo_*1..7 > 7일치 (root 없음·배열 아님·빈 root 는 실패)"""
+    row = _object_of(_first_root_row(body))
+    return [DormitoryMenuDay(*_fields(row, f"fo_date{day}", f"fo_menu_mor{day}", f"fo_menu_lun{day}",
+                                      f"fo_menu_eve{day}", f"fo_sub_menu{day}")) for day in range(1, 8)]
 
 
 def _to_dormitory_notice(row):
     # 작성자 필드(regname, regid)는 읽지 않음
-    return DormitoryNotice(_text(row["seq"]), _text(row["subject"]), _text(row["regdate"]),
-                           int(row["visitcnt"] or 0), _text(row["file_name1"]))
+    row = _object_of(row)
+    seq, subject, regdate, file_name = _fields(row, "seq", "subject", "regdate", "file_name1")
+    return DormitoryNotice(seq, subject, regdate, _int_of(row.get("visitcnt")), file_name)
+
+
+def _notice_rows(block: Dict[str, Any], key: str) -> List[DormitoryNotice]:
+    """목록 필드가 없거나 배열이 아니면 빈 목록 (결과 없음은 장애가 아님)"""
+    rows = block.get(key)
+    return [_to_dormitory_notice(row) for row in rows] if isinstance(rows, list) else []
 
 
 def _to_dormitory_notices(body) -> DormitoryNotices:
-    block = body["root"][0]
-    return DormitoryNotices(int(block["totalCount"][0]["cnt"]), [_to_dormitory_notice(row) for row in block["topList"]],
-                            [_to_dormitory_notice(row) for row in block["list"]])
+    block = _object_of(_first_root_row(body))
+    counts = block.get("totalCount")
+    total = _int_of(_object_of(counts[0]).get("cnt")) if isinstance(counts, list) and counts else 0
+    return DormitoryNotices(total, _notice_rows(block, "topList"), _notice_rows(block, "list"))
 
 
 def _to_cafeteria_menu_item(row):
-    return CafeteriaMenuItem(_text(row["buildingName"]), _text(row["location"]), _text(row["placeId"]),
-                             _text(row["placeName"]), _text(row["menuDate"]), _text(row["day"]),
-                             _text(row["mealTypeId"]), _text(row["mealName"]), _text(row["menuName"]),
-                             _text(row["price"]))
+    return CafeteriaMenuItem(*_fields(row, "buildingName", "location", "placeId", "placeName", "menuDate", "day",
+                                      "mealTypeId", "mealName", "menuName", "price"))
 
 
 def _to_campus_place(row):
+    row = _object_of(row)
     used_fields = {"id", "placeName", "placeNameEn", "placeType", "welfareCategory", "latitude", "longitude",
                    "placeInfo", "telNum", "description"}
-    return CampusPlace(_text(row["id"]), _text(row["placeName"]), _text(row["placeNameEn"]), _text(row["placeType"]),
-                       _text(row["welfareCategory"]), float(row["latitude"]), float(row["longitude"]),
-                       _text(row["placeInfo"]), _text(row["telNum"]), _text(row["description"]),
-                       _extra_of(row, used_fields))
+    identifier, name, name_en, place_type, category = _fields(row, "id", "placeName", "placeNameEn", "placeType",
+                                                              "welfareCategory")
+    info, phone, description = _fields(row, "placeInfo", "telNum", "description")
+    return CampusPlace(identifier, name, name_en, place_type, category, _float_of(row.get("latitude")),
+                       _float_of(row.get("longitude")), info, phone, description, _extra_of(row, used_fields))
 
 
 def _to_extracurricular_event(row):
-    detail = row["data"]
-    return ExtracurricularEvent(_text(row["id"]), _text(row["title"]), _text(row["start"]), _text(row["end"]),
-                                _text(row["category_title"]), _text(detail.get("url")),
-                                _text(detail.get("description")), _text(detail.get("location")))
+    row = _object_of(row)
+    detail = _object_of(row.get("data"))
+    return ExtracurricularEvent(*_fields(row, "id", "title", "start", "end", "category_title"),
+                                *_fields(detail, "url", "description", "location"))
 
 
 def _year_of(date_text: str) -> str:
@@ -162,14 +212,17 @@ class SejongPublicData:
     """공개 데이터 클라이언트: 메서드 12개, 메서드·인자별 메모리 캐시, 동시 호출 합치기(같은 키 1회 요청)"""
 
     def __init__(self, timeout_seconds: float = 10, cache_ttl_seconds: float = 86400, ssl_verification: bool = True,
+                 failure_cache_seconds: float = 60, cache_max_entries: int = 500,
                  _session_factory: Optional[Callable[[], Any]] = None, _clock: Optional[Callable[[], float]] = None):
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_seconds = cache_ttl_seconds
         self.ssl_verification = ssl_verification
+        self.failure_cache_seconds = failure_cache_seconds
+        self.cache_max_entries = cache_max_entries
         self._session_factory = _session_factory or self._create_default_session
         self._clock = _clock or time.time
         self._session: Any = None
-        self._cache: Dict[Tuple, Tuple[float, Any]] = {}  # 키 > (저장 시각, 값)
+        self._cache: Dict[Tuple, Tuple[float, Any, bool]] = {}  # 키 > (저장 시각, 값, 실패 기억 여부), 오래된 순
         self._key_locks: Dict[Tuple, threading.Lock] = {}
         self._guard_lock = threading.Lock()
 
@@ -245,15 +298,31 @@ class SejongPublicData:
         """캐시 확인 > 요청 > 변환 > 캐시 저장, 상류 실패는 마지막 캐시(만료 포함) 또는 빈 값 (같은 키는 한 번에 한 요청)"""
         with self._lock_for(cache_key):
             cached = self._cache.get(cache_key)
-            if cached is not None and self._clock() - cached[0] < self.cache_ttl_seconds:
-                return self._copy_of(cached[1])
+            if cached is not None:
+                stored_at, cached_value, is_failure = cached
+                valid_seconds = self.failure_cache_seconds if is_failure else self.cache_ttl_seconds
+                if self._clock() - stored_at < valid_seconds:  # 성공 캐시 또는 실패 기억이 유효하면 요청 없음
+                    return self._copy_of(cached_value)
             try:
                 value = convert(self._request_json(method, url, payload, content_type))
             except Exception as error:  # 상류 실패 전부 격리 (서버 내부 정보 로그 금지, 예외 종류만)
                 LOGGER.warning("[sejong public data] upstream failed (%s) : %s", cache_key[0], type(error).__name__)
-                return self._copy_of(cached[1] if cached is not None else empty_value)
-            self._cache[cache_key] = (self._clock(), value)
+                if cached is not None and not cached[2]:
+                    return self._copy_of(cached[1])  # 만료된 캐시 값
+                self._store(cache_key, empty_value, True)  # 실패 기억 (캐시 값 없을 때만)
+                return self._copy_of(empty_value)
+            self._store(cache_key, value, False)
             return self._copy_of(value)
+
+    def _store(self, cache_key: Tuple, value: Any, is_failure: bool) -> None:
+        """캐시 저장 (상한 초과 시 가장 오래된 항목과 그 Lock 제거)"""
+        with self._guard_lock:
+            self._cache.pop(cache_key, None)  # 갱신 항목을 가장 최신 위치로
+            while len(self._cache) >= max(self.cache_max_entries, 1):
+                oldest_key = next(iter(self._cache))
+                del self._cache[oldest_key]
+                self._key_locks.pop(oldest_key, None)
+            self._cache[cache_key] = (self._clock(), value, is_failure)
 
     def _request_json(self, method: str, url: str, payload: Optional[Dict], content_type: Optional[str]) -> Any:
         """요청 1건 > JSON (2xx 아님·JSON 아님·_SUBMIT_ERROR_ 는 예외)"""

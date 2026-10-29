@@ -6,8 +6,8 @@ Sources the school serves without login (verified 2026-10-30, details in [REFERE
 
 | Language | Entry point | Naming |
 |---|---|---|
-| Python | `sejongpeia.SejongPublicData(timeout_seconds=10, cache_ttl_seconds=86400, ssl_verification=True)` | `snake_case` methods and fields |
-| Node | `new SejongPublicData({ timeoutSeconds, cacheTtlSeconds, sslVerification })` (exported from the package) | `camelCase` |
+| Python | `sejongpeia.SejongPublicData(timeout_seconds=10, cache_ttl_seconds=86400, failure_cache_seconds=60, cache_max_entries=500, ssl_verification=True)` | `snake_case` methods and fields |
+| Node | `new SejongPublicData({ timeoutSeconds, cacheTtlSeconds, failureCacheSeconds, cacheMaxEntries, sslVerification })` (exported from the package) | `camelCase` |
 | Java | `kr.suhsaechan.sejongpeia.publicdata.SejongPublicData` (Spring bean via auto-configuration, also constructible) | `camelCase`, Lombok models |
 
 The expected JSON uses `snake_case` keys; the Node and Java tests convert names before comparing. Every model also has `extra` (a map of string to string) except the dormitory and cafeteria models.
@@ -37,11 +37,20 @@ SIS requests: header `Content-Type: application/json; charset="UTF-8"`, `Accept:
 - `extra`: every school field not used above, as a string, skipping null and empty values and the deny list (`CD_ALIAS1..3` with `_ENG`, `regname`, `regid`, `STACK_TRACE`). Names of staff members must never appear in `extra`.
 - Dormitory notices: pinned items come from `topList`, regular ones from `list`, `total` from `totalCount[0].cnt`. The author fields (`regname`, `regid`) are not returned.
 
+## Value rules (same in all languages)
+
+- Missing or null optional fields become an empty string (`0` for `views` and `total`, `0.0` for `latitude` and `longitude`). A row is never dropped, and one odd row never fails the whole list.
+- Only a missing or non-array **container** is a failure (`data`, `items`, `events`, `root`, `dl_*`). Dormitory notices are the exception: a missing `topList`, `list` or `totalCount` means no results (empty lists, total 0), because a search without matches is not an outage. An empty `root` array (no first row) is a failure for both dormitory sources, because the school always returns one row.
+- Scalar school values are converted to text (strings as they are, numbers in plain decimal form, booleans as `true` or `false`). `Term.year` and other mapped fields are always strings.
+- A non-scalar value (object or array) inside `extra` becomes a compact JSON string (no spaces).
+
 ## Failure isolation and cache
 
 - In-memory cache per method and arguments, `cache_ttl_seconds` default 86400. A fresh cache entry means no request.
 - Any connection failure, timeout, non-2xx status, non-JSON body, missing expected key, or a `_SUBMIT_ERROR_` object returns the last cached value (even if expired), or an empty list (empty object for dormitory notices). It never raises for upstream problems and never exposes `STACK_TRACE` or other server internals.
 - Only invalid input raises: `lectures` without any of the three filters raises `INVALID_INPUT`.
+- Failures are remembered briefly: after a failed fetch with no cached value, the same call returns the empty value without a request for `failure_cache_seconds` (default 60). A stale cached value is still returned on failure.
+- The cache holds at most `cache_max_entries` (default 500) entries; when full the oldest entry is evicted. Per-key locks are released with their entries (no unbounded growth, callers may pass user-typed search text).
 - Concurrent calls with the same arguments share one request. At most one request per call (`lectures`, `calendar` and the others are single requests).
 - Tests run on fixtures through an injectable transport and an injectable clock; no school server in unit tests. Live shape checks are done by `scripts/probe-reference-data.py`.
 

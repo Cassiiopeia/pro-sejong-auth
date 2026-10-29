@@ -1,6 +1,6 @@
 """공개 데이터 모델: 학교 응답 필드 > 라이브러리 필드 (spec/PUBLIC_DATA.md, 불변 dataclass)
 
-extra: 매핑에 쓰지 않은 학교 필드 원문 문자열 (빈 값·개인 식별·서버 내부 필드 제외)
+extra: 매핑에 쓰지 않은 학교 필드 문자열 (비스칼라는 압축 JSON, 빈 값·개인 식별·서버 내부 필드 제외)
 """
 
 from dataclasses import dataclass, field

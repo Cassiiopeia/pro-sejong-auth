@@ -116,18 +116,10 @@ def test_sis_request_body_and_headers():
     assert json.loads(request["data"]) == {"dm_search": {"ORGN_CLSF_CD": "20", "YEAR": "2099", "SMT_CD": "20", "YEAR_SMT": "2099/20"}}
     assert request["headers"]["Content-Type"] == 'application/json; charset="UTF-8"'
     assert request["headers"]["Accept"] == "application/json"
-
-
-def test_organization_categories_request_body_is_empty_search():
-    client, session = create_client(ALL_SOURCES)
     client.organization_categories()
-    assert json.loads(session.requests[0]["data"]) == {"dm_search": {}}
-
-
-def test_lectures_request_body():
-    client, session = create_client(ALL_SOURCES)
+    assert json.loads(session.requests[1]["data"]) == {"dm_search": {}}
     client.lectures("20", "2099", "20", course_name="예시과목")
-    assert json.loads(session.requests[0]["data"])["dm_search"] == {
+    assert json.loads(session.requests[2]["data"])["dm_search"] == {
         "ORGN_CLSF_CD": "20", "YEAR": "2099", "SMT_CD": "20", "YEAR_SMT": "2099/20",
         "DEPT_CD": "", "CURI_NM": "예시과목", "EMP_NM": "", "LANG_CHK": "KOR"}
 
@@ -181,29 +173,28 @@ def test_fresh_cache_skips_request_and_expired_cache_refreshes():
     clock.now += 2
     client.course_types()
     assert len(session.requests) == 2
-
-
-def test_cache_key_includes_arguments():
-    client, session = create_client(ALL_SOURCES)
-    client.cafeteria_menu("1")
+    client.cafeteria_menu("1")  # 인자가 다르면 다른 키
     client.cafeteria_menu("2")
-    assert len(session.requests) == 2
-
-
-def test_cached_list_is_not_shared_with_caller():
-    client, _ = create_client(ALL_SOURCES)
-    client.course_types().clear()
+    assert len(session.requests) == 4
+    client.course_types().clear()  # 호출자가 캐시를 바꾸지 못함
     assert len(client.course_types()) == 1
 
 
-def test_expired_cache_is_returned_when_refresh_fails():
+def test_failure_is_remembered_and_stale_cache_is_still_returned():
     clock = FakeClock()
-    session = RecordingSession(ALL_SOURCES)
-    client = SejongPublicData(cache_ttl_seconds=10, _session_factory=lambda: session, _clock=clock)
+    session = RecordingSession({"https://": OSError("down")})
+    client = SejongPublicData(cache_ttl_seconds=10, failure_cache_seconds=60, _session_factory=lambda: session, _clock=clock)
+    assert client.cafeteria_menu("1") == [] and client.cafeteria_menu("1") == []
+    assert len(session.requests) == 1  # 실패 기억 중에는 요청 없음
+    clock.now += 61
+    client.cafeteria_menu("1")
+    assert len(session.requests) == 2
+    session.outcome_by_url_prefix = ALL_SOURCES
+    clock.now += 61
     first = client.cafeteria_menu("1")
-    session.outcome_by_url_prefix = {"https://www.sejong.ac.kr/": OSError("down")}
+    session.outcome_by_url_prefix = {"https://": OSError("down")}
     clock.now += 1000
-    assert client.cafeteria_menu("1") == first
+    assert client.cafeteria_menu("1") == first  # 만료된 캐시 값
 
 
 def test_concurrent_calls_share_one_request():
@@ -247,3 +238,30 @@ def test_upstream_failure_returns_empty_value(method_name, failure_name, caplog)
     else:
         assert result == []
     assert "secret internals" not in caplog.text
+
+
+# ---- 느슨한 매핑
+def test_row_with_missing_fields_survives_and_values_are_text():
+    body = '{"items": [{"id": 7, "latitude": null, "meta": {"a": [1, 2]}}, {"placeName": "예시관", "latitude": "37.5", "flag": true}]}'
+    client, _ = create_client({"https://": json_response(body)})
+    places = client.campus_places()
+    assert [place.id for place in places] == ["7", ""]
+    assert places[0].latitude == 0.0 and places[0].name == ""
+    assert places[0].extra == {"meta": '{"a":[1,2]}'}  # 비스칼라는 압축 JSON
+    assert places[1].latitude == 37.5 and places[1].extra == {"flag": "true"}
+
+
+def test_dormitory_notices_without_results_is_empty_not_failure():
+    client, session = create_client({"https://": json_response('{"root": [{}]}')})
+    assert to_plain(client.dormitory_notices()) == {"total": 0, "pinned": [], "items": []}
+    client.dormitory_notices()
+    assert len(session.requests) == 1  # 정상 응답으로 캐시됨
+
+
+# ---- 캐시 상한
+def test_cache_evicts_oldest_entry_and_its_lock():
+    client = SejongPublicData(cache_max_entries=2, _session_factory=lambda: RecordingSession(ALL_SOURCES))
+    for place_id in ("1", "2", "3"):
+        client.cafeteria_menu(place_id)
+    assert len(client._cache) == 2 and len(client._key_locks) == 2
+    assert ("cafeteria_menu", "1") not in client._cache

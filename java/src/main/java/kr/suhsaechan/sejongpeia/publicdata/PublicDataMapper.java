@@ -102,18 +102,23 @@ final class PublicDataMapper {
     return List.copyOf(days);
   }
 
-  /** 기숙사 공지: 고정(topList) + 일반(list) + 전체 건수(totalCount[0].cnt), 작성자 제외 */
+  /** 기숙사 공지: 고정(topList) + 일반(list) + 전체 건수(totalCount[0].cnt), 작성자 제외 (없거나 비면 결과 없음: 빈 목록, 0) */
   static DormitoryNotices toDormitoryNotices(JsonNode root) {
     JsonNode block = firstRootRow(root);
-    JsonNode totalRows = requireArray(block, "totalCount");
-    List<DormitoryNotice> pinned = new ArrayList<>();
-    if (block.get("topList") != null && block.get("topList").isArray()) {
-      block.get("topList").forEach(row -> pinned.add(toDormitoryNotice(row)));
+    List<DormitoryNotice> pinned = noticesOf(block.get("topList"));
+    List<DormitoryNotice> items = noticesOf(block.get("list"));
+    JsonNode totalRows = block.get("totalCount");
+    boolean hasTotalRow = totalRows != null && totalRows.isArray() && totalRows.size() > 0;
+    return DormitoryNotices.builder().total(hasTotalRow ? integer(totalRows.get(0), "cnt") : 0)
+        .pinned(pinned).items(items).build();
+  }
+
+  private static List<DormitoryNotice> noticesOf(JsonNode rows) {
+    List<DormitoryNotice> notices = new ArrayList<>();
+    if (rows != null && rows.isArray()) {
+      rows.forEach(row -> notices.add(toDormitoryNotice(row)));
     }
-    List<DormitoryNotice> items = new ArrayList<>();
-    requireArray(block, "list").forEach(row -> items.add(toDormitoryNotice(row)));
-    return DormitoryNotices.builder().total(totalRows.size() == 0 ? 0 : integer(totalRows.get(0), "cnt"))
-        .pinned(List.copyOf(pinned)).items(List.copyOf(items)).build();
+    return List.copyOf(notices);
   }
 
   private static DormitoryNotice toDormitoryNotice(JsonNode row) {

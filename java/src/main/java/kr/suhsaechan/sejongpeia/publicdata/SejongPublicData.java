@@ -33,6 +33,9 @@ public class SejongPublicData {
   private static final String FORM_CONTENT_TYPE = OkHttpPublicDataHttpCaller.FORM_CONTENT_TYPE;
   private static final String DEFAULT_CALENDAR_CATEGORY_CODE = "0001"; // 학부 일정
   private static final String DEFAULT_DORMITORY_LOCATION = "SJ";
+  // 실패 기억 기본 60초, 캐시 기본 최대 500항목 (SejongAuthProperties 기본값과 동일)
+  private static final long DEFAULT_FAILURE_CACHE_SECONDS = 60;
+  private static final int DEFAULT_CACHE_MAX_ENTRIES = 500;
   private static final int DEFAULT_NOTICE_PAGE = 1;
   private static final int DEFAULT_NOTICE_ROWS = 10;
   private static final int YEAR_TEXT_LENGTH = 4;
@@ -46,12 +49,19 @@ public class SejongPublicData {
 
   public SejongPublicData(SejongAuthProperties properties) {
     this(new OkHttpPublicDataHttpCaller(properties), Clock.systemUTC(),
-        Duration.ofSeconds(properties.getPublicDataCacheTtlSeconds()));
+        Duration.ofSeconds(properties.getPublicDataCacheTtlSeconds()),
+        Duration.ofSeconds(properties.getPublicDataFailureCacheSeconds()), properties.getPublicDataCacheMaxEntries());
   }
 
   /** 호출기와 시계 주입 (테스트, 프록시 등) */
   public SejongPublicData(PublicDataHttpCaller httpCaller, Clock clock, Duration cacheTimeToLive) {
-    this.fetcher = new PublicDataFetcher(httpCaller, clock, cacheTimeToLive);
+    this(httpCaller, clock, cacheTimeToLive, Duration.ofSeconds(DEFAULT_FAILURE_CACHE_SECONDS), DEFAULT_CACHE_MAX_ENTRIES);
+  }
+
+  /** 호출기, 시계, 캐시 유효 시간, 실패 기억 시간, 캐시 최대 항목 수 주입 */
+  public SejongPublicData(PublicDataHttpCaller httpCaller, Clock clock, Duration cacheTimeToLive,
+      Duration failureMemoryDuration, int cacheMaxEntries) {
+    this.fetcher = new PublicDataFetcher(httpCaller, clock, cacheTimeToLive, failureMemoryDuration, cacheMaxEntries);
   }
 
   public List<OrganizationCategory> organizationCategories() {
