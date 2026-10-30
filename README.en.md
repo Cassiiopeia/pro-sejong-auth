@@ -1,26 +1,27 @@
 <div align="center">
 
-<img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
+<div align="right">
 
-<img src="docs/assets/banner/banner-a.en.png" alt="pro-sejongpeia: everything you need to build on Sejong University. Student login, departments, lectures, academic calendar and cafeterias for Java, Python and Node.js" width="880">
-
-**Everything you need to build on Sejong University, in one library.**
-From student login to departments, lectures, the academic calendar and cafeterias, one call from Java, Python or Node.js.
-Fast and light, gentle on requests, never stores a password, and checked against the real portal every day.
-
-<sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 라이브러리 (Java · Python · Node)</sub>
-
-**📖 [Documentation](https://cassiiopeia.github.io/pro-sejongpeia/en/)** · [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/en/#demo) · [Quick start](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) · [School data](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/) · [Authentication](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) · [What you get](#what-you-get) · [한국어](README.md) | English
-
-[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
-[![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/)
-[![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia)
-[![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
-[![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+[한국어](README.md) · **English**
 
 </div>
 
----
+<img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="96">
+
+<img src="docs/assets/banner/banner-a.en.png" alt="PRO SEJONGPEIA: everything you need to build on Sejong University. Student login, departments, lectures, academic calendar and cafeterias for Java, Python and Node.js" width="880">
+
+<br>
+
+**From student login to departments, lectures, the academic calendar and cafeterias,<br>one call from Java, Python or Node.js.**
+
+Fast and light, gentle on requests, never stores a password.
+
+**[Documentation](https://cassiiopeia.github.io/pro-sejongpeia/en/)** &nbsp;·&nbsp; [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/en/#demo) &nbsp;·&nbsp; [Quick start](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) &nbsp;·&nbsp; [School data](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/)
+
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia) [![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/) [![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia) [![License](docs/assets/badges/license-mit.svg)](LICENSE)<br>
+[![Checked against the real portal every day](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+
+</div>
 
 ## What you get
 
@@ -28,40 +29,40 @@ Not just student verification. The public data the school serves without a login
 
 | | Feature | What you get |
 |:-:|---|---|
-| 🔐 | **Student verification** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and school codes such as the department code. Pick integrated, DHC or SIS |
-| 🏫 | **Department and term codes** | Organization categories (undergraduate and graduate), the term list and the full department list |
-| 📚 | **Lectures** | The whole term or a search by department, course name or instructor, with schedule and room |
-| 🎓 | **Curriculum and course overview** | Suggested year and semester, credits and the course overview of a department's curriculum |
-| 📅 | **Academic calendar** | Undergraduate and graduate schedules, plus the per-business allowed periods (course registration, certificate printing) you see after login |
-| 🛏️ | **Dormitory** | Seven days of menus and the notices |
-| 🍚 | **Cafeterias** | The list of cafeterias and daily menus with prices |
-| 📍 | **Campus places** | Buildings and welfare facilities with name, coordinates and info |
-| 🎉 | **Extracurricular events** | Event schedule with category and location |
+| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **Student verification** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and school codes such as the department code. Pick integrated, DHC or SIS |
+| <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **Department and term codes** | Organization categories (undergraduate and graduate), the term list and the full department list |
+| <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **Lectures** | The whole term or a search by department, course name or instructor, with schedule and room |
+| <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **Curriculum and course overview** | Suggested year and semester, credits and the course overview of a department's curriculum |
+| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **Academic calendar** | Undergraduate and graduate schedules, plus the per-business allowed periods (course registration, certificate printing) you see after login |
+| <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **Dormitory** | Seven days of menus and the notices |
+| <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **Cafeterias** | The list of cafeterias and daily menus with prices |
+| <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **Campus places** | Buildings and welfare facilities with name, coordinates and info |
+| <img src="docs/assets/icons/events.svg" width="22" alt=""> | **Extracurricular events** | Event schedule with category and location |
 
 ## Why this library
 
 Four promises, each with proof you can check in the code or the tests.
 
-### ⚡ Fast and light
+### <img src="docs/assets/icons/fast.svg" width="22" alt="" align="top"> Fast and light
 
 - **Zero dependencies** (Python, Node): standard library only (`dependencies = []`, `"dependencies": {}`).
 - **Measured**: the department list and one department's lectures take about 0.1 s, the whole term's lectures about 1 s. Cached answers take microseconds (Python, Seoul, median of 5 fresh clients; most of the time is the school server's own response).
 - **One login**: the integrated call signs in to the portal once and reads DHC and SIS with the same session. 0.6 to 0.8 s in all three languages (median of 5).
 
-### 🧠 Gentle on requests
+### <img src="docs/assets/icons/efficient.svg" width="22" alt="" align="top"> Gentle on requests
 
 - Results are cached in memory for **24 hours**, and **simultaneous calls with the same arguments share one request**. The cache holds at most 500 entries (default) and evicts the oldest first.
 - A call sends one request. The only exception is the cafeteria list, which sends one per number in a range (10 by default), **one after the other**, per refresh.
 - A failed call is **remembered for 60 seconds** so the school's servers are not hammered. Proof: the cache section of [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
 
-### 🔒 Safe
+### <img src="docs/assets/icons/safe.svg" width="22" alt="" align="top"> Safe
 
 - **The password is never stored.** It is only used for the portal login request and never put into error messages (test `test_error_message_never_contains_password`).
 - **Stops at the first failure.** A wrong password ends with `AUTHENTICATION_FAILED` and no retry, so the account is not locked by the library, and a locked account is reported as `ACCOUNT_LOCKED`.
 - The SIS extra fields (`extra`) **always exclude** session values, client IP, account state, resident number, bank account, address and staff names, and server-internal error details are never returned.
 - A failing school server does not shake your app: public data returns the last cached value or an empty list instead of throwing.
 
-### ✅ Trustworthy
+### <img src="docs/assets/icons/reliable.svg" width="22" alt="" align="top"> Trustworthy
 
 - **Checked against the real portal every day**: at 09:00 KST all three languages sign in to the live portal, and a failure opens an issue automatically (see the badge above).
 - **Same results in three languages**: shared values live in [spec/contract.json](spec/contract.json), and each language's tests fail when they drift.
@@ -75,10 +76,10 @@ The hard parts of doing it yourself (the one cipher the portal accepts, firewall
 
 | Feature | Java | Python | Node |
 |---|:-:|:-:|:-:|
-| **Student verification**: integrated · DHC · SIS · SIS business periods | ✅ | ✅ | ✅ |
-| **Codes and lectures**: categories · terms · departments · lectures · course types · selective domains · curriculum | ✅ | ✅ | ✅ |
-| **Schedule and campus life**: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✅ | ✅ | ✅ |
-| Raw response, SIS codes and `extra` options | ✅ | ✅ | ✅ |
+| **Student verification**: integrated · DHC · SIS · SIS business periods | ✓ | ✓ | ✓ |
+| **Codes and lectures**: categories · terms · departments · lectures · course types · selective domains · curriculum | ✓ | ✓ | ✓ |
+| **Schedule and campus life**: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✓ | ✓ | ✓ |
+| Raw response, SIS codes and `extra` options | ✓ | ✓ | ✓ |
 
 All method names (per language, including the Java raw-response variants) are listed in [Authentication methods](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) and [School data: common rules](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/).
 
@@ -179,7 +180,7 @@ dependencies {
 </dependency>
 ```
 
-Put the latest version in `<version>`. Check it in the latest-version heading at the top or the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
+Put the latest version in `<version>`. Check it on the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
 
 ```java
 @RestController
