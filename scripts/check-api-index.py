@@ -62,7 +62,7 @@ def read_python_class(path, class_name):
             try:
                 module_constants[statement.targets[0].id] = ast.literal_eval(statement.value)
             except ValueError:
-                pass
+                pass  # 리터럴이 아닌 모듈 상수(함수 호출 등)는 기본값 비교에 쓰지 않으므로 건너뜀
     class_node = next(node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name)
     methods = {}
     for function in class_node.body:
