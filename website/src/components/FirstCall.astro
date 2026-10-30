@@ -10,7 +10,7 @@ const { locale } = Astro.props;
 const copy = LANDING_COPY[locale].firstCall;
 
 // 코드 예시: docs/INTEGRATION_EXAMPLES, README 의 검증된 호출 형태 (코드 주석만 언어별)
-const termComment = locale === 'ko' ? '학부, 2026년 2학기' : 'undergraduate, 2026 2nd semester';
+const termComment = locale === 'ko' ? '학부, 학기 값은 학교 값' : 'undergraduate, term values are the school\'s';
 const springComment = locale === 'ko' ? 'Spring 에서는 빈으로 주입' : 'inject it as a bean in Spring';
 const javaAuth = `// build.gradle: implementation "kr.suhsaechan:sejongpeia:<version>"   (latest: central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 SejongAuthResult result = sejongAuthEngine.authenticate("21011234", "${copy.passwordPlaceholder}");

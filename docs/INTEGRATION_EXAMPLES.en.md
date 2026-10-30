@@ -20,7 +20,7 @@ Checked on 2026-10-30 against the live school servers, with the 1.2.49 source (P
 | `implementation "kr.suhsaechan:sejongpeia:<version>"` | `pip install pro-sejongpeia==<version>` | `npm install pro-sejongpeia@<version>` |
 
 - `<version>` is the latest release number (see the README badges, or [Maven Central](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia), [PyPI](https://pypi.org/project/pro-sejongpeia/), [npm](https://www.npmjs.com/package/pro-sejongpeia)). The examples here were checked with the 1.2.49 source.
-- Spring Boot registers `SuhSejongAuthEngine` and `SejongPublicData` as beans. For plain Java see "Without Spring (plain Java)" in the [README](../README.en.md#quick-start-java--spring-boot).
+- Spring Boot registers `SuhSejongAuthEngine` and `SejongPublicData` as beans. For plain Java see "Java: without Spring" in the [configuration docs](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/configuration/).
 - Create **one** `SejongPublicData` per process. The in-memory cache (24 hours by default) and request coalescing live inside the instance.
 - When a school server fails, public data returns the last cached value or an **empty list** without throwing. An empty list can mean "no data" or "a problem on the school side", so show a hint such as "could not load" next to empty results.
 - The Python examples use syntax that works on 3.9+, the Node examples on 18+ (ESM, top-level `await`); what was actually run is the environment above.
