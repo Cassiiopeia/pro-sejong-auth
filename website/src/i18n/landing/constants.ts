@@ -13,17 +13,17 @@ export const VERSION_FILE_URL = 'https://raw.githubusercontent.com/Cassiiopeia/p
 export const PACKAGE_BADGES = [
   {
     name: 'Maven Central',
-    imageUrl: 'https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F?logo=apachemaven&logoColor=white',
+    imageUrl: 'https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/badges/maven-central.svg',
     linkUrl: 'https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia',
   },
   {
     name: 'PyPI',
-    imageUrl: 'https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60?logo=pypi&logoColor=white',
+    imageUrl: 'https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/badges/pypi.svg',
     linkUrl: 'https://pypi.org/project/pro-sejongpeia/',
   },
   {
     name: 'npm',
-    imageUrl: 'https://img.shields.io/badge/npm-pro--sejongpeia-324D60?logo=npm&logoColor=white',
+    imageUrl: 'https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/badges/npm.svg',
     linkUrl: 'https://www.npmjs.com/package/pro-sejongpeia',
   },
   {
