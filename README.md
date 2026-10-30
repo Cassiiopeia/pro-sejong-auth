@@ -142,7 +142,7 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "")
 System.out.println(departments.size() + " " + lectures.get(0).getName());
 ```
 
-예시 출력입니다 (Python, 학교 서버 3번 호출에 0.3초).
+예시 출력입니다 (Python).
 
 <p align="center">
   <img src="docs/assets/demo/public-data-run.png" alt="SejongPublicData 예시 출력: 학과 목록, 소프트웨어학과 개설강좌, 학사일정" width="760">

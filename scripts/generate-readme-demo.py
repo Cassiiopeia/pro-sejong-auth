@@ -9,7 +9,6 @@
 import html
 import sys
 import time
-from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python" / "src"))
@@ -65,8 +64,8 @@ def render_html(lines, elapsed_seconds, lecture_count, event_count):
             body.append(f'<div class="out">{escaped}</div>')
         else:
             body.append("<div>&nbsp;</div>")
-    footer = (f"실제 학교 서버 호출 3번, 로그인 없음, 합계 {elapsed_seconds:.1f}초 "
-              f"(학과 {lines[5][1]}개, 소프트웨어학과 강좌 {lecture_count}행, 일정 {event_count}건) · {date.today().isoformat()}")
+    # 날짜·개수는 시간이 지나면 어긋나므로 적지 않음
+    footer = "로그인 없이 호출한 예시 출력"
     return f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
 body {{ margin:0; padding:28px; background:#EFE9E1; font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; }}
 .window {{ width:880px; border-radius:12px; overflow:hidden; background:#1B2733; box-shadow:0 10px 30px rgba(0,0,0,.25); }}
