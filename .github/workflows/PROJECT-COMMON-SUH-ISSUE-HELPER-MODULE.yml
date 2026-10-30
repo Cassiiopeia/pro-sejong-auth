@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate Branch & Commit Comment
-        uses: Cassiiopeia/github-issue-helper@deploy
+        uses: Cassiiopeia/github-issue-helper@df15793c462c0cbe9cf26936667899ef5c1de890 # deploy
         with:
           # 토큰: PAT이 설정되어 있으면 PAT 사용, 없으면 GITHUB_TOKEN fallback
           token: ${{ secrets._GITHUB_PAT_TOKEN || secrets.GITHUB_TOKEN }}
