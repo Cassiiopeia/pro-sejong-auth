@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-30T00:42:49Z",
-    "currentVersion": "1.2.61",
+    "lastUpdated": "2026-10-30T00:57:58Z",
+    "currentVersion": "1.2.63",
     "projectType": "spring",
-    "totalReleases": 25,
+    "totalReleases": 26,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,36 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.63",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-30",
+      "pr_number": 131,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * README 첫 화면을 기능 개요, 빠름·최적화·안전·신뢰 근거, 세 언어 지원 표 중심으로 다시 구성\n  * 새 배너와 공유 이미지 (빨강 기반, 영문 대문자)\n  * Java 의존성 안내에 Maven Central 주소와 Maven pom 예시 추가\n  * 소개 사이트 첫 화면 문구 정리\n\n* **문서**\n  * 패키지 설명(PyPI, npm)을 새 메시지에 맞게 갱신",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "README 첫 화면을 기능 개요, 빠름·최적화·안전·신뢰 근거, 세 언어 지원 표 중심으로 다시 구성",
+            "새 배너와 공유 이미지 (빨강 기반, 영문 대문자)",
+            "Java 의존성 안내에 Maven Central 주소와 Maven pom 예시 추가",
+            "소개 사이트 첫 화면 문구 정리"
+          ]
+        },
+        "문서": {
+          "title": "문서",
+          "items": [
+            "패키지 설명(PyPI, npm)을 새 메시지에 맞게 갱신"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.61",
       "project_type": "spring",
