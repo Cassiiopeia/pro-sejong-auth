@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-30T00:57:58Z",
-    "currentVersion": "1.2.63",
+    "lastUpdated": "2026-10-30T01:22:05Z",
+    "currentVersion": "1.2.65",
     "projectType": "spring",
-    "totalReleases": 26,
+    "totalReleases": 27,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,36 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.65",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-30",
+      "pr_number": 135,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * 자동화 워크플로우의 토큰 권한을 최소화하고 사용하는 액션을 커밋 단위로 고정해 보안 강화\n  * README를 더 간결하게 정리하고 배지가 깨지지 않도록 고정 배지로 교체\n  * 문서 사이트 본문 폭 확대\n  * 오래되면 어긋나는 날짜와 수치를 홍보 문구에서 제거\n\n* **문서**\n  * 결과 필드, 에러 코드, 설정 상세를 사이트 문서로 이동하고 README에서 링크",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "자동화 워크플로우의 토큰 권한을 최소화하고 사용하는 액션을 커밋 단위로 고정해 보안 강화",
+            "README를 더 간결하게 정리하고 배지가 깨지지 않도록 고정 배지로 교체",
+            "문서 사이트 본문 폭 확대",
+            "오래되면 어긋나는 날짜와 수치를 홍보 문구에서 제거"
+          ]
+        },
+        "문서": {
+          "title": "문서",
+          "items": [
+            "결과 필드, 에러 코드, 설정 상세를 사이트 문서로 이동하고 README에서 링크"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.63",
       "project_type": "spring",
