@@ -1,4 +1,4 @@
-# pro-sejongpeia (Python)
+# PRO-SEJONGPEIA (Python)
 
 ![pro-sejongpeia: 세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지](https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/banner/banner-a.ko.png)
 

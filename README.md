@@ -10,7 +10,7 @@
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 · 학교 데이터 라이브러리</sub>
 
-[사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [무엇을 해 주나요](#무엇을-해-주나요) · [바로 해 보기](#바로-해-보기) · [문서](#더-보기-통합-예시와-api-안정성) · 한국어 | [English](README.en.md)
+**📖 [문서 사이트](https://cassiiopeia.github.io/pro-sejongpeia/)** · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [빠른 시작](https://cassiiopeia.github.io/pro-sejongpeia/start/quickstart/) · [학교 데이터](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/) · [인증](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/) · [무엇을 해 주나요](#무엇을-해-주나요) · 한국어 | [English](README.en.md)
 
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
 ## 최신 버전 : v1.2.65 (2026-10-30)

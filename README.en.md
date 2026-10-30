@@ -10,7 +10,7 @@ Fast and light, gentle on requests, never stores a password, and checked against
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 라이브러리 (Java · Python · Node)</sub>
 
-[Site](https://cassiiopeia.github.io/pro-sejongpeia/) · [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [What you get](#what-you-get) · [Try it now](#try-it-now) · [Docs](#more-integration-examples-and-api-stability) · [한국어](README.md) | English
+**📖 [Documentation](https://cassiiopeia.github.io/pro-sejongpeia/en/)** · [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/en/#demo) · [Quick start](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) · [School data](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/) · [Authentication](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) · [What you get](#what-you-get) · [한국어](README.md) | English
 
 [![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 [![PyPI](https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60)](https://pypi.org/project/pro-sejongpeia/)
