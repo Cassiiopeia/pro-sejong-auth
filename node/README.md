@@ -124,6 +124,8 @@ Node 18 이상. 세종대학교 공식 제품이 아닙니다.
 
 문서, 라이브 데모, Java·Python 버전: https://cassiiopeia.github.io/pro-sejongpeia/
 
+Java 버전은 Maven Central에서 받습니다 (`kr.suhsaechan:sejongpeia`, 최신 버전은 [아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인).
+
 ## English
 
 Verify a Sejong University student with a student ID and portal password, and get their major, year, classic-reading certification and contact info. The API above is the same in English; error messages are in English. Full English docs: [README.en.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md).

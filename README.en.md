@@ -132,7 +132,7 @@ const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
-**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<version>"`
+**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<version>"` ([check the latest version](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia))
 
 ```java
 SejongPublicData publicData = new SejongPublicData();   // a bean in Spring
@@ -180,13 +180,25 @@ Error handling and Spring setup are in the [quick start](#quick-start-java--spri
 
 ## Quick start: Java / Spring Boot
 
+[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+
 Published to **Maven Central** (no extra repository needed). Java 17+, Spring Boot 3.x. Spring Boot auto-configuration registers the `SuhSejongAuthEngine` and `SejongPublicData` beans.
 
 ```groovy
 dependencies {
-    implementation "kr.suhsaechan:sejongpeia:<version>"   // see the Maven Central badge
+    implementation "kr.suhsaechan:sejongpeia:<version>"
 }
 ```
+
+```xml
+<dependency>
+    <groupId>kr.suhsaechan</groupId>
+    <artifactId>sejongpeia</artifactId>
+    <version><!-- version --></version>
+</dependency>
+```
+
+Put the latest version in `<version>`. Check it on the badge above or the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
 
 ```java
 @RestController
@@ -204,15 +216,7 @@ public class AuthController {
 ```
 
 <details>
-<summary>Maven, without Spring (plain Java), checking classic reading</summary>
-
-```xml
-<dependency>
-    <groupId>kr.suhsaechan</groupId>
-    <artifactId>sejongpeia</artifactId>
-    <version><!-- see the Maven Central badge --></version>
-</dependency>
-```
+<summary>Without Spring (plain Java), checking classic reading</summary>
 
 Spring Boot is an optional dependency: plain Java projects do not download it.
 

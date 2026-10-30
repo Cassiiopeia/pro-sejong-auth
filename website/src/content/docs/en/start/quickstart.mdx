@@ -11,6 +11,8 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
 
    <Tabs syncKey="language">
      <TabItem label="Java">
+       [![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+
        Published to Maven Central, so no extra repository is needed. Java 17+, Spring Boot 3.x.
 
        ```groovy
@@ -26,6 +28,8 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
            <version><!-- the version you pin --></version>
        </dependency>
        ```
+
+       Put the latest version in `<version>`. Check it on the badge above or the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
      </TabItem>
      <TabItem label="Python">
        Python 3.9+, no dependencies beyond the standard library.

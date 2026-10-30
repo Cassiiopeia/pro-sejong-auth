@@ -135,7 +135,7 @@ const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
-**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<버전>"`
+**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<버전>"` ([최신 버전 확인](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia))
 
 ```java
 SejongPublicData publicData = new SejongPublicData();   // Spring에서는 빈으로 주입
@@ -183,13 +183,25 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
 
 ## 빠른 시작: Java / Spring Boot
 
+[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+
 **Maven Central**에서 배포합니다 (저장소 추가 불필요). Java 17+, Spring Boot 3.x. Spring Boot 자동 설정이 `SuhSejongAuthEngine`과 `SejongPublicData` 빈을 등록합니다.
 
 ```groovy
 dependencies {
-    implementation "kr.suhsaechan:sejongpeia:<버전>"   // Maven Central 배지 확인
+    implementation "kr.suhsaechan:sejongpeia:<버전>"
 }
 ```
+
+```xml
+<dependency>
+    <groupId>kr.suhsaechan</groupId>
+    <artifactId>sejongpeia</artifactId>
+    <version><!-- 버전 --></version>
+</dependency>
+```
+
+`<버전>`(`<version>`)에는 최신 버전을 넣으세요. 위 배지 또는 [Maven Central 아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인하고, 전체 버전 목록은 [저장소 목록](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/)에 있습니다.
 
 ```java
 @RestController
@@ -207,15 +219,7 @@ public class AuthController {
 ```
 
 <details>
-<summary>Maven, Spring 없이 쓰기 (일반 Java), 고전독서 인증 확인</summary>
-
-```xml
-<dependency>
-    <groupId>kr.suhsaechan</groupId>
-    <artifactId>sejongpeia</artifactId>
-    <version><!-- Maven Central 배지 확인 --></version>
-</dependency>
-```
+<summary>Spring 없이 쓰기 (일반 Java), 고전독서 인증 확인</summary>
 
 Spring Boot는 선택 의존성이라 일반 Java 프로젝트는 받지 않습니다.
 
