@@ -8,42 +8,69 @@ import { NodeHttpsSession, USER_AGENT, type Session } from '../common/transport.
 
 export type * from './models.js';
 
-const SIS_BASE_URL = 'https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/';
-const HOMEPAGE_BASE_URL = 'https://www.sejong.ac.kr/kor/';
+// 학교 주소·요청 키·고정 값의 원본은 spec/contract.json 의 publicData (test/contract.test.mjs 가 일치 검사)
+export const SIS_BASE_URL = 'https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/';
+export const SIS_CONTENT_TYPE = 'application/json; charset="UTF-8"';
+export const SIS_SEARCH_KEY = 'dm_search';
+export const SIS_ONLOAD_ENDPOINT = 'doOnload.do';
+export const SIS_TERM_LIST_ENDPOINT = 'doYearsmtlist.do';
+export const SIS_DEPARTMENT_LIST_ENDPOINT = 'doLesndeptgroup.do';
+export const SIS_LECTURE_LIST_ENDPOINT = 'doList.do';
+export const JSON_ACCEPT = 'application/json';
+export const FORM_CONTENT_TYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
+export const FORM_REQUESTED_WITH = 'XMLHttpRequest';
 // 학과 교육과정 과목 1건: deptNo 는 SIS 학과 코드(DEPT_CD)와 같은 값
-const CURRICULUM_COURSE_URL = 'https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do';
+export const CURRICULUM_COURSE_URL = 'https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do';
+export const CURRICULUM_QUERY_KEYS = ['curiNo', 'deptNo'];
+export const ACADEMIC_CALENDAR_URL = 'https://www.sejong.ac.kr/kor/academics/academic-calendar.do';
+export const CALENDAR_QUERY_KEYS = ['mode', 'start', 'end', 'collDiv'];
+export const CALENDAR_MODE = 'getCalendarData';
+export const DEFAULT_CALENDAR_CATEGORY_CODE = '0001'; // 학부 일정
+// 대학원 사이트별 학사일정: {siteId} 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
+export const GRADUATE_CALENDAR_URL = 'https://{siteId}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp';
+export const GRADUATE_CALENDAR_QUERY_KEYS = ['year', 'month', 'siteId'];
+// 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
+export const GRADUATE_SITE_ID_PATTERN_SOURCE = '[a-z0-9][a-z0-9-]{0,30}';
+const GRADUATE_SITE_ID_PATTERN = new RegExp(`^${GRADUATE_SITE_ID_PATTERN_SOURCE}$`);
+export const DORMITORY_MENU_URL = 'https://happydorm.sejong.ac.kr/food/indexFoodList.do';
+export const DORMITORY_MENU_FORM_KEYS = ['locgbn'];
+export const DORMITORY_NOTICE_URL = 'https://happydorm.sejong.ac.kr/bbs/getBbsList.do';
+export const DORMITORY_NOTICE_FORM_KEYS = ['cPage', 'rows', 'bbs_locgbn', 'bbs_id', 'sType', 'sWord'];
+export const DORMITORY_NOTICE_BOARD_ID = 'notice';
+export const DORMITORY_NOTICE_SEARCH_TYPE = 'subject'; // 제목 검색
+export const DEFAULT_DORMITORY_LOCATION = 'SJ';
+export const CAFETERIA_URL = 'https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do';
+export const CAFETERIA_QUERY_KEYS = ['mode', 'placeId'];
+export const CAFETERIA_MENU_MODE = 'getMenuList';
+export const CAMPUS_MAP_URL = 'https://www.sejong.ac.kr/kor/intro/campus-map.do';
+export const CAMPUS_MAP_QUERY_KEYS = ['mode', 'placeType'];
+export const CAMPUS_PLACE_LIST_MODE = 'getPlaceUserList';
+export const EXTRACURRICULAR_URL = 'https://do.sejong.ac.kr/ko/process/schedule/getEvents';
+export const EXTRACURRICULAR_FORM_KEYS = ['cid', 'category', 'start', 'end', 'start_year', 'end_year'];
+export const EXTRACURRICULAR_CID = 'eco';
 // remark 는 교과목 개요 본문이라 overview 로 받음 (CurriculumCourse 필드 순서와 별개, 매핑에 쓴 키 목록)
 const CURRICULUM_COURSE_USED_KEYS = ['deptCd', 'deptNm', 'orgnClsfCd', 'year', 'curiNo', 'curiNm', 'curiTypeCd', 'curiTypeNm', 'cdt',
   'lecTmNum', 'exeTmNum', 'curiTm', 'stuYearCd', 'smtDanCd', 'smtDanNm', 'remark'];
-// 대학원 사이트별 학사일정: siteId 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
-const GRADUATE_CALENDAR_URL_PREFIX = '.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp';
-// 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
-const GRADUATE_SITE_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,30}$/;
 const CALENDAR_EVENT_USED_KEYS = ['scmYear', 'scmMonth', 'collDiv', 'collDivNm', 'scmSubject', 'scmSubjectEng', 'frDt', 'toDt'];
-const DORMITORY_BASE_URL = 'https://happydorm.sejong.ac.kr/';
-const EXTRACURRICULAR_URL = 'https://do.sejong.ac.kr/ko/process/schedule/getEvents';
 
-const SIS_JSON_HEADERS = { 'Content-Type': 'application/json; charset="UTF-8"', Accept: 'application/json' };
+const SIS_JSON_HEADERS = { 'Content-Type': SIS_CONTENT_TYPE, Accept: JSON_ACCEPT };
 // GET 도 Accept 가 없으면 학교(교육과정)가 404 를 돌려줌
-const JSON_ACCEPT_HEADERS = { Accept: 'application/json' };
-const FORM_HEADERS = { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' };
+const JSON_ACCEPT_HEADERS = { Accept: JSON_ACCEPT };
+const FORM_HEADERS = { 'Content-Type': FORM_CONTENT_TYPE, 'X-Requested-With': FORM_REQUESTED_WITH };
 
 // 결과 extra 에서 제외: 교직원 이름 등 개인 식별, 서버 내부 정보
 const EXTRA_DENYLIST = new Set(['CD_ALIAS1', 'CD_ALIAS2', 'CD_ALIAS3', 'CD_ALIAS1_ENG', 'CD_ALIAS2_ENG', 'CD_ALIAS3_ENG', 'regname', 'regid', 'STACK_TRACE']);
-const SIS_SUBMIT_ERROR_KEY = '_SUBMIT_ERROR_';
+export const SIS_SUBMIT_ERROR_KEY = '_SUBMIT_ERROR_';
 // 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
-const LECTURE_EMPTY_FILTERS = Object.fromEntries(
-  ['SMT_NM', 'CURI_TYPE_CD', 'SLT_DOMAIN_CD', 'CURI_NO', 'CLASS', 'SLT_DEPT_CD', 'PLAN_REG_YN', 'CORS_SCHE_GRP_CD'].map((key) => [key, '']),
-);
+export const LECTURE_EMPTY_FILTER_KEYS = ['SMT_NM', 'CURI_TYPE_CD', 'SLT_DOMAIN_CD', 'CURI_NO', 'CLASS', 'SLT_DEPT_CD', 'PLAN_REG_YN', 'CORS_SCHE_GRP_CD'];
+const LECTURE_EMPTY_FILTERS = Object.fromEntries(LECTURE_EMPTY_FILTER_KEYS.map((key) => [key, '']));
 // 학교에 식당 목록 API가 없어 번호 1부터 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
 // 식당 번호는 1부터 호출자가 정한 상한까지 차례로 조회 (기본 10, 최대 50: 한 번 갱신의 요청 수를 제한)
-const CAFETERIA_DEFAULT_MAX_PLACE_ID = 10;
-const CAFETERIA_LIMIT_MAX_PLACE_ID = 50;
+export const CAFETERIA_DEFAULT_MAX_PLACE_ID = 10;
+export const CAFETERIA_LIMIT_MAX_PLACE_ID = 50;
 // 메뉴 응답 행의 알려진 필드 (식당 extra 에는 이 밖의 필드만)
 const CAFETERIA_MENU_USED_KEYS = ['placeId', 'placeName', 'buildingName', 'location', 'menuDate', 'day', 'mealTypeId', 'mealName', 'menuName', 'price'];
 const DORMITORY_DAYS_PER_WEEK = 7;
-const DEFAULT_CALENDAR_CATEGORY_CODE = '0001';
-const DEFAULT_DORMITORY_LOCATION = 'SJ';
 
 type JsonObject = Record<string, unknown>;
 type SchoolRow = JsonObject;
@@ -174,7 +201,10 @@ const toCount = (value: unknown): number => Number.parseInt(toText(value), 10) |
 const DEFAULT_FAILURE_CACHE_SECONDS = 60;
 const DEFAULT_CACHE_MAX_ENTRIES = 500;
 
-const requestBodyOfDataset = (searchFields: JsonObject) => JSON.stringify({ dm_search: searchFields });
+const requestBodyOfDataset = (searchFields: JsonObject) => JSON.stringify({ [SIS_SEARCH_KEY]: searchFields });
+
+// 요청 키 목록 + 값 > 보낼 순서 그대로의 키-값 쌍
+const pairsOf = (keys: string[], ...values: string[]): URLSearchParams => new URLSearchParams(keys.map((key, index): [string, string] => [key, values[index]]));
 
 // 학사일정 행 > 일정 (홈페이지와 대학원 사이트 공통)
 const toCalendarEvent = (row: SchoolRow): CalendarEvent => ({
@@ -221,7 +251,7 @@ export class SejongPublicData {
    * @returns OrganizationCategory 목록
    */
   organizationCategories(): Promise<OrganizationCategory[]> {
-    return this.fetchSisDataset('organizationCategories', 'doOnload.do', {}, 'dl_code_orgn', (row) => ({
+    return this.fetchSisDataset('organizationCategories', SIS_ONLOAD_ENDPOINT, {}, 'dl_code_orgn', (row) => ({
       code: toText(row['COM_CD']), name: toText(row['CD_NM']), nameEn: toText(row.CD_NM_ENG),
       extra: extraOf(row, ['COM_CD', 'CD_NM', 'CD_NM_ENG']),
     }));
@@ -235,7 +265,7 @@ export class SejongPublicData {
    * @returns Term 목록
    */
   terms(categoryCode: string): Promise<Term[]> {
-    return this.fetchSisDataset('terms', 'doYearsmtlist.do', { ORGN_CLSF_CD: categoryCode }, 'dl_code_yearSmt', (row) => ({
+    return this.fetchSisDataset('terms', SIS_TERM_LIST_ENDPOINT, { ORGN_CLSF_CD: categoryCode }, 'dl_code_yearSmt', (row) => ({
       year: toText(row['YEAR']), semesterCode: toText(row['SMT_CD']), code: toText(row['YEAR_SMT_CD']),
       name: toText(row['YEAR_SMT_NM']), extra: extraOf(row, ['YEAR', 'SMT_CD', 'YEAR_SMT_CD', 'YEAR_SMT_NM']),
     }), [categoryCode]);
@@ -250,7 +280,7 @@ export class SejongPublicData {
    */
   departments({ categoryCode, year, semesterCode }: DepartmentsQuery): Promise<Department[]> {
     const usedKeys = ['DEPT_CD', 'DEPT_LEVEL_CD', 'DEPT_L_CD', 'DEPT_L_PRINT', 'DEPT_M_CD', 'DEPT_M_PRINT', 'DEPT_S_CD', 'DEPT_S_PRINT', 'DEPT_NM_ENG'];
-    return this.fetchSisDataset('departments', 'doLesndeptgroup.do', termSearchFields(categoryCode, year, semesterCode), 'dl_code_dept', (row) => ({
+    return this.fetchSisDataset('departments', SIS_DEPARTMENT_LIST_ENDPOINT, termSearchFields(categoryCode, year, semesterCode), 'dl_code_dept', (row) => ({
       code: toText(row['DEPT_CD']), level: toText(row['DEPT_LEVEL_CD']),
       collegeCode: toText(row.DEPT_L_CD), collegeName: toText(row.DEPT_L_PRINT),
       unitCode: toText(row.DEPT_M_CD), unitName: toText(row.DEPT_M_PRINT),
@@ -266,7 +296,7 @@ export class SejongPublicData {
    * @returns CourseType 목록
    */
   courseTypes(): Promise<CourseType[]> {
-    return this.fetchSisDataset('courseTypes', 'doOnload.do', {}, 'dl_code_curiType', (row) => ({
+    return this.fetchSisDataset('courseTypes', SIS_ONLOAD_ENDPOINT, {}, 'dl_code_curiType', (row) => ({
       code: toText(row['CURI_TYPE_CD']), name: toText(row['CURI_TYPE_CD_NM']), categoryCode: toText(row.ORGN_CLSF_CD),
       extra: extraOf(row, ['CURI_TYPE_CD', 'CURI_TYPE_CD_NM', 'ORGN_CLSF_CD']),
     }));
@@ -279,7 +309,7 @@ export class SejongPublicData {
    * @returns SelectiveDomain 목록
    */
   selectiveDomains(): Promise<SelectiveDomain[]> {
-    return this.fetchSisDataset('selectiveDomains', 'doOnload.do', {}, 'dl_code_sltDomain', (row) => ({
+    return this.fetchSisDataset('selectiveDomains', SIS_ONLOAD_ENDPOINT, {}, 'dl_code_sltDomain', (row) => ({
       code: toText(row['COM_CD']), name: toText(row['CD_NM']), nameEn: toText(row.CD_NM_ENG),
       extra: extraOf(row, ['COM_CD', 'CD_NM', 'CD_NM_ENG']),
     }));
@@ -297,7 +327,7 @@ export class SejongPublicData {
     const usedKeys = ['CURI_NO', 'CLASS', 'CURI_NM', 'CURI_TYPE_CD', 'CURI_TYPE_CD_NM', 'SLT_DOMAIN_CD', 'SLT_DOMAIN_CD_NM', 'CDT', 'TM_NUM', 'TOT_TM_NUM',
       'LESN_TIME', 'LESN_ROOM', 'LESN_EMP', 'STUDENT_YEAR', 'CURI_LANG_CD', 'CURI_LANG_NM', 'DEPT_CD', 'SCH_DEPT_ALIAS', 'MANAGE_DEPT_NM', 'REMARK', 'YEAR', 'SMT_CD'];
     const searchFields = { ...LECTURE_EMPTY_FILTERS, ...termSearchFields(categoryCode, year, semesterCode), DEPT_CD: departmentCode.trim(), CURI_NM: courseName.trim(), EMP_NM: instructorName.trim(), LANG_CHK: 'KOR' };
-    return this.fetchSisDataset('lectures', 'doList.do', searchFields, 'dl_main', (row) => ({
+    return this.fetchSisDataset('lectures', SIS_LECTURE_LIST_ENDPOINT, searchFields, 'dl_main', (row) => ({
       courseNumber: toText(row['CURI_NO']), section: toText(row['CLASS']), name: toText(row['CURI_NM']),
       courseTypeCode: toText(row.CURI_TYPE_CD), courseTypeName: toText(row.CURI_TYPE_CD_NM),
       domainCode: toText(row.SLT_DOMAIN_CD), domainName: toText(row.SLT_DOMAIN_CD_NM),
@@ -321,7 +351,7 @@ export class SejongPublicData {
     if (!String(departmentCode ?? '').trim() || !String(courseNumber ?? '').trim()) {
       throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Department code and course number are required.');
     }
-    const url = `${CURRICULUM_COURSE_URL}?${new URLSearchParams({ curiNo: courseNumber, deptNo: departmentCode })}`;
+    const url = `${CURRICULUM_COURSE_URL}?${pairsOf(CURRICULUM_QUERY_KEYS, courseNumber, departmentCode)}`;
     return this.fetchCached('curriculumCourses', [departmentCode, courseNumber], () => [], () => this.requestJson('GET', url), (body) =>
       rowsOf(body, 'items').map((row) => ({
         departmentCode: toText(row['deptCd']), departmentName: toText(row['deptNm']), categoryCode: toText(row['orgnClsfCd']), year: toText(row['year']),
@@ -340,8 +370,7 @@ export class SejongPublicData {
    * @returns CalendarEvent 목록
    */
   calendar({ start, end, categoryCode = DEFAULT_CALENDAR_CATEGORY_CODE }: CalendarQuery): Promise<CalendarEvent[]> {
-    const query = new URLSearchParams({ mode: 'getCalendarData', start, end, collDiv: categoryCode });
-    const url = `${HOMEPAGE_BASE_URL}academics/academic-calendar.do?${query}`;
+    const url = `${ACADEMIC_CALENDAR_URL}?${pairsOf(CALENDAR_QUERY_KEYS, CALENDAR_MODE, start, end, categoryCode)}`;
     return this.fetchCached('calendar', [start, end, categoryCode], () => [], () => this.requestJson('GET', url), (body) =>
       rowsOf(body, 'data').map(toCalendarEvent));
   }
@@ -358,8 +387,7 @@ export class SejongPublicData {
     if (!GRADUATE_SITE_ID_PATTERN.test(String(siteId ?? ''))) {
       throw new SejongAuthError(ErrorCode.INVALID_INPUT, 'Graduate site id must be lowercase letters, digits and hyphens.');
     }
-    const query = new URLSearchParams({ year: String(year), month: String(month), siteId });
-    const url = `https://${siteId}${GRADUATE_CALENDAR_URL_PREFIX}?${query}`;
+    const url = `${GRADUATE_CALENDAR_URL.replace('{siteId}', siteId)}?${pairsOf(GRADUATE_CALENDAR_QUERY_KEYS, String(year), String(month), siteId)}`;
     return this.fetchCached('graduateCalendar', [siteId, String(year), String(month)], () => [], () => this.requestJson('GET', url), (body) => {
       // success 거짓·없음은 실패, items 는 JSON 문자열이라 한 번 더 해석
       if (toText(body.success).toLowerCase() !== 'true') throw new Error('graduate calendar did not report success');
@@ -376,8 +404,8 @@ export class SejongPublicData {
    * @returns DormitoryMenuDay 목록 (7개)
    */
   dormitoryMenu(location = DEFAULT_DORMITORY_LOCATION): Promise<DormitoryMenuDay[]> {
-    const form = new URLSearchParams({ locgbn: location });
-    return this.fetchCached('dormitoryMenu', [location], () => [], () => this.requestJson('POST', `${DORMITORY_BASE_URL}food/indexFoodList.do`, form), (body) => {
+    const form = pairsOf(DORMITORY_MENU_FORM_KEYS, location);
+    return this.fetchCached('dormitoryMenu', [location], () => [], () => this.requestJson('POST', DORMITORY_MENU_URL, form), (body) => {
       const row = rowsOf(body, 'root')[0];
       if (!row) throw new Error('empty root');
       return Array.from({ length: DORMITORY_DAYS_PER_WEEK }, (_, index) => {
@@ -398,12 +426,12 @@ export class SejongPublicData {
    * @returns DormitoryNotices (실패하면 total 0과 빈 목록, 결과 없음도 total 0)
    */
   dormitoryNotices({ page = 1, rows = 10, keyword = '', location = DEFAULT_DORMITORY_LOCATION }: DormitoryNoticesQuery = {}): Promise<DormitoryNotices> {
-    const form = new URLSearchParams({ cPage: String(page), rows: String(rows), bbs_locgbn: location, bbs_id: 'notice', sType: 'subject', sWord: keyword });
+    const form = pairsOf(DORMITORY_NOTICE_FORM_KEYS, String(page), String(rows), location, DORMITORY_NOTICE_BOARD_ID, DORMITORY_NOTICE_SEARCH_TYPE, keyword);
     const toNotice = (row: SchoolRow): DormitoryNotice => ({
       id: toText(row['seq']), title: toText(row.subject), date: toText(row.regdate), views: toCount(row.visitcnt), fileName: toText(row.file_name1),
     });
     return this.fetchCached('dormitoryNotices', [page, rows, keyword, location], () => ({ total: 0, pinned: [], items: [] }),
-      () => this.requestJson('POST', `${DORMITORY_BASE_URL}bbs/getBbsList.do`, form), (body) => {
+      () => this.requestJson('POST', DORMITORY_NOTICE_URL, form), (body) => {
         // root 만 필수, 나머지가 없으면 결과 없음
         const block = rowsOf(body, 'root')[0] ?? {};
         return {
@@ -422,7 +450,7 @@ export class SejongPublicData {
    * @returns CafeteriaMenuItem 목록
    */
   cafeteriaMenu(placeId: string | number): Promise<CafeteriaMenuItem[]> {
-    const url = `${HOMEPAGE_BASE_URL}unilife/cafeteria-info.do?${new URLSearchParams({ mode: 'getMenuList', placeId: String(placeId) })}`;
+    const url = `${CAFETERIA_URL}?${pairsOf(CAFETERIA_QUERY_KEYS, CAFETERIA_MENU_MODE, String(placeId))}`;
     return this.fetchCached('cafeteriaMenu', [String(placeId)], () => [], () => this.requestJson('GET', url), (body) =>
       rowsOf(body, 'items').map((row) => ({
         buildingName: toText(row.buildingName), location: toText(row.location), placeId: toText(row.placeId), placeName: toText(row.placeName),
@@ -447,7 +475,7 @@ export class SejongPublicData {
     const requestAllPlaceIds = async (): Promise<JsonObject> => {
       const responses: JsonObject[] = [];
       for (const placeId of probePlaceIds) { // 순서대로 한 건씩, 병렬 요청 없음
-        const url = `${HOMEPAGE_BASE_URL}unilife/cafeteria-info.do?${new URLSearchParams({ mode: 'getMenuList', placeId })}`;
+        const url = `${CAFETERIA_URL}?${pairsOf(CAFETERIA_QUERY_KEYS, CAFETERIA_MENU_MODE, placeId)}`;
         responses.push(await this.requestJson('GET', url));
       }
       return { responses };
@@ -477,7 +505,7 @@ export class SejongPublicData {
    * @returns CampusPlace 목록
    */
   campusPlaces(placeType = ''): Promise<CampusPlace[]> {
-    const url = `${HOMEPAGE_BASE_URL}intro/campus-map.do?${new URLSearchParams({ mode: 'getPlaceUserList', placeType })}`;
+    const url = `${CAMPUS_MAP_URL}?${pairsOf(CAMPUS_MAP_QUERY_KEYS, CAMPUS_PLACE_LIST_MODE, placeType)}`;
     const usedKeys = ['id', 'placeName', 'placeNameEn', 'placeType', 'welfareCategory', 'latitude', 'longitude', 'placeInfo', 'telNum', 'description'];
     return this.fetchCached('campusPlaces', [placeType], () => [], () => this.requestJson('GET', url), (body) =>
       rowsOf(body, 'items').map((row) => {
@@ -498,7 +526,7 @@ export class SejongPublicData {
    */
   extracurricularEvents({ start, end, category = '' }: ExtracurricularEventsQuery): Promise<ExtracurricularEvent[]> {
     const yearOf = (date: string) => date.slice(0, 4);
-    const form = new URLSearchParams({ cid: 'eco', category, start, end, start_year: yearOf(start), end_year: yearOf(end) });
+    const form = pairsOf(EXTRACURRICULAR_FORM_KEYS, EXTRACURRICULAR_CID, category, start, end, yearOf(start), yearOf(end));
     return this.fetchCached('extracurricularEvents', [start, end, category], () => [], () => this.requestJson('POST', EXTRACURRICULAR_URL, form), (body) =>
       rowsOf(body, 'events').map((row) => {
         const detail = asObject(row.data);

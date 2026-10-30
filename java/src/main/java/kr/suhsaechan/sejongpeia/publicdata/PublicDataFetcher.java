@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 final class PublicDataFetcher {
 
   // 학교 SIS 가 오류를 200 응답의 JSON 으로 돌려줄 때 쓰는 키
-  private static final String SUBMIT_ERROR_KEY = "_SUBMIT_ERROR_";
+  static final String SUBMIT_ERROR_KEY = "_SUBMIT_ERROR_";
 
   private final PublicDataHttpCaller httpCaller;
   private final Clock clock;

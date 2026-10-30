@@ -18,8 +18,10 @@ from typing import Callable, Dict, List, Optional, Tuple
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python" / "src"))
 
-import sejongpeia.public_data.client as public_data_module  # noqa: E402
 from sejongpeia.common.transport import USER_AGENT, UrllibSession, create_ssl_context  # noqa: E402
+
+# 주소·요청 키·고정 값의 원본: spec/contract.json 의 publicData (세 언어 상수와 같은 값)
+CONTRACT = json.loads((ROOT / "spec" / "contract.json").read_text(encoding="utf-8"))["publicData"]
 
 REQUEST_INTERVAL_SECONDS = 1
 TIMEOUT_SECONDS = 60  # 비교과 일정이 느림 (수십 초)
@@ -95,12 +97,12 @@ def find_notice_problems(block: dict) -> List[str]:
 
 def request_json(session: UrllibSession, method: str, url: str, form: Optional[dict] = None) -> object:
     """요청 1건 > JSON (본문은 항상 JSON 으로 파싱: 기숙사는 text/html 로 응답)"""
-    headers = {"Accept": "application/json"}
+    headers = {"Accept": CONTRACT["jsonAccept"]}
     data = None
     if form is not None:
         data = urllib.parse.urlencode(form).encode("utf-8")
-        headers["Content-Type"] = public_data_module.FORM_CONTENT_TYPE
-        headers["X-Requested-With"] = "XMLHttpRequest"
+        headers["Content-Type"] = CONTRACT["formContentType"]
+        headers["X-Requested-With"] = CONTRACT["formRequestedWith"]
     response = session.request(method, url, data=data, headers=headers)
     if not response.is_successful:
         raise RuntimeError(f"HTTP {response.status}")
@@ -110,39 +112,46 @@ def request_json(session: UrllibSession, method: str, url: str, form: Optional[d
 
 def lectures_request(session: UrllibSession) -> object:
     """강의 검색: 필터 키 전체를 빈 값으로 포함 (하나라도 빠지면 _SUBMIT_ERROR_)"""
-    search = {**public_data_module.LECTURE_EMPTY_FILTERS, "ORGN_CLSF_CD": "20", "YEAR": "2026", "SMT_CD": "20",
+    sis_timetable = CONTRACT["sisTimetable"]
+    search = {**dict.fromkeys(sis_timetable["lectureEmptyFilterKeys"], ""), "ORGN_CLSF_CD": "20", "YEAR": "2026", "SMT_CD": "20",
               "YEAR_SMT": "2026/20", "DEPT_CD": "", "CURI_NM": "영어", "EMP_NM": "", "LANG_CHK": "KOR"}
     response = session.request(
-        "POST", public_data_module.SIS_OPEN_TIME_URL + "doList.do",
-        data=json.dumps({"dm_search": search}, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": public_data_module.SIS_CONTENT_TYPE, "Accept": "application/json"})
+        "POST", sis_timetable["baseUrl"] + sis_timetable["lectureListEndpoint"],
+        data=json.dumps({sis_timetable["searchKey"]: search}, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": sis_timetable["contentType"], "Accept": CONTRACT["jsonAccept"]})
     if not response.is_successful:
         raise RuntimeError(f"HTTP {response.status}")
     time.sleep(REQUEST_INTERVAL_SECONDS)
     return json.loads(response.body)
 
 
+def query_of(keys: List[str], *values: object) -> str:
+    """계약의 요청 키 목록 + 값 > 쿼리 문자열 (키 순서 그대로)"""
+    return urllib.parse.urlencode(dict(zip(keys, values)))
+
+
 def build_live_requests(session: UrllibSession) -> Dict[str, Callable[[], object]]:
-    module = public_data_module
-    month_query = {"start": "2026-10-01", "end": "2026-10-31"}
-    calendar_query = urllib.parse.urlencode({"mode": "getCalendarData", **month_query, "collDiv": "0001"})
-    cafeteria_query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": SAMPLE_PLACE_ID})
-    campus_query = urllib.parse.urlencode({"mode": "getPlaceUserList", "placeType": ""})
-    curriculum_query = urllib.parse.urlencode({"curiNo": SAMPLE_CURRICULUM_COURSE_NUMBER, "deptNo": SAMPLE_CURRICULUM_DEPARTMENT_CODE})
-    graduate_query = urllib.parse.urlencode({"year": "2026", "month": "10", "siteId": "graduate"})
+    calendar, graduate_calendar, curriculum = CONTRACT["calendar"], CONTRACT["graduateCalendar"], CONTRACT["curriculum"]
+    dormitory, cafeteria, campus_map, extracurricular = (CONTRACT[name] for name in ("dormitory", "cafeteria", "campusMap", "extracurricular"))
+    month_start, month_end = "2026-10-01", "2026-10-31"
+    calendar_query = query_of(calendar["queryKeys"], calendar["mode"], month_start, month_end, calendar["defaultCategoryCode"])
+    cafeteria_query = query_of(cafeteria["queryKeys"], cafeteria["menuMode"], SAMPLE_PLACE_ID)
+    campus_query = query_of(campus_map["queryKeys"], campus_map["mode"], "")
+    curriculum_query = query_of(curriculum["queryKeys"], SAMPLE_CURRICULUM_COURSE_NUMBER, SAMPLE_CURRICULUM_DEPARTMENT_CODE)
+    graduate_query = query_of(graduate_calendar["queryKeys"], "2026", "10", "graduate")
+    graduate_url = graduate_calendar["urlTemplate"].replace("{siteId}", "graduate")
     return {
         "lectures": lambda: lectures_request(session),
-        "curriculum_courses": lambda: request_json(session, "GET", f"{module.CURRICULUM_COURSE_URL}?{curriculum_query}"),
-        "calendar": lambda: request_json(session, "GET", f"{module.ACADEMIC_CALENDAR_URL}?{calendar_query}"),
-        "graduate_calendar": lambda: request_json(
-            session, "GET", f"{module.GRADUATE_CALENDAR_URL.format(site_id='graduate')}?{graduate_query}"),
-        "dormitory_menu": lambda: request_json(session, "POST", module.DORMITORY_MENU_URL, {"locgbn": "SJ"}),
-        "dormitory_notices": lambda: request_json(session, "POST", module.DORMITORY_NOTICE_URL, {
-            "cPage": 1, "rows": 3, "bbs_locgbn": "SJ", "bbs_id": "notice", "sType": "subject", "sWord": ""}),
-        "cafeteria": lambda: request_json(session, "GET", f"{module.CAFETERIA_URL}?{cafeteria_query}"),
-        "campus_places": lambda: request_json(session, "GET", f"{module.CAMPUS_MAP_URL}?{campus_query}"),
-        "extracurricular_events": lambda: request_json(session, "POST", module.EXTRACURRICULAR_EVENTS_URL, {
-            "cid": "eco", "category": "", **month_query, "start_year": "2026", "end_year": "2026"}),
+        "curriculum_courses": lambda: request_json(session, "GET", f"{curriculum['url']}?{curriculum_query}"),
+        "calendar": lambda: request_json(session, "GET", f"{calendar['url']}?{calendar_query}"),
+        "graduate_calendar": lambda: request_json(session, "GET", f"{graduate_url}?{graduate_query}"),
+        "dormitory_menu": lambda: request_json(session, "POST", dormitory["menuUrl"], dict(zip(dormitory["menuFormKeys"], ("SJ",)))),
+        "dormitory_notices": lambda: request_json(session, "POST", dormitory["noticeUrl"], dict(zip(
+            dormitory["noticeFormKeys"], (1, 3, "SJ", dormitory["noticeBoardId"], dormitory["noticeSearchType"], "")))),
+        "cafeteria": lambda: request_json(session, "GET", f"{cafeteria['url']}?{cafeteria_query}"),
+        "campus_places": lambda: request_json(session, "GET", f"{campus_map['url']}?{campus_query}"),
+        "extracurricular_events": lambda: request_json(session, "POST", extracurricular["url"], dict(zip(
+            extracurricular["formKeys"], (extracurricular["cid"], "", month_start, month_end, "2026", "2026")))),
     }
 
 

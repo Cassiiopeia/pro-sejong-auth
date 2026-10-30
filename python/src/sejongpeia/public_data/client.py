@@ -21,29 +21,52 @@ from ..common.transport import USER_AGENT, UrllibSession, create_ssl_context
 
 LOGGER = logging.getLogger(__name__)
 
+# 학교 주소·요청 키·고정 값의 원본은 spec/contract.json 의 publicData (tests/test_contract.py 가 일치 검사)
+JSON_ACCEPT = "application/json"
+FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8"
+FORM_REQUESTED_WITH = "XMLHttpRequest"
 SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/"
+SIS_CONTENT_TYPE = 'application/json; charset="UTF-8"'
+SIS_SEARCH_KEY = "dm_search"
+SIS_ONLOAD_ENDPOINT = "doOnload.do"
+SIS_TERM_LIST_ENDPOINT = "doYearsmtlist.do"
+SIS_DEPARTMENT_LIST_ENDPOINT = "doLesndeptgroup.do"
+SIS_LECTURE_LIST_ENDPOINT = "doList.do"
+# 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
+LECTURE_EMPTY_FILTER_KEYS = ("SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN",
+                             "CORS_SCHE_GRP_CD")
 # 학과 교육과정 과목 1건: deptNo 는 SIS 학과 코드(DEPT_CD)와 같은 값, Accept: application/json 이 없으면 404
 CURRICULUM_COURSE_URL = "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do"
+CURRICULUM_QUERY_KEYS = ("curiNo", "deptNo")
 ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do"
-# 대학원 사이트별 학사일정: {site_id} 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
-GRADUATE_CALENDAR_URL = "https://{site_id}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp"
+CALENDAR_QUERY_KEYS = ("mode", "start", "end", "collDiv")
+CALENDAR_MODE = "getCalendarData"
+DEFAULT_CALENDAR_CATEGORY_CODE = "0001"  # 학부 일정
+# 대학원 사이트별 학사일정: {siteId} 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
+GRADUATE_CALENDAR_URL = "https://{siteId}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp"
+GRADUATE_CALENDAR_QUERY_KEYS = ("year", "month", "siteId")
 # 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
 GRADUATE_SITE_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]{0,30}")
+DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do"
+DORMITORY_MENU_FORM_KEYS = ("locgbn",)
+DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do"
+DORMITORY_NOTICE_FORM_KEYS = ("cPage", "rows", "bbs_locgbn", "bbs_id", "sType", "sWord")
+DORMITORY_NOTICE_BOARD_ID = "notice"
+DORMITORY_NOTICE_SEARCH_TYPE = "subject"  # 제목 검색
+DEFAULT_DORMITORY_LOCATION = "SJ"
 CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do"
+CAFETERIA_QUERY_KEYS = ("mode", "placeId")
+CAFETERIA_MENU_MODE = "getMenuList"
 # 학교에 식당 목록 API가 없어 번호 1부터 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
 CAFETERIA_DEFAULT_MAX_PLACE_ID = 10
 # 호출자가 올릴 수 있는 상한 (한 번 갱신에 최대 이만큼 요청하므로 학교 서버 부담을 막기 위해 제한)
 CAFETERIA_LIMIT_MAX_PLACE_ID = 50
 CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do"
-DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do"
-DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do"
+CAMPUS_MAP_QUERY_KEYS = ("mode", "placeType")
+CAMPUS_PLACE_LIST_MODE = "getPlaceUserList"
 EXTRACURRICULAR_EVENTS_URL = "https://do.sejong.ac.kr/ko/process/schedule/getEvents"
-
-SIS_CONTENT_TYPE = 'application/json; charset="UTF-8"'
-# 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
-LECTURE_EMPTY_FILTERS = {key: "" for key in (
-    "SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD")}
-FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8"
+EXTRACURRICULAR_FORM_KEYS = ("cid", "category", "start", "end", "start_year", "end_year")
+EXTRACURRICULAR_CID = "eco"
 SUBMIT_ERROR_MARKER = "_SUBMIT_ERROR_"
 
 # extra 제외 필드: 교직원 이름 등 개인 식별, 서버 내부 정보
@@ -260,6 +283,11 @@ def _to_extracurricular_event(row):
                                 *_fields(detail, "url", "description", "location"))
 
 
+def _pairs_of(keys: Tuple[str, ...], *values: Any) -> Dict[str, Any]:
+    """요청 키 목록 + 값 > 보낼 순서 그대로의 키-값 쌍"""
+    return dict(zip(keys, values))
+
+
 def _year_of(date_text: str) -> str:
     """yyyy-mm-dd > yyyy"""
     return str(date_text)[:4]
@@ -303,7 +331,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        return self._sis_dataset("doOnload.do", {}, "dl_code_orgn", _to_organization_category)
+        return self._sis_dataset(SIS_ONLOAD_ENDPOINT, {}, "dl_code_orgn", _to_organization_category)
 
     def terms(self, category_code: str) -> List[Term]:
         """기관 구분의 학기 목록: 기관 구분 코드 > Term 목록
@@ -312,7 +340,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        return self._sis_dataset("doYearsmtlist.do", {"ORGN_CLSF_CD": category_code}, "dl_code_yearSmt", _to_term)
+        return self._sis_dataset(SIS_TERM_LIST_ENDPOINT, {"ORGN_CLSF_CD": category_code}, "dl_code_yearSmt", _to_term)
 
     def departments(self, category_code: str, year: str, semester_code: str) -> List[Department]:
         """학기의 학과 목록: 기관 구분·연도·학기 코드 > Department 목록
@@ -325,7 +353,7 @@ class SejongPublicData:
         """
         search = {"ORGN_CLSF_CD": category_code, "YEAR": year, "SMT_CD": semester_code,
                   "YEAR_SMT": f"{year}/{semester_code}"}
-        return self._sis_dataset("doLesndeptgroup.do", search, "dl_code_dept", _to_department)
+        return self._sis_dataset(SIS_DEPARTMENT_LIST_ENDPOINT, search, "dl_code_dept", _to_department)
 
     def course_types(self) -> List[CourseType]:
         """이수 구분 목록 (공필, 전필 등)
@@ -334,7 +362,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        return self._sis_dataset("doOnload.do", {}, "dl_code_curiType", _to_course_type)
+        return self._sis_dataset(SIS_ONLOAD_ENDPOINT, {}, "dl_code_curiType", _to_course_type)
 
     def selective_domains(self) -> List[SelectiveDomain]:
         """선택 교양 영역 목록
@@ -343,7 +371,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        return self._sis_dataset("doOnload.do", {}, "dl_code_sltDomain", _to_selective_domain)
+        return self._sis_dataset(SIS_ONLOAD_ENDPOINT, {}, "dl_code_sltDomain", _to_selective_domain)
 
     def lectures(self, category_code: str, year: str, semester_code: str, department_code: str = "",
                  course_name: str = "", instructor_name: str = "") -> List[Lecture]:
@@ -358,10 +386,10 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        search = {**LECTURE_EMPTY_FILTERS, "ORGN_CLSF_CD": category_code, "YEAR": year, "SMT_CD": semester_code,
+        search = {**dict.fromkeys(LECTURE_EMPTY_FILTER_KEYS, ""), "ORGN_CLSF_CD": category_code, "YEAR": year, "SMT_CD": semester_code,
                   "YEAR_SMT": f"{year}/{semester_code}", "DEPT_CD": str(department_code or "").strip(),
                   "CURI_NM": str(course_name or "").strip(), "EMP_NM": str(instructor_name or "").strip(), "LANG_CHK": "KOR"}
-        return self._sis_dataset("doList.do", search, "dl_main", _to_lecture)
+        return self._sis_dataset(SIS_LECTURE_LIST_ENDPOINT, search, "dl_main", _to_lecture)
 
     def curriculum_courses(self, department_code: str, course_number: str) -> List[CurriculumCourse]:
         """학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요)
@@ -373,12 +401,12 @@ class SejongPublicData:
         """
         if not str(department_code or "").strip() or not str(course_number or "").strip():
             raise SejongAuthError(ErrorCode.INVALID_INPUT, "Department code and course number are required")
-        query = urllib.parse.urlencode({"curiNo": course_number, "deptNo": department_code})
+        query = urllib.parse.urlencode(_pairs_of(CURRICULUM_QUERY_KEYS, course_number, department_code))
         return self._fetch(("curriculum_courses", department_code, course_number), "GET",
                            f"{CURRICULUM_COURSE_URL}?{query}", None, None,
                            lambda body: [_to_curriculum_course(row) for row in _dataset(body, "items")], [])
 
-    def calendar(self, start: str, end: str, category_code: str = "0001") -> List[CalendarEvent]:
+    def calendar(self, start: str, end: str, category_code: str = DEFAULT_CALENDAR_CATEGORY_CODE) -> List[CalendarEvent]:
         """학부·대학원 홈페이지 학사일정: 기간·분류 > CalendarEvent 목록
         인자 start: 시작일 yyyy-MM-dd
         인자 end: 종료일 yyyy-MM-dd
@@ -387,7 +415,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        query = urllib.parse.urlencode({"mode": "getCalendarData", "start": start, "end": end, "collDiv": category_code})
+        query = urllib.parse.urlencode(_pairs_of(CALENDAR_QUERY_KEYS, CALENDAR_MODE, start, end, category_code))
         return self._fetch(("calendar", category_code, start, end), "GET", f"{ACADEMIC_CALENDAR_URL}?{query}", None, None,
                            lambda body: [_to_calendar_event(row) for row in _dataset(body, "data")], [])
 
@@ -402,22 +430,23 @@ class SejongPublicData:
         """
         if not GRADUATE_SITE_ID_PATTERN.fullmatch(str(site_id or "")):
             raise SejongAuthError(ErrorCode.INVALID_INPUT, "Graduate site id must be lowercase letters, digits and hyphens")
-        query = urllib.parse.urlencode({"year": year, "month": month, "siteId": site_id})
+        query = urllib.parse.urlencode(_pairs_of(GRADUATE_CALENDAR_QUERY_KEYS, year, month, site_id))
         return self._fetch(("graduate_calendar", site_id, year, month), "GET",
-                           f"{GRADUATE_CALENDAR_URL.format(site_id=site_id)}?{query}", None, None,
+                           f"{GRADUATE_CALENDAR_URL.replace('{siteId}', site_id)}?{query}", None, None,
                            _to_graduate_calendar_events, [])
 
-    def dormitory_menu(self, location: str = "SJ") -> List[DormitoryMenuDay]:
+    def dormitory_menu(self, location: str = DEFAULT_DORMITORY_LOCATION) -> List[DormitoryMenuDay]:
         """기숙사 일주일 식단 (7일: 조식·중식·석식·대체)
         인자 location: 기숙사 위치 코드 (기본 SJ, 다른 값은 확인하지 않음)
         반환: DormitoryMenuDay 목록 (7개)
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        return self._fetch(("dormitory_menu", location), "POST", DORMITORY_MENU_URL, {"locgbn": location}, FORM_CONTENT_TYPE,
+        return self._fetch(("dormitory_menu", location), "POST", DORMITORY_MENU_URL,
+                           _pairs_of(DORMITORY_MENU_FORM_KEYS, location), FORM_CONTENT_TYPE,
                            _to_dormitory_menu_days, [])
 
-    def dormitory_notices(self, page: int = 1, rows: int = 10, keyword: str = "", location: str = "SJ") -> DormitoryNotices:
+    def dormitory_notices(self, page: int = 1, rows: int = 10, keyword: str = "", location: str = DEFAULT_DORMITORY_LOCATION) -> DormitoryNotices:
         """기숙사 공지: 고정 공지와 일반 공지, 전체 건수 (작성자 정보는 반환하지 않음)
         인자 page: 쪽 번호 (1부터)
         인자 rows: 쪽당 건수
@@ -427,7 +456,8 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        form = {"cPage": page, "rows": rows, "bbs_locgbn": location, "bbs_id": "notice", "sType": "subject", "sWord": keyword}
+        form = _pairs_of(DORMITORY_NOTICE_FORM_KEYS, page, rows, location, DORMITORY_NOTICE_BOARD_ID,
+                         DORMITORY_NOTICE_SEARCH_TYPE, keyword)
         return self._fetch(("dormitory_notices", page, rows, keyword, location), "POST", DORMITORY_NOTICE_URL, form,
                            FORM_CONTENT_TYPE, _to_dormitory_notices, DormitoryNotices(total=0, pinned=[], items=[]))
 
@@ -438,7 +468,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": place_id})
+        query = urllib.parse.urlencode(_pairs_of(CAFETERIA_QUERY_KEYS, CAFETERIA_MENU_MODE, place_id))
         return self._fetch(("cafeteria_menu", place_id), "GET", f"{CAFETERIA_URL}?{query}", None, None,
                            lambda body: [_to_cafeteria_menu_item(row) for row in _dataset(body, "items")], [])
 
@@ -455,7 +485,7 @@ class SejongPublicData:
         def load_places() -> List[CafeteriaPlace]:
             bodies_by_place_id = {}
             for place_id in (str(number) for number in range(1, max_place_id + 1)):  # 순서대로 한 건씩, 병렬 요청 없음
-                query = urllib.parse.urlencode({"mode": "getMenuList", "placeId": place_id})
+                query = urllib.parse.urlencode(_pairs_of(CAFETERIA_QUERY_KEYS, CAFETERIA_MENU_MODE, place_id))
                 bodies_by_place_id[place_id] = self._request_json("GET", f"{CAFETERIA_URL}?{query}", None, None)
             return _to_cafeteria_places(bodies_by_place_id)
         return self._cached_call(("cafeteria_places", max_place_id), load_places, [])
@@ -467,7 +497,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        query = urllib.parse.urlencode({"mode": "getPlaceUserList", "placeType": place_type})
+        query = urllib.parse.urlencode(_pairs_of(CAMPUS_MAP_QUERY_KEYS, CAMPUS_PLACE_LIST_MODE, place_type))
         return self._fetch(("campus_places", place_type), "GET", f"{CAMPUS_MAP_URL}?{query}", None, None,
                            lambda body: [_to_campus_place(row) for row in _dataset(body, "items")], [])
 
@@ -480,8 +510,7 @@ class SejongPublicData:
         실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
         캐시: 인자별 cache_ttl_seconds (기본 86400), 요청 1건
         """
-        form = {"cid": "eco", "category": category, "start": start, "end": end,
-                "start_year": _year_of(start), "end_year": _year_of(end)}
+        form = _pairs_of(EXTRACURRICULAR_FORM_KEYS, EXTRACURRICULAR_CID, category, start, end, _year_of(start), _year_of(end))
         return self._fetch(("extracurricular_events", start, end, category), "POST", EXTRACURRICULAR_EVENTS_URL, form,
                            FORM_CONTENT_TYPE,
                            lambda body: [_to_extracurricular_event(row) for row in _dataset(body, "events")], [])
@@ -490,7 +519,7 @@ class SejongPublicData:
     def _sis_dataset(self, endpoint: str, search: Dict[str, str], dataset_name: str, to_model: Callable) -> List:
         """SIS 조회 한 건: {"dm_search": ...} JSON 본문 > 데이터셋 배열 > 모델 목록"""
         cache_key = ("sis", endpoint, dataset_name, tuple(sorted(search.items())))
-        return self._fetch(cache_key, "POST", SIS_OPEN_TIME_URL + endpoint, {"dm_search": search}, SIS_CONTENT_TYPE,
+        return self._fetch(cache_key, "POST", SIS_OPEN_TIME_URL + endpoint, {SIS_SEARCH_KEY: search}, SIS_CONTENT_TYPE,
                            lambda body: [to_model(row) for row in _dataset(body, dataset_name)], [])
 
     def _fetch(self, cache_key: Tuple, method: str, url: str, payload: Optional[Dict], content_type: Optional[str],
@@ -531,13 +560,13 @@ class SejongPublicData:
 
     def _request_json(self, method: str, url: str, payload: Optional[Dict], content_type: Optional[str]) -> Any:
         """요청 1건 > JSON (2xx 아님·JSON 아님·_SUBMIT_ERROR_ 는 예외)"""
-        headers = {"Accept": "application/json"}
+        headers = {"Accept": JSON_ACCEPT}
         data = None
         if content_type == SIS_CONTENT_TYPE:
             data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         elif content_type == FORM_CONTENT_TYPE:
             data = urllib.parse.urlencode(payload).encode("utf-8")
-            headers["X-Requested-With"] = "XMLHttpRequest"
+            headers["X-Requested-With"] = FORM_REQUESTED_WITH
         if content_type:
             headers["Content-Type"] = content_type
         response = self._get_session().request(method, url, data=data, headers=headers)

@@ -41,7 +41,7 @@ cd website && npm ci && npm run build && node scripts/check-links.mjs   # docs s
 ## Add a new public data source (7 steps, details in `CONTRIBUTING.md` and `website/.../contribute/add-data-source`)
 
 1. Propose it as an issue (source location, login needed or not, request shape, fields, personal data). HTML-only sources are not a base source.
-2. Contract first: add a row to the Methods table in `spec/PUBLIC_DATA.md` (request, field mapping, date checked).
+2. Contract first: put the address, request keys and fixed values under `publicData` in `spec/contract.json` (each language keeps its own constants, its contract test compares them), then add a row to the Methods table in `spec/PUBLIC_DATA.md` (request, field mapping, date checked).
 3. Synthetic fixture and expected output: extend `FIXTURES` and `map_all()` in `scripts/generate-public-data-fixtures.py`, then run it (`python3 scripts/generate-public-data-fixtures.py`).
 4. Implement Java, Python and Node **in the same PR**, using the shared helpers of `SejongPublicData` for request, cache and failure isolation.
 5. Add one test per language that compares fixture output to the expected JSON. No test calls the school.

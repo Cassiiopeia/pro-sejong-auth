@@ -8,7 +8,7 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 ## 절차
 
 1. **이슈로 제안**합니다. 이슈 템플릿 `새 정보 출처 제안`을 쓰세요. 출처 위치, 로그인 필요 여부, 요청 형태(JSON 또는 HTML), 필드, 개인정보 포함 여부를 적어 주세요. JSON이 아니고 HTML만 있는 정보는 기본 원본으로 삼지 않습니다.
-2. **계약을 먼저** 씁니다. `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다. 에이전트용 메서드 목록 `spec/api-index.json`에도 같은 메서드를 추가합니다 (인자, 반환 모델, Java 시그니처). 세 언어 구현과 어긋나면 `python3 scripts/check-api-index.py`가 실패합니다.
+2. **계약을 먼저** 씁니다. 주소, 요청 키, 고정 값은 `spec/contract.json`의 `publicData`에 넣고 (언어별 상수는 각자 두며 계약 테스트가 일치를 검사합니다), `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다. 에이전트용 메서드 목록 `spec/api-index.json`에도 같은 메서드를 추가합니다 (인자, 반환 모델, Java 시그니처). 세 언어 구현과 어긋나면 `python3 scripts/check-api-index.py`가 실패합니다.
 3. **합성 fixture와 기대 결과**를 만듭니다. `scripts/generate-public-data-fixtures.py`의 `FIXTURES`와 `map_all()`에 추가하고 실행합니다. 실제 응답을 복사하지 않고, 교직원 이름 같은 개인 식별 값은 넣지 않습니다.
 4. **Java, Python, Node를 한 PR에서** 구현합니다. 요청, 캐시, 실패 격리는 `SejongPublicData`의 공통 헬퍼를 그대로 씁니다. 값 규칙(없으면 빈 문자열, `extra`)은 계약을 따릅니다.
 5. **테스트는 필요한 만큼만** 씁니다. fixture 결과가 기대 결과와 같은지 하나면 충분합니다. 학교 서버를 부르는 테스트는 넣지 않습니다.

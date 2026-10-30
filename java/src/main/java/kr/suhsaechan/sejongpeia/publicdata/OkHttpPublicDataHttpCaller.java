@@ -16,6 +16,8 @@ class OkHttpPublicDataHttpCaller implements PublicDataHttpCaller {
 
   private static final String USER_AGENT = "pro-sejongpeia-java";
   static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
+  static final String JSON_ACCEPT = "application/json";
+  static final String FORM_REQUESTED_WITH = "XMLHttpRequest";
 
   private final OkHttpClient client;
 
@@ -28,7 +30,7 @@ class OkHttpPublicDataHttpCaller implements PublicDataHttpCaller {
     Request.Builder builder = new Request.Builder()
         .url(request.getUrl())
         .header("User-Agent", USER_AGENT)
-        .header("Accept", "application/json");
+        .header("Accept", JSON_ACCEPT);
     boolean isPost = "POST".equals(request.getHttpMethod());
     if (isPost) {
       // 본문 형식 지정: 문자 집합 포함 값을 그대로 헤더로 (OkHttp 가 charset 을 덧붙이지 않게 바이트 본문 사용)
@@ -39,7 +41,7 @@ class OkHttpPublicDataHttpCaller implements PublicDataHttpCaller {
           MediaType.parse(contentType));
       builder.post(body).header("Content-Type", contentType);
       if (FORM_CONTENT_TYPE.equals(contentType)) {
-        builder.header("X-Requested-With", "XMLHttpRequest");
+        builder.header("X-Requested-With", FORM_REQUESTED_WITH);
       }
     }
     try (Response response = client.newCall(builder.build()).execute()) {
