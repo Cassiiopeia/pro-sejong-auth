@@ -5,57 +5,68 @@ description: 소속 분류, 학기, 학과, 이수 구분, 선택 영역 코드�
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-학교 학사정보시스템(SIS)의 강의시간표 화면이 쓰는 코드표를 받습니다. 학과 이름과 코드는 몇 해마다 바뀌므로, 코드를 직접 적어 두지 않고 이 메서드로 확인해서 쓰세요. 학교가 주는 학과 코드는 로그인한 학생의 SIS 결과(`departmentCode`)와 같은 코드 체계입니다. 공통 규칙은 [공통 규칙](../overview/)을 보세요.
+학교 학사정보시스템(SIS)의 강의시간표 화면이 쓰는 코드표(소속 분류, 학기, 학과, 이수 구분, 선택 영역)를 로그인 없이 받습니다. 코드와 이름은 직접 적어 두지 말고 이 메서드로 받아서 다른 메서드에 넘기세요. 학과 코드는 로그인한 학생의 SIS 결과(`departmentCode`)와 같은 체계입니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
 
-## 메서드
+## 요청 파라미터
 
-| 정보 | Java | Python | Node.js |
-|---|---|---|---|
-| 소속 분류 | `organizationCategories()` | `organization_categories()` | `organizationCategories()` |
-| 학기 | `terms(categoryCode)` | `terms(category_code)` | `terms(categoryCode)` |
-| 학과 | `departments(categoryCode, year, semesterCode)` | `departments(category_code, year, semester_code)` | `departments({ categoryCode, year, semesterCode })` |
-| 이수 구분 | `courseTypes()` | `course_types()` | `courseTypes()` |
-| 선택 영역 | `selectiveDomains()` | `selective_domains()` | `selectiveDomains()` |
+메서드는 5개입니다: `organization_categories()`, `terms(category_code)`, `departments(category_code, year, semester_code)`, `course_types()`, `selective_domains()`. Node.js와 Java는 `camelCase`(`organizationCategories()`, `courseTypes()` 등)이고, `departments`는 Node.js에서 `departments({ categoryCode, year, semesterCode })`처럼 객체로 받습니다.
 
-반환은 모두 목록입니다 (`OrganizationCategory`, `Term`, `Department`, `CourseType`, `SelectiveDomain`).
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `category_code` | 문자열 | `terms`, `departments`에서 필수 | - | 소속 분류 코드. 하드코딩한 목록이 아니라 `organization_categories()`가 돌려준 `code`를 넘깁니다 |
+| `year` | 문자열 | `departments`에서 필수 | - | 연도. `terms(category_code)`가 돌려준 `year`를 넘깁니다 |
+| `semester_code` | 문자열 | `departments`에서 필수 | - | 학기 코드 (아래 표) |
 
-## 요청 메모
+나머지 세 메서드(`organization_categories`, `course_types`, `selective_domains`)는 파라미터가 없습니다.
 
-- 출처: `sjpt.sejong.ac.kr`의 강의시간표 화면(`/app/ext/SueOpenTimeQ.jsp`)이 부르는 `POST /sch/sch/ext/SueOpenTimeQ/` 아래 엔드포인트. **로그인이 필요 없습니다** (쿠키 없는 일반 HTTP로 확인).
-- 본문은 `{"dm_search": {...}}` JSON, 헤더는 `Content-Type: application/json; charset="UTF-8"`와 `Accept: application/json`.
-
-| 메서드 | 엔드포인트 | 본문 `dm_search` | 응답 데이터셋 |
-|---|---|---|---|
-| 소속 분류, 이수 구분, 선택 영역 | `doOnload.do` | `{}` | `dl_code_orgn`, `dl_code_curiType`, `dl_code_sltDomain` |
-| 학기 | `doYearsmtlist.do` | `ORGN_CLSF_CD` | `dl_code_yearSmt` |
-| 학과 | `doLesndeptgroup.do` | `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `YEAR_SMT`(`<연도>/<학기 코드>`) | `dl_code_dept` |
-
-- 세 코드표(소속 분류, 이수 구분, 선택 영역)는 같은 `doOnload.do` 응답에서 나오지만, 메서드마다 캐시 항목이 따로입니다.
-- 2026-10-30 기준 행 수: 소속 분류 22, 선택 영역 31, 이수 구분 81, 학기 115(학부 `20`)와 57(대학원 `30`), 학과 103(학부 `20`, 2026/2).
-- 확인 환경: 2026-10-30, Python 3.14와 라이브러리 전송 계층, 쿠키 없는 브라우저.
-
-### 소속 분류 코드
-
-`ORGN_CLSF_CD`로 다른 메서드에 넘기는 값입니다. 확인한 값: `20` 학부, `30` 일반대학원, `31`, `33`, `34`, `39`, `3J`, `3K` 전문·특수대학원. 이름은 결과의 `name`으로 확인하세요. 현재 학기에 학과가 0건인 분류(닫혔거나 합쳐진 대학원)가 있고, 빈 목록은 정상 응답입니다.
-
-### 학기 코드 (`semester_code`)
-
-| 코드 | 학기 |
+| 학기 코드 | 학기 |
 |---|---|
 | `10` | 1학기 |
 | `11` | 하계 계절학기 |
 | `20` | 2학기 |
 | `21` | 동계 계절학기 |
 
-## 결과 필드
+**학교 요청**
 
-필드 이름은 Python `snake_case`입니다. Node.js와 Java는 `camelCase`입니다 (예: `name_en` > `nameEn`). 값이 없으면 빈 문자열이고, 모든 모델에 `extra`(문자열 맵)가 있습니다.
+- `POST https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/` 아래 엔드포인트: 소속 분류·이수 구분·선택 영역은 `doOnload.do`, 학기는 `doYearsmtlist.do`, 학과는 `doLesndeptgroup.do`. 본문은 `{"dm_search": {...}}` JSON입니다.
+- 학과 요청의 `dm_search`는 `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `YEAR_SMT`(`연도/학기 코드`, 예: `연도/20`)를 담습니다.
+- 소속 분류·이수 구분·선택 영역은 같은 `doOnload.do` 응답에서 나오지만 메서드마다 캐시 항목이 따로입니다.
+
+## 응답 데이터 구조
+
+모두 목록을 돌려줍니다 (`OrganizationCategory`, `Term`, `Department`, `CourseType`, `SelectiveDomain`). 예시 JSON의 필드 이름은 Python `snake_case`이고 Node.js와 Java는 `camelCase`입니다 (예: `name_en` > `nameEn`). 학교 데이터는 바뀌므로 값은 예시입니다.
+
+```jsonc
+// terms("20")
+[{ "year": "2026", "semester_code": "20", "code": "2026/20", "name": "2026/2학기", "extra": {} }]
+
+// organization_categories()
+[{ "code": "20", "name": "학부", "name_en": "Undergraduate", "extra": { "PRT_ORD": "200" } }]
+
+// departments("20", "2026", "20")
+[{
+  "code": "3517", "level": "2",
+  "college_code": "3500", "college_name": "인공지능융합대학",
+  "unit_code": "3517", "unit_name": "AI로봇학과",
+  "major_code": "", "major_name": "",
+  "name_en": "College of AI Convergence Department of Artificial Intelligence and Robotics",
+  "extra": { "DEPT_NM": "인공지능융합대학 AI로봇학과【3517 학부】", "ORGN_CLSF_CD": "20" }
+}]
+
+// course_types()
+[{ "code": "11", "name": "교필", "category_code": "20", "extra": { "CURI_TYPE_FULL_NM": "교양필수" } }]
+
+// selective_domains()
+[{ "code": "10", "name": "인성과도덕", "name_en": "Character & Morality", "extra": { "PRT_ORD": "1" } }]
+```
+
+값이 없으면 빈 문자열이고, 모든 모델에 `extra`(문자열 맵)가 있습니다.
 
 ### 소속 분류 (`OrganizationCategory`)
 
 | 필드 | 학교 키 | 설명 |
 |---|---|---|
-| `code` | `COM_CD` | 분류 코드 |
+| `code` | `COM_CD` | 분류 코드 (학부 `20`, 일반대학원 `30` 등). 다른 메서드의 `category_code`로 넘깁니다 |
 | `name`, `name_en` | `CD_NM`, `CD_NM_ENG` | 한국어, 영어 이름 |
 | `extra` | 그 밖의 필드 | 예: 표시 순서 `PRT_ORD` |
 
@@ -67,8 +78,8 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 |---|---|---|
 | `year` | `YEAR` | 연도 (문자열) |
 | `semester_code` | `SMT_CD` | 학기 코드 (위 표) |
-| `code` | `YEAR_SMT_CD` | 예: `2026/20` |
-| `name` | `YEAR_SMT_NM` | 예: `2026/2학기` |
+| `code` | `YEAR_SMT_CD` | `연도/학기 코드` 형태 |
+| `name` | `YEAR_SMT_NM` | 학교 표기 이름 |
 
 ### 학과 (`Department`)
 
@@ -82,9 +93,9 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | `name_en` | `DEPT_NM_ENG` | 영어 이름 (일부 행은 비어 있음) |
 
 - `level`이 `2`이면 `code`와 `unit_code`가 같고, `3`이면 `code`와 `major_code`가 같으며 상위 학과는 `unit_code`입니다.
-- 이름은 `*_PRINT` 계열이 깨끗합니다. `extra`에 들어가는 `DEPT_NM` 같은 `*_NM` 필드에는 `【3517 학부】` 같은 꾸밈이 붙어 있습니다. 라이브러리는 이 꾸밈을 지워 빈칸을 채우지 않습니다.
-- `college_code`가 항상 실제 단과대는 아닙니다. 융합전공(`3300`)이나 옛 묶음(`2021`) 코드가 있었습니다. 코드는 연결 키로만 쓰고 이름을 단과대로 가정하지 마세요.
-- 한 행에 학교 컬럼이 약 55개이고 대부분 비어 있습니다. 위 필드 밖은 `extra`에 담깁니다.
+- 이름은 `*_PRINT` 계열이 깨끗합니다. `extra`에 들어가는 `DEPT_NM` 같은 `*_NM` 필드에는 `【3517 학부】` 같은 꾸밈이 붙어 있고, 라이브러리는 이를 지우지 않습니다.
+- `college_code`가 항상 실제 단과대는 아닙니다. 융합전공이나 옛 묶음 코드가 올 수 있으니 코드는 연결 키로만 쓰세요.
+- 위 필드 밖의 학교 컬럼은 모두 `extra`에 담깁니다.
 
 ### 이수 구분 (`CourseType`)과 선택 영역 (`SelectiveDomain`)
 
@@ -93,9 +104,22 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | `CourseType` | `code`, `name`, `category_code` | `CURI_TYPE_CD`, `CURI_TYPE_CD_NM`, `ORGN_CLSF_CD` |
 | `SelectiveDomain` | `code`, `name`, `name_en` | `COM_CD`, `CD_NM`, `CD_NM_ENG` |
 
-개설강좌의 `course_type_code`, `domain_code`와 같은 이름의 코드입니다 ([개설강좌](../lectures/)). 두 코드표의 값이 강좌 필드와 빠짐없이 대응하는지는 따로 검증하지 않았습니다.
+개설강좌의 `course_type_code`, `domain_code`와 같은 이름의 코드입니다 ([개설강좌](../lectures/)).
 
-## 예시
+- 메서드와 인자마다 하루(기본 86400초) 캐시합니다. 학과는 소속 분류, 연도, 학기 조합마다 따로 캐시되고, 호출당 학교 요청은 한 번입니다.
+- 연결 실패, 시간 초과, 데이터셋 키 없음, 학교의 `_SUBMIT_ERROR_` 응답(HTTP 200이어도 오류 객체가 올 수 있음)은 예외 없이 마지막 캐시 값 또는 빈 목록입니다.
+- 빈 목록은 정상 응답일 수 있습니다. 예를 들어 해당 학기에 학과가 없는 소속 분류가 있습니다.
+- 이 다섯 메서드는 입력 오류로 예외를 던지지 않습니다.
+
+## 알려진 한계
+
+- 비공식·무버전 엔드포인트입니다. 학교가 예고 없이 바꾸거나 없앨 수 있습니다.
+- 학과 목록은 학기마다 달라집니다. 학과가 추가되고 이름이 바뀌므로 원하는 학기를 항상 같이 넘기세요.
+- 이 목록은 그 학기에 강의를 여는 학과(시간표 필터용)입니다. 센터, 처 같은 비학술 조직 등 모든 행정 조직은 아닙니다.
+- `code`가 학생 SIS의 학과 코드와 같다는 점은 학부 재학생 계정 기준입니다. 대학원생, 복수전공, 교직원 계정의 코드는 다를 수 있습니다.
+- 계약 원본: [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md)
+
+## 예시 코드
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -103,7 +127,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 ```java
 List<OrganizationCategory> categories = publicData.organizationCategories();
 List<Term> terms = publicData.terms("20");                              // 학부 학기 목록
-List<Department> departments = publicData.departments("20", "2026", "20"); // 학부, 2026년 2학기
+List<Department> departments = publicData.departments("20", "2026", "20"); // 학부, 학기 코드 20 = 2학기
 ```
 
 </TabItem>
@@ -112,7 +136,7 @@ List<Department> departments = publicData.departments("20", "2026", "20"); // �
 ```python
 categories = public_data.organization_categories()
 terms = public_data.terms("20")  # 학부 학기 목록
-departments = public_data.departments("20", "2026", "20")  # 학부, 2026년 2학기
+departments = public_data.departments("20", "2026", "20")  # 학부, 학기 코드 20 = 2학기
 ```
 
 </TabItem>
@@ -121,27 +145,10 @@ departments = public_data.departments("20", "2026", "20")  # 학부, 2026년 2�
 ```javascript
 const categories = await publicData.organizationCategories();
 const terms = await publicData.terms('20'); // 학부 학기 목록
-const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' }); // 학부, 2026년 2학기
+const departments = await publicData.departments({ categoryCode: '20', year: '2026', semesterCode: '20' }); // 학부, 학기 코드 20 = 2학기
 ```
 
 </TabItem>
 </Tabs>
 
 학과 목록으로 강의를 찾는 전체 예시는 [학과·강의 검색](../../guides/department-lecture-search/)을 보세요.
-
-## 캐시와 실패 동작
-
-- 메서드와 인자마다 하루(기본 86400초) 캐시합니다. 학과는 소속 분류, 연도, 학기 조합마다 따로 캐시됩니다.
-- 요청은 호출당 한 번입니다.
-- 연결 실패, 시간 초과, 데이터셋 키 없음, 학교의 `_SUBMIT_ERROR_` 응답(HTTP 200이어도 오류 객체가 올 수 있음)은 예외 없이 마지막 캐시 값 또는 빈 목록입니다. 상태 코드만 믿지 않고 기대한 데이터셋 키가 있는지 확인합니다.
-- 이 다섯 메서드는 입력 오류로 예외를 던지지 않습니다.
-
-## 알려진 한계와 확인하지 못한 것
-
-- 비공식·무버전 엔드포인트입니다. 학교가 예고 없이 바꾸거나 없앨 수 있습니다.
-- 학과 목록은 **학기에 따라 달라집니다.** 학부 행 수: 71(2000/1), 73(2010/1), 79(2020/1), 101(2025/2), 103(2026/2). 학과는 학기마다 추가되고 이름이 바뀌므로 원하는 학기를 항상 같이 넘기세요.
-- 이 목록은 그 학기에 **강의를 여는** 학과(시간표 필터용)입니다. 모든 행정 조직은 아닙니다. 센터, 처 같은 비학술 조직은 들어 있지 않습니다.
-- `code`가 학생 SIS의 학과 코드와 같다는 것은 **학부 계정 1개로만** 확인했습니다. 대학원생, 복수전공, 다른 재학 상태, 교직원 계정은 확인하지 못했습니다.
-- 공개 홈페이지의 「전체 학과」 페이지와 이름을 비교하면 49개 중 42개가 일치했습니다 (2026-10-30). 나머지는 표기가 다르거나 다른 이름으로 올라 있습니다. 그 페이지에는 코드가 없습니다.
-- 학교가 코드와 소속 분류 차원을 함께 주는 곳은 이 시간표 화면뿐이었습니다. 다른 곳을 조사한 기록은 [REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)에 있습니다.
-- 계약 원본: [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md)

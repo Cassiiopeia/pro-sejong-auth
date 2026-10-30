@@ -73,7 +73,7 @@ cd node && npm ci && npm test                     # Node 18+
 - 문서 맨 위 언어 전환 줄에 같은 문서의 모든 언어를 링크합니다 (예: `한국어 | [English](README.en.md) | [日本語](README.ja.md)`).
 - 한국어 문서를 고치면 번역도 같은 PR에서 고칩니다. 번역을 못 하면 PR 설명에 적어 주세요.
 - `README.md`의 `## 최신 버전 :` 줄은 릴리스 워크플로우가 갱신하므로 직접 고치지 않습니다.
-- 확인: `python3 scripts/check-docs.py` (깨진 상대 링크, 언어 전환 링크 누락). PR에서도 `PROJECT-SEJONG-DOCS-CHECK`가 실행됩니다.
+- 확인: `python3 scripts/check-docs.py` (깨진 상대 링크, 언어 전환 링크 누락). PR에서도 `PROJECT-SEJONG-DOCS-CHECK`가 실행됩니다. 사용자용 문서(README, 사이트)에는 확인 날짜나 프로젝트 버전 같은 고정값을 적지 않으며 `python3 scripts/check-fixed-values.py`가 코드 블록 밖의 날짜·버전을 막습니다.
 
 ## 새 정보 출처 추가하기
 

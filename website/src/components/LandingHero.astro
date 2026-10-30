@@ -3,6 +3,7 @@
 import { LANDING_COPY, PACKAGE_BADGES, REPOSITORY_URL, type LandingLocale } from '../i18n/landing';
 import { documentUrl } from '../i18n/links';
 import HeroVisual from './HeroVisual.astro';
+import LatestVersion from './LatestVersion.astro';
 
 interface Props {
   locale: LandingLocale;
@@ -25,6 +26,7 @@ const copy = LANDING_COPY[locale].hero;
       <a class="landing-button" href={REPOSITORY_URL}>{copy.github}</a>
     </div>
     <ul class="landing-badges">
+      <li><LatestVersion label={copy.latestVersionLabel} isOnHero /></li>
       {
         PACKAGE_BADGES.map((badge) => (
           <li>

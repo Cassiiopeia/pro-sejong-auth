@@ -4,14 +4,14 @@
 
 Copy-paste examples for four common use cases in Java, Python and Node.js. Read the [API stability policy](API_STABILITY.en.md) first (breaking changes can happen, so pin the version).
 
-| Use case | Login | How far it was checked |
-|---|---|---|
-| [1. Student verification (club sign-up)](#1-student-verification-club-sign-up) | required | **not run** (no account). Signatures checked against the source; only the blank-input branch was run in Python and Node |
-| [2. Department and lecture search page](#2-department-and-lecture-search-page) | not needed | Python and Node: server started and requested; Java: only the library calls compiled and run, without a server |
-| [3. Academic calendar widget](#3-academic-calendar-widget) | not needed | run in all three languages |
-| [4. Dormitory and cafeteria info bot](#4-dormitory-and-cafeteria-info-bot) | not needed | run in all three languages |
+| Use case | Login |
+|---|---|
+| [1. Student verification (club sign-up)](#1-student-verification-club-sign-up) | required |
+| [2. Department and lecture search page](#2-department-and-lecture-search-page) | not needed |
+| [3. Academic calendar widget](#3-academic-calendar-widget) | not needed |
+| [4. Dormitory and cafeteria info bot](#4-dormitory-and-cafeteria-info-bot) | not needed |
 
-Checked on 2026-10-30 against the live school servers, with the 1.2.49 source (Python 3.14, Node 26, JDK 17). School data changes, so the outputs below are that day's examples. The Java annotations `@Service`, `@RestController`, `@GetMapping` and `@RequestParam` were compiled as same-shaped stand-ins without the Spring dependency, so only the library calls were verified; the Spring wiring was not.
+School data changes, so the values in the response examples only show the shape. The example code is for reference; the Java annotations (`@Service`, `@RestController`, ...) are meant for a project that has the Spring dependency.
 
 ## Setup
 
@@ -19,17 +19,71 @@ Checked on 2026-10-30 against the live school servers, with the 1.2.49 source (P
 |---|---|---|
 | `implementation "kr.suhsaechan:sejongpeia:<version>"` | `pip install pro-sejongpeia==<version>` | `npm install pro-sejongpeia@<version>` |
 
-- `<version>` is the latest release number (see the README badges, or [Maven Central](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia), [PyPI](https://pypi.org/project/pro-sejongpeia/), [npm](https://www.npmjs.com/package/pro-sejongpeia)). The examples here were checked with the 1.2.49 source.
+- `<version>` is the latest release number (see [Maven Central](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia), [PyPI](https://pypi.org/project/pro-sejongpeia/), [npm](https://www.npmjs.com/package/pro-sejongpeia)).
 - Spring Boot registers `SuhSejongAuthEngine` and `SejongPublicData` as beans. For plain Java see "Java: without Spring" in the [configuration docs](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/configuration/).
 - Create **one** `SejongPublicData` per process. The in-memory cache (24 hours by default) and request coalescing live inside the instance.
 - When a school server fails, public data returns the last cached value or an **empty list** without throwing. An empty list can mean "no data" or "a problem on the school side", so show a hint such as "could not load" next to empty results.
-- The Python examples use syntax that works on 3.9+, the Node examples on 18+ (ESM, top-level `await`); what was actually run is the environment above.
+- The Python examples use syntax that works on 3.9+, the Node examples on 18+ (ESM, top-level `await`).
 
 ## 1. Student verification (club sign-up)
 
 Take the student ID and password from a sign-up form, check enrollment, and fetch only student ID, name and major. The password is neither stored nor logged.
 
-> **This example was not run.** It logs in to the real portal and no account was available when this document was written. Method names, arguments, result fields and error codes were matched by reading the source (`__init__.py`, `index.ts`, `SuhSejongAuthEngine.java`) and [spec/RESULT_SCHEMA.md](../spec/RESULT_SCHEMA.md). In Python and Node only the `INVALID_INPUT` branch was run, by calling with a blank student ID and password (rejected before any network call). Java was only compiled. With a real account, `scripts/verify-live.sh` in [CONTRIBUTING](../CONTRIBUTING.en.md) compares the three languages.
+### Request parameters
+
+Names follow Python `snake_case`; Node.js and Java use `camelCase`. A portal login is required.
+
+| Method | Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|---|
+| `authenticate` | `student_id` | string | Yes | | Student ID |
+| | `password` | string | Yes | | Portal password. Never stored or logged |
+| | `include_raw` | boolean | No | `false` | Also return the portal's raw text (`rawHtml`, `rawJson`) |
+| | `include_extra` | boolean | No | `false` | Return the school's remaining SIS fields as `extra` |
+| `authenticate_dhc` | `student_id`, `password`, `include_raw` | | | | When only student ID, name, major, year and status are needed (lighter, no contact lookup) |
+
+### Response data structure
+
+The result `authenticate` returns (top) and the value the example function hands back to the sign-up form (bottom). Field names are Python `snake_case` (`student_id`); Node.js and Java use `camelCase` (`studentId`, `getStudentId()`). Values are made-up and only show the shape.
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "grade": "3",
+  "status": "재학",
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000",
+  "english_name": "Gildong Hong",
+  "user_category": "학부생"
+}
+```
+
+```json
+{ "verified": true, "student_id": "20000000", "name": "홍길동", "major": "컴퓨터공학과" }
+```
+
+| Field | Meaning |
+|---|---|
+| `student_id` / `name` / `major` | Student ID / name / major. What the example function returns |
+| `status` | Enrollment status (enrolled, on leave, graduated, ...). The portal's own text, so the wording can change |
+| `grade` | Year of study (string) |
+| `email` / `phone_number` / `english_name` / `user_category` | Contact (SIS) lookup. `null` when the SIS lookup fails. The other SIS school-code fields are omitted here |
+| `verified` | Built by the example function by comparing `status` with the enrolled value. Not a library field |
+
+All fields: [Result fields](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/result-fields/).
+
+**On failure**: a wrong password, a locked account and so on are thrown as `SejongAuthError` (with an error code). [Error codes](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/error-codes/)
+
+### Good to know
+
+- **Never resend a wrong password repeatedly.** The portal locks the account. The library stops at the first failure, but if anyone can type a student ID into your form, **limit failures per student ID** (see the [account lock note in the README](../README.en.md#error-codes)).
+- `status` and `major` are the portal's own strings. The `재학` comparison above is an example; keep it as a constant in one place since the wording can change.
+- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter (result fields in the [feature table](../README.en.md#features)).
+- Call it from a server only. Calling from a browser or app exposes the password to third-party code.
+
+### Example code
 
 **Python**
 
@@ -122,13 +176,6 @@ class StudentVerificationService {
 }
 ```
 
-Things to watch:
-
-- **Never resend a wrong password repeatedly.** The portal locks the account. The library stops at the first failure, but if anyone can type a student ID into your form, **limit failures per student ID** (see the [account lock note in the README](../README.en.md#error-codes)).
-- `status` and `major` are the portal's own strings. The `재학` comparison above is an example; keep it as a constant in one place since the wording can change.
-- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter (result fields in the [feature table](../README.en.md#features)).
-- Call it from a server only. Calling from a browser or app exposes the password to third-party code.
-
 ## 2. Department and lecture search page
 
 A small server that returns departments and lectures as JSON. A front end only needs these two URLs.
@@ -136,7 +183,76 @@ A small server that returns departments and lectures as JSON. A front end only n
 - `GET /departments`: department code, college, department name
 - `GET /lectures?department=<department code>&name=<course name>`: one of the two is required (a rule of this example server; the library returns the whole term when all conditions are empty)
 
-The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) and the semester value are the school's own values; list them with `organization_categories()` and `terms(...)`.
+### Request parameters
+
+The example server's HTTP request, and the library methods it calls. Names follow Python `snake_case`; Node.js takes a `camelCase` options object and Java takes positional arguments. No login is needed.
+
+**Example server**
+
+| URL | Parameter | Required | Meaning |
+|---|---|---|---|
+| `GET /departments` | | | No parameters |
+| `GET /lectures` | `department` | No | Department code |
+| | `name` | No | Course name (substring). Requiring one of the two is a rule of this example server |
+
+**Library methods**
+
+| Method | Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|---|
+| `departments` | `category_code` | string | Yes | | Organization category (`20` undergraduate) |
+| | `year` | string | Yes | | Year |
+| | `semester_code` | string | Yes | | Semester code (`10` first, `20` second, `11` and `21` seasonal) |
+| `lectures` | `category_code`, `year`, `semester_code` | string | Yes | | Same as above |
+| | `department_code` | string | No | empty string | Department code |
+| | `course_name` | string | No | empty string | Course name |
+| | `instructor_name` | string | No | empty string | Instructor name. With all three conditions empty you get the whole term |
+
+All code values are the school's own; list them with `organization_categories()` and `terms(...)` ([Department and term codes](https://cassiiopeia.github.io/pro-sejongpeia/en/data/codes/)).
+
+### Response data structure
+
+The JSON the example server returns. The top block is the response of `GET /departments`, the bottom one of `GET /lectures?...`; values only show the shape. Key names follow the Python example; in the Node.js example `course_number` is `courseNumber`. The Java controller returns the library models (`Department`, `Lecture`) as they are, so it has more fields, named in `camelCase`.
+
+```json
+[
+  { "code": "3517", "college": "인공지능융합대학", "name": "AI로봇학과" },
+  { "code": "3331", "college": "연계전공", "name": "스마트투어리즘매니지먼트소프트웨어" }
+]
+```
+
+```json
+[
+  {
+    "course": "알고리즘및실습",
+    "department": "컴퓨터공학과",
+    "schedule": "화13:00-15:00",
+    "credits": "3.0",
+    "course_number": "009954"
+  }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `code` | Department code. Pass it as-is to `/lectures?department=` |
+| `college` / `name` | College / department (or major) name |
+| `course` / `department` | Course name / offering department name |
+| `schedule` | Weekday and time (school text, for example `화13:00-15:00`) |
+| `credits` | Credits (string) |
+| `course_number` | Course number. Usable to continue to the curriculum lookup |
+
+For every field the library returns, see [Course listings](https://cassiiopeia.github.io/pro-sejongpeia/en/data/lectures/#response-data-structure) and [Department and term codes](https://cassiiopeia.github.io/pro-sejongpeia/en/data/codes/#response-data-structure).
+
+**On failure**: when the school server fails you get the last cached value or an empty list, without an exception. The example server returns it as an empty array (`[]`).
+
+### Good to know
+
+- Department code, course name and instructor name of `lectures` are all optional. **With all of them empty you get the whole term**: a response of several MB (see [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md)), so the example server requires a condition. If you need everything, query department by department.
+- Lecture results include the instructor name (`instructor`). The examples return only selected fields; decide which fields to expose when you publish this.
+- Course-name search matches substrings. Some names return 0 results, so show an empty-result hint.
+- A lecture's `course_number` and `department_code` lead on to the department curriculum entry (grade, semester, course overview) with `curriculum_courses`.
+
+### Example code
 
 **Python** (standard library server)
 
@@ -174,7 +290,7 @@ class LectureSearchHandler(BaseHTTPRequestHandler):
             query = parse_qs(url.query)
             department_code = query.get("department", [""])[0].strip()
             course_name = query.get("name", [""])[0].strip()
-            if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+            if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(수 MB)라서 이 서버는 조건을 필수로 함
                 self.send_error(400, "department or name is required")
                 return
             body = search_lectures(department_code, course_name)
@@ -222,7 +338,7 @@ createServer(async (request, response) => {
   } else if (url.pathname === '/lectures') {
     const departmentCode = (url.searchParams.get('department') ?? '').trim();
     const courseName = (url.searchParams.get('name') ?? '').trim();
-    if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+    if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(수 MB)라서 이 서버는 조건을 필수로 함
       response.writeHead(400).end('department or name is required');
       return;
     }
@@ -267,7 +383,7 @@ class LectureSearchController {
   @GetMapping("/lectures")
   List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
                          @RequestParam(defaultValue = "") String name) {
-    if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+    if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(수 MB)라서 이 서버는 조건을 필수로 함
       return List.of();
     }
     return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
@@ -275,22 +391,61 @@ class LectureSearchController {
 }
 ```
 
-What was checked (each server started and called with `curl`):
-
-- `/departments`: 103 departments (same count in all three languages)
-- `/lectures?name=알고리즘` (a course-name substring): 18 lectures. Shape of one item: `{"course":"알고리즘및실습","department":"컴퓨터공학과","schedule":"화13:00-15:00","credits":"3.0","courseNumber":"009954"}`
-- `/lectures` without a condition: 400 (Python, Node). The Java controller is written to return an empty list in that case, but it was not run as a Spring server (only the library calls were run)
-
-Notes:
-
-- Department code, course name and instructor name of `lectures` are all optional. **With all of them empty you get the whole term**: about 2,800 rows and 2.4 MB for undergraduate (as of 2026-10-30, see [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md)), so the example server requires a condition. If you need everything, query department by department.
-- Lecture results include the instructor name (`instructor`). The examples return only selected fields; decide which fields to expose when you publish this.
-- Course-name search matched substrings (`알고리즘` 18, `프로그래밍` 73). Some names return 0 (that day `자료구조` returned 0), so show an empty-result hint.
-- A lecture's `course_number` and `department_code` lead on to the department curriculum entry (grade, semester, course overview) with `curriculum_courses`.
-
 ## 3. Academic calendar widget
 
 Shows the undergraduate academic events within the next 30 days, ordered by start date.
+
+### Request parameters
+
+Names follow Python `snake_case`; Node.js takes a `camelCase` options object (`{ start, end }`) and Java takes positional arguments. No login is needed.
+
+| Method | Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|---|
+| `calendar` | `start` | string | Yes | | Start date (`yyyy-MM-dd`) |
+| | `end` | string | Yes | | End date (`yyyy-MM-dd`) |
+| | `category_code` | string | No | `0001` | Category code. `0001` undergraduate, `0002` to `0007` graduate. New categories only need a different code |
+| `graduate_calendar` | `site_id` | string | Yes | | Graduate site name (for example `graduate`). The caller passes it, so a new graduate school needs no release |
+| | `year` / `month` | integer | Yes | | Year / month to fetch |
+
+### Response data structure
+
+One entry of the list `calendar(start, end)` returns. Field names are Python `snake_case`; Node.js uses `camelCase` (`start_date` -> `startDate`) and Java uses getters (`getStartDate()`). Values only show the shape.
+
+```json
+[
+  {
+    "year": "2026",
+    "month": "3",
+    "category_code": "0001",
+    "category_name": "학부",
+    "title": "2학기 중간고사 성적 입력",
+    "title_en": "Grades input for Fall semester Midterm Examination",
+    "start_date": "2026-03-02",
+    "end_date": "2026-03-08",
+    "extra": {}
+  }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `title` / `title_en` | Title / English title (school text) |
+| `start_date` / `end_date` | Start / end date (`yyyy-MM-dd` for undergraduate; same value for a one-day event) |
+| `year` / `month` | Year / month the entry belongs to |
+| `category_code` / `category_name` | Category code / name (`0001` is undergraduate) |
+| `extra` | Other school fields (empty for undergraduate events) |
+
+All fields: [Academic calendar](https://cassiiopeia.github.io/pro-sejongpeia/en/data/calendar/#response-data-structure).
+
+**On failure**: when the school server fails you get the last cached value or an empty list, without an exception. It looks the same as a period with no events.
+
+### Good to know
+
+- `calendar(start, end, category_code="0001")`: `0001` is undergraduate; graduate schedules are `0002` to `0007`, or per site with `graduate_calendar(site_id, year, month)`. See [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md) for the date format differences.
+- Opening the widget does not hit the school each time. The same arguments are cached for 24 hours.
+- Titles are the school's own text (Korean). The English title is `title_en` / `titleEn`.
+
+### Example code
 
 **Python**
 
@@ -358,24 +513,125 @@ class AcademicCalendarWidget {
 }
 ```
 
-Output (2026-10-30, the same 4 events in all three languages):
-
-```text
-2026-10-27 ~ 2026-11-02  2학기 중간고사 성적 입력
-2026-11-02 ~ 2026-11-26  복수·부전공, 연계융합전공 신청
-2026-11-03 ~ 2026-11-07  2학기 중간고사 성적 열람 및 정정
-2026-11-09 ~ 2026-12-18  세종인재자기설계전공 신청
-```
-
-Notes:
-
-- `calendar(start, end, category_code="0001")`: `0001` is undergraduate; graduate schedules are `0002` to `0007`, or per site with `graduate_calendar(site_id, year, month)`. See [spec/PUBLIC_DATA.md](../spec/PUBLIC_DATA.md) for the date format differences.
-- Opening the widget does not hit the school each time. The same arguments are cached for 24 hours.
-- Titles are the school's own text (Korean). The English title is `title_en` / `titleEn`.
-
 ## 4. Dormitory and cafeteria info bot
 
 Builds today's dormitory menu, cafeteria menus and dormitory notices as message strings. Attach it to whatever sends them: Slack, Discord, Kakao and so on.
+
+### Request parameters
+
+Names follow Python `snake_case`; Node.js takes a `camelCase` options object (`{ rows: 3 }`) and Java takes positional arguments. No login is needed.
+
+| Method | Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|---|
+| `dormitory_menu` | `location` | string | No | `SJ` | Dormitory location code |
+| `cafeteria_menu` | `place_id` | string | Yes | | The school's cafeteria number. The caller passes it, so new cafeterias need no library change |
+| `cafeteria_places` | `max_place_id` | integer | No | library default | Scans cafeteria numbers from 1 up to this value to build the list. Raise it to widen the range |
+| `dormitory_notices` | `rows` | integer | No | `10` | Notices per request |
+| | `page` | integer | No | `1` | Page number |
+| | `keyword` | string | No | empty string | Title search text |
+| | `location` | string | No | `SJ` | Dormitory location code |
+
+### Response data structure
+
+The raw data the example turns into messages. Field names are Python `snake_case`; Node.js uses `camelCase` (`meal_name` -> `mealName`) and Java uses getters (`getMealName()`). Values only show the shape.
+
+**`dormitory_menu()`**: one entry per day, up to 7 days
+
+```json
+[
+  {
+    "date": "2026-03-02",
+    "breakfast": "쌀밥 된장국 계란말이",
+    "lunch": "쌀밥 육개장 부추전 배추김치",
+    "dinner": "쌀밥 북어국 안동찜닭 배추김치",
+    "alternative": "식권 1장으로 간편식 교환"
+  }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `date` | Date (`yyyy-MM-dd`) |
+| `breakfast` / `lunch` / `dinner` | Meals. The school's own text, so several dishes sit in one string |
+| `alternative` | Alternative meal (empty string if none) |
+
+**`cafeteria_menu(place_id)`**: one menu line per entry. Depending on the cafeteria, a dated weekly menu or an undated standing menu
+
+```json
+[
+  {
+    "place_id": "1",
+    "place_name": "계절밥상",
+    "building_name": "군자관",
+    "location": "6층",
+    "date": "2026-03-02",
+    "day": "월",
+    "meal_type_id": "1",
+    "meal_name": "중식",
+    "menu_name": "된장국 · 제육볶음 · 배추김치",
+    "price": "7000"
+  },
+  {
+    "place_id": "3",
+    "place_name": "진관키친",
+    "building_name": "진관홀",
+    "location": "B1층",
+    "date": "",
+    "day": "",
+    "meal_type_id": "",
+    "meal_name": "",
+    "menu_name": "라면",
+    "price": "3300"
+  }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `place_id` / `place_name` | Cafeteria number / name |
+| `building_name` / `location` | Building / floor |
+| `date` / `day` | Date / weekday. Empty string for standing-menu cafeterias |
+| `meal_name` | Meal (lunch, dinner, ...). Empty string for standing menus |
+| `menu_name` | Menu (several dishes joined with ` · `) |
+| `price` | Price (KRW, as a string) |
+
+**`dormitory_notices(rows=3)`**: notices, split into pinned (`pinned`) and regular (`items`)
+
+```json
+{
+  "total": 120,
+  "pinned": [],
+  "items": [
+    {
+      "id": "37570",
+      "title": "[기숙사] 정기소독 실시 안내",
+      "date": "2026-03-02",
+      "views": 426,
+      "file_name": "안내.png"
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `total` | Total number of notices (integer) |
+| `pinned` / `items` | Pinned / regular notice lists. Entries have the same shape |
+| `id` / `title` / `date` | Notice number / title / posted date |
+| `views` / `file_name` | View count (integer) / attachment file name (empty string if none) |
+
+All fields: [Dormitory](https://cassiiopeia.github.io/pro-sejongpeia/en/data/dormitory/#response-data-structure) and [Cafeterias](https://cassiiopeia.github.io/pro-sejongpeia/en/data/cafeteria/#response-data-structure).
+
+**On failure**: when the school server fails you get the last cached value or an empty list (an empty result with `total` `0` for `dormitory_notices`), without an exception. An empty list looks the same as "no data", so show a hint.
+
+### Good to know
+
+- Cafeteria numbers are the school's values. Numbers can change, and `place_name` in the result tells which cafeteria it is. An empty list appears both for a wrong number and for a day without a menu.
+- Depending on the cafeteria, you get a week of dated menus or an undated standing menu. The examples handle both.
+- The dormitory menu covers 7 days: `dormitory_menu(location="SJ")`.
+- To go easy on the school servers, refreshing a few times a day is enough (the library cache is already 24 hours).
+
+### Example code
 
 **Python**
 
@@ -385,7 +641,7 @@ from datetime import date
 from sejongpeia import SejongPublicData
 
 public_data = SejongPublicData()
-CAFETERIA_PLACE_IDS = ["1", "3", "4", "5", "6"]  # 학교의 식당 번호 (2026-10-30 확인), 바뀔 수 있음
+CAFETERIA_PLACE_IDS = ["1", "3", "4", "5", "6"]  # 학교의 식당 번호, 바뀔 수 있음
 
 
 def dormitory_menu_message() -> str:
@@ -428,7 +684,7 @@ if __name__ == "__main__":
 import { SejongPublicData } from 'pro-sejongpeia';
 
 const publicData = new SejongPublicData();
-const CAFETERIA_PLACE_IDS = ['1', '3', '4', '5', '6']; // 학교의 식당 번호 (2026-10-30 확인), 바뀔 수 있음
+const CAFETERIA_PLACE_IDS = ['1', '3', '4', '5', '6']; // 학교의 식당 번호, 바뀔 수 있음
 const todayText = () => new Date().toLocaleDateString('sv-SE'); // yyyy-MM-dd (로컬 날짜)
 
 export async function dormitoryMenuMessage() {
@@ -499,28 +755,6 @@ class CampusInfoBot {
   }
 }
 ```
-
-Start of the output (2026-10-30, shortened):
-
-```text
-[기숙사 2026-10-30]
-조식: 돈육장조림버터비빔밥 음료
-중식: 쌀밥 육개장 부추전 우엉떡잡채 아삭이고추무침 배추김치
-석식: 쌀밥 북어계란국 순살안동찜닭 꼬시래기무침 참나물흑임자무침 배추김치
-[계절밥상 군자관 6층]
-중식 얼갈이된장국 · 오징어제육볶음 · 감자튀김 · ... 7000원
-[진관키친 진관홀 B1층]
-라면 3300원
-...
-2026-10-19 [기숙사] 2026년 10월 정기소독 실시 안내
-```
-
-Notes:
-
-- Cafeteria numbers are the school's values (checked 2026-10-30: ids 1, 3, 4, 5, 6 had menus, id 2 returned an empty list). Numbers can change, and `place_name` in the result tells which cafeteria it is. An empty list appears both for a wrong number and for a day without a menu.
-- Cafeteria 1 returned a week of menus with dates; 3 to 6 returned undated standing menus. The examples handle both.
-- The dormitory menu covers 7 days: `dormitory_menu(location="SJ")`.
-- To go easy on the school servers, refreshing a few times a day is enough (the library cache is already 24 hours).
 
 ## Changing the code in this document
 

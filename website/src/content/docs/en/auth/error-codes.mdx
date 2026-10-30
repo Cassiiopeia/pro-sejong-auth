@@ -32,13 +32,13 @@ Java keeps `INVALID_CREDENTIALS`, marked `@Deprecated`. It is never thrown any m
 
 ## Account lock
 
-The Sejong portal locks an account after repeated wrong passwords (about 5 according to the portal's own notice).
+The Sejong portal locks an account after repeated wrong passwords.
 
 - A lock is released only by resetting the password at the [portal password page](https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp). Waiting does not release it and the library cannot release it for you.
 - The library never retries a rejected login: it stops at the first failure without further requests.
 - If anyone can type a student ID into your service, **limit the failure count per student ID**. Otherwise someone can repeat failures on purpose with another student's ID and lock that student's portal account.
 
-How the verdict is read is in [Login verdict and account lock protection](../../understand/login-verdict/). The exact lock count, and whether a successful login resets it, are not verified.
+How the verdict is read is in [Login verdict and account lock protection](../../understand/login-verdict/).
 
 ## Handling examples
 

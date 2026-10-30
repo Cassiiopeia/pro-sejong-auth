@@ -5,39 +5,51 @@ description: 학부 학사일정과 대학원 사이트별 학사일정을 날�
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-기간을 주면 학사일정을 제목과 시작일, 종료일로 돌려줍니다. 학부와 대학원 일정은 학교의 출처가 달라서 메서드가 둘입니다. `calendar`는 홈페이지의 학사일정(학부 `0001`, 대학원 `0002`~`0007`), `graduate_calendar`는 대학원 사이트별 일정입니다. 두 메서드는 같은 결과 모델(`CalendarEvent`)을 쓰지만 **날짜 형식이 다릅니다.** 공통 규칙은 [공통 규칙](../overview/)입니다.
+기간을 주면 학사일정을 제목과 시작일, 종료일로 돌려줍니다. 로그인이 필요 없습니다. 학부와 대학원 일정은 학교의 출처가 달라서 메서드가 둘입니다. `calendar`는 홈페이지의 학사일정(학부 `0001`, 대학원 `0002`~`0007`), `graduate_calendar`는 대학원 사이트별 일정이고, 둘은 같은 결과 모델(`CalendarEvent`)을 쓰지만 **날짜 형식이 다릅니다.** 오늘부터 30일 안의 일정을 보여 주는 위젯은 [학사일정 위젯](../../guides/academic-calendar/)을 보세요. 공통 규칙은 [공통 규칙](../overview/)입니다.
 
-## 메서드
+## 요청 파라미터
 
-| 언어 | `calendar` | `graduate_calendar` |
-|---|---|---|
-| Java | `calendar(String startDate, String endDate)`, `calendar(String startDate, String endDate, String categoryCode)` | `graduateCalendar(String siteId, int year, int month)` |
-| Python | `calendar(start, end, category_code="0001")` | `graduate_calendar(site_id, year, month)` |
-| Node.js | `calendar({ start, end, categoryCode? })` | `graduateCalendar({ siteId, year, month })` |
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `start` (`calendar`) | 문자열 `yyyy-MM-dd` | 필수 | 없음 | 조회 시작일 |
+| `end` (`calendar`) | 문자열 `yyyy-MM-dd` | 필수 | 없음 | 조회 종료일. 여러 달을 한 번에 받을 수 있음 |
+| `category_code` (`calendar`) | 문자열 | 선택 | `0001` | 분류 선택: `0001` 학부, `0002`~`0007` 대학원. 분류 이름은 결과의 `category_name`으로 확인 |
+| `site_id` (`graduate_calendar`) | 문자열 | 필수 | 없음 | 대학원의 사이트 이름 (예: `graduate`, `gsi`, `mba`). 호출하는 쪽이 넘기므로 새 대학원이 생겨도 릴리스가 필요 없음. 호스트 이름이 되므로 `[a-z0-9][a-z0-9-]{0,30}`에 맞아야 하고, 아니면 요청 없이 `INVALID_INPUT` |
+| `year` (`graduate_calendar`) | 정수 | 필수 | 없음 | 연도 (Node.js는 숫자 또는 문자열) |
+| `month` (`graduate_calendar`) | 정수 | 필수 | 없음 | 월 (Node.js는 숫자 또는 문자열) |
 
-- `categoryCode` 기본값은 `0001`(학부)입니다. Java는 두 인자 버전이 이 기본값을 씁니다.
-- `start`, `end`는 `yyyy-MM-dd` 문자열입니다.
-- Node.js의 `year`, `month`는 숫자 또는 문자열을 받습니다.
-- 반환: `CalendarEvent` 목록.
+- 이름 표기: Python은 `snake_case`, Node.js와 Java는 `camelCase`입니다 (`categoryCode`, `siteId`). Node.js는 객체 하나로 받습니다: `calendar({ start, end, categoryCode? })`, `graduateCalendar({ siteId, year, month })`. Java는 `calendar(startDate, endDate)`, `calendar(startDate, endDate, categoryCode)`, `graduateCalendar(siteId, year, month)`이고 두 인자 버전이 `0001`을 씁니다.
+- `calendar` 학교 요청: `GET https://www.sejong.ac.kr/kor/academics/academic-calendar.do?mode=getCalendarData&start=<yyyy-MM-dd>&end=<yyyy-MM-dd>&collDiv=<코드>`, 응답 배열 `data`.
+- `graduate_calendar` 학교 요청: `GET https://<site_id>.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year=<yyyy>&month=<m>&siteId=<site_id>`.
+- 응답의 `items`는 JSON 문자열이라 라이브러리가 한 번 더 해석합니다 (배열로 와도 받음). `success`가 true가 아니거나 `items`가 없으면 학교 쪽 실패입니다. 일정이 없는 달은 정상 응답입니다.
 
-## 요청 메모
+## 응답 데이터 구조
 
-### `calendar`
+`calendar` 예시입니다 (필드 이름은 Python 기준, Node.js와 Java는 `camelCase`). 학교 데이터는 바뀌므로 값은 예시입니다.
 
-- `GET https://www.sejong.ac.kr/kor/academics/academic-calendar.do?mode=getCalendarData&start=<yyyy-MM-dd>&end=<yyyy-MM-dd>&collDiv=<코드>`. 응답 배열 `data`.
-- 대학원 일정도 `collDiv` `0002`~`0007`로 여러 달을 한 번에 받을 수 있습니다 (날짜는 `yyyy-MM-dd`).
+```json
+[
+  {
+    "year": "2026", "month": "3", "category_code": "0001", "category_name": "학부",
+    "title": "개강", "title_en": "Start of classes",
+    "start_date": "2026-03-02", "end_date": "2026-03-02", "extra": {}
+  }
+]
+```
 
-### `graduate_calendar`
+`graduate_calendar` 예시입니다. 날짜는 `MM.dd`이고 `extra`에 요일이 들어갑니다.
 
-- `GET https://<site_id>.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year=<yyyy>&month=<m>&siteId=<site_id>`.
-- 응답: `success`, `startDay`, `lastDay`, `dayList`(달력 칸, 사용 안 함), `items`. **`items`는 JSON 문자열**이라 라이브러리가 한 번 더 해석합니다. 문자열이 아니라 배열로 와도 받습니다.
-- `success`가 true가 아니거나, `items`가 없거나 문자열 JSON도 배열도 아니면 학교 쪽 실패로 보고 빈 목록(또는 마지막 캐시)입니다. 일정이 없는 달은 정상 응답입니다.
-- **`site_id`는 학교의 사이트 이름**이고 호출하는 쪽이 넘깁니다. 새 대학원이 생겨도 릴리스가 필요 없습니다. 2026-10-30에 확인한 이름: `graduate`, `gsi`, `mba`, `pub`, `tourgrad`, `edu`, `arts`. 호스트 이름이 되므로 `[a-z0-9][a-z0-9-]{0,30}`에 맞아야 하고, 아니면 요청 없이 `INVALID_INPUT`입니다.
-- 확인 범위: 사이트 7곳이 같은 계열 화면에서 JSON을 공개하는 것을 확인했고, 일정 응답은 그중 2곳을 직접 확인했다고 조사 기록에 적혀 있습니다. 나머지 사이트의 일정 응답은 사이트별로 확인하지 않았습니다.
+```json
+[
+  {
+    "year": "2026", "month": "3", "category_code": "0002", "category_name": "일반대학원",
+    "title": "논문 제출 신청", "title_en": "Thesis submission",
+    "start_date": "03.04", "end_date": "03.10", "extra": { "frDtKo": "수", "toDtKo": "화" }
+  }
+]
+```
 
-## 결과 필드
-
-필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 모두 문자열이고 없으면 빈 문자열입니다.
+모든 필드는 문자열이고 없으면 빈 문자열입니다.
 
 | 필드 | 학교 키 | 설명 |
 |---|---|---|
@@ -57,7 +69,23 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 두 형식을 한 목록으로 합칠 때는 직접 변환하세요. 라이브러리는 바꿔 주지 않습니다.
 
-## 예시
+### 실패 동작
+
+- 메서드, 분류 코드 또는 사이트, 기간 조합마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
+- 학교 실패(연결, 시간 초과, 비정상 응답, 기대한 키 없음)는 마지막 캐시 값 또는 빈 목록이고, 캐시가 없으면 60초(기본) 동안 요청 없이 빈 목록입니다.
+- 예외는 `graduate_calendar`의 사이트 이름 형태 오류(`INVALID_INPUT`) 하나뿐입니다. `calendar`는 예외를 던지지 않습니다.
+- 빈 목록은 「그 기간에 일정이 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
+
+## 알려진 한계
+
+- 제목은 학교 원문입니다. 학교가 표기를 바꾸면 달라지므로 제목으로 분기하지 마세요.
+- `graduate_calendar`는 `MM.dd`만 주기 때문에 연말을 넘는 일정의 종료 연도를 알 수 없습니다.
+- `calendar`의 `0002`~`0007` 코드가 각각 어느 대학원인지는 결과의 `category_name`으로 확인하세요.
+- 사이트마다 같은 계열의 화면을 쓰지만 사이트별 응답은 달라질 수 있으니 사용할 `site_id`로 직접 호출해 보세요.
+- 로그인이 필요한 학사 업무 기간은 이 메서드가 아닙니다 ([학사 업무 기간](../../auth/business-periods/)).
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## 예시 코드
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -92,21 +120,3 @@ const graduateEvents = await publicData.graduateCalendar({ siteId: 'graduate', y
 
 </TabItem>
 </Tabs>
-
-오늘부터 30일 안의 일정을 시작일 순으로 보여 주는 위젯은 [학사일정 위젯](../../guides/academic-calendar/)을 보세요.
-
-## 캐시와 실패 동작
-
-- 메서드, 분류 코드 또는 사이트, 기간 조합마다 하루(기본 86400초) 캐시합니다. 위젯이 열릴 때마다 학교에 요청하지 않습니다. 호출당 요청은 한 번입니다.
-- 학교 실패(연결, 시간 초과, 비정상 응답, 기대한 키 없음)는 마지막 캐시 값 또는 빈 목록입니다. 캐시가 없으면 60초(기본) 동안 빈 목록을 요청 없이 돌려줍니다.
-- 예외는 `graduate_calendar`의 사이트 이름 형태 오류(`INVALID_INPUT`) 하나뿐입니다. `calendar`는 예외를 던지지 않습니다.
-- 빈 목록은 「그 기간에 일정이 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
-
-## 알려진 한계와 확인하지 못한 것
-
-- 제목은 학교 원문입니다. 학교가 표기를 바꾸면 달라지므로 제목으로 분기하지 마세요.
-- `graduate_calendar`는 `MM.dd`만 주기 때문에 연말을 넘는 일정의 종료 연도를 알 수 없습니다.
-- `calendar`의 `0002`~`0007` 코드가 각각 어느 대학원인지는 이 문서가 표로 정리하지 않았습니다. 결과의 `category_name`으로 확인하세요.
-- 로그인이 필요한 학사 업무 기간은 이 메서드가 아닙니다 ([학사 업무 기간](../../auth/business-periods/)).
-- 대학원 교수진 목록처럼 개인정보가 섞인 출처는 제공하지 않습니다.
-- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

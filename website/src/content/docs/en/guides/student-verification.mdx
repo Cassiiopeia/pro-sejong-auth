@@ -7,13 +7,66 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 Take the student ID and password from a sign-up form, check enrollment, and fetch only student ID, name and major. The password is neither stored nor logged.
 
-<Aside type="caution" title="This example was not run">
-It logs in to the real portal and no account was available when this page was written. Method names, arguments, result fields and error codes were matched by reading the source (`__init__.py`, `index.ts`, `SuhSejongAuthEngine.java`) and [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md). In Python and Node only the `INVALID_INPUT` branch was run, by calling with a blank student ID and password (rejected before any network call). Java was only compiled, and the Spring wiring was not verified.
-
-With a real account, `scripts/verify-live.sh` in the repository compares the three languages ([Issues and pull requests](../../contribute/issues-and-prs/)).
+<Aside type="note" title="The example code is for reference">
+Method names, arguments, result fields and error codes follow [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md). With a real portal account, `scripts/verify-live.sh` in the repository compares the three languages ([Issues and pull requests](../../contribute/issues-and-prs/)).
 </Aside>
 
-## Code
+## Request parameters
+
+Names follow Python `snake_case`; Node.js and Java use `camelCase`. A portal login is required.
+
+| Method | Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|---|
+| `authenticate` | `student_id` | string | Yes | | Student ID |
+| | `password` | string | Yes | | Portal password. Never stored or logged |
+| | `include_raw` | boolean | No | `false` | Also return the portal's raw text (`rawHtml`, `rawJson`) |
+| | `include_extra` | boolean | No | `false` | Return the school's remaining SIS fields as `extra` |
+| `authenticate_dhc` | `student_id`, `password`, `include_raw` | | | | When only student ID, name, major, year and status are needed (lighter, no contact lookup) |
+
+## Response data structure
+
+The result `authenticate` returns (top) and the value the example function hands back to the sign-up form (bottom). Field names are Python `snake_case` (`student_id`); Node.js and Java use `camelCase` (`studentId`, `getStudentId()`). Values are made-up and only show the shape.
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "grade": "3",
+  "status": "재학",
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000",
+  "english_name": "Gildong Hong",
+  "user_category": "학부생"
+}
+```
+
+```json
+{ "verified": true, "student_id": "20000000", "name": "홍길동", "major": "컴퓨터공학과" }
+```
+
+| Field | Meaning |
+|---|---|
+| `student_id` / `name` / `major` | Student ID / name / major. What the example function returns |
+| `status` | Enrollment status (enrolled, on leave, graduated, ...). The portal's own text, so the wording can change |
+| `grade` | Year of study (string) |
+| `email` / `phone_number` / `english_name` / `user_category` | Contact (SIS) lookup. `null` when the SIS lookup fails. The other SIS school-code fields are omitted here |
+| `verified` | Built by the example function by comparing `status` with the enrolled value. Not a library field |
+
+All fields: [Result fields](../../auth/result-fields/).
+
+**On failure**: a wrong password, a locked account and so on are thrown as `SejongAuthError` (with an error code). [Error codes](../../auth/error-codes/)
+
+## Good to know
+
+- **Never resend a wrong password repeatedly.** The portal locks the account. The library stops at the first failure, but if anyone can type a student ID into your form, **limit failures per student ID**. [Login verdict and account lock protection](../../understand/login-verdict/)
+- `status` and `major` are the portal's own strings. The `재학` comparison above is an example; keep it as a constant in one place since the wording can change.
+- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter. See [Authentication methods](../../auth/methods/) and [Result fields](../../auth/result-fields/).
+- Call it from a server only. Calling from a browser or app exposes the password to third-party code.
+- Branch on the error **code**, never on the message. [Error codes](../../auth/error-codes/)
+
+## Example code
 
 The user-facing messages are in Korean in the original examples; replace them with your own. `ACTIVE_STATUS = "재학"` is the portal's own string for "enrolled" and must stay as the school sends it.
 
@@ -107,11 +160,3 @@ The user-facing messages are in Korean in the original examples; replace them wi
     ```
   </TabItem>
 </Tabs>
-
-## Things to watch
-
-- **Never resend a wrong password repeatedly.** The portal locks the account. The library stops at the first failure, but if anyone can type a student ID into your form, **limit failures per student ID**. [Login verdict and account lock protection](../../understand/login-verdict/)
-- `status` and `major` are the portal's own strings. The `재학` comparison above is an example; keep it as a constant in one place since the wording can change.
-- One `authenticate` call includes the contact (SIS) lookup. If you only need student ID, name and major, the DHC-only call `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC` is lighter. See [Authentication methods](../../auth/methods/) and [Result fields](../../auth/result-fields/).
-- Call it from a server only. Calling from a browser or app exposes the password to third-party code.
-- Branch on the error **code**, never on the message. [Error codes](../../auth/error-codes/)

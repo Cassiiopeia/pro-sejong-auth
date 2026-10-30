@@ -7,40 +7,13 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 Everything is optional. If the defaults are fine, configure nothing.
 
-| Setting | Default | Java (`application.yml`) | Python | Node.js |
-|---|---|---|---|---|
-| Request timeout (seconds, connect and read) | 10 | `sejongpeia.timeout-seconds` | `timeout_seconds` | `timeoutSeconds` |
-| Portal login retries | 3 | `sejongpeia.max-retry` | `max_retry` | `maxRetry` |
-| Certificate verification | on (true) | `sejongpeia.ssl-verification` | `ssl_verification` | `sslVerification` |
+## Settings
 
-<Tabs syncKey="language">
-  <TabItem label="Java">
-    ```yaml
-    sejongpeia:
-      timeout-seconds: 10     # request timeout (default 10)
-      max-retry: 3            # portal login retries (default 3)
-      ssl-verification: true  # portal certificate check (default true)
-    ```
-  </TabItem>
-  <TabItem label="Python">
-    ```python
-    from sejongpeia import SejongAuthClient
-
-    # create your own client only when you need non-default settings
-    client = SejongAuthClient(timeout_seconds=10, max_retry=3, ssl_verification=True)
-    result = client.authenticate(student_id, password)
-    ```
-  </TabItem>
-  <TabItem label="Node.js">
-    ```javascript
-    import { SejongAuthClient } from 'pro-sejongpeia';
-
-    // create your own client only when you need non-default settings
-    const client = new SejongAuthClient({ timeoutSeconds: 10, maxRetry: 3, sslVerification: true });
-    const result = await client.authenticate(studentId, password);
-    ```
-  </TabItem>
-</Tabs>
+| Setting | Type | Default | Meaning |
+|---|---|---|---|
+| Request timeout | number (seconds) | 10 | Connect and read timeout. Java `sejongpeia.timeout-seconds`, Python `timeout_seconds`, Node.js `timeoutSeconds` |
+| Portal login retries | number | 3 | Java `sejongpeia.max-retry`, Python `max_retry`, Node.js `maxRetry` |
+| Certificate verification | boolean | `true` | Java `sejongpeia.ssl-verification`, Python `ssl_verification`, Node.js `sslVerification` |
 
 ## Scope of retries
 
@@ -88,3 +61,34 @@ Background is in [Legacy TLS](../../understand/legacy-tls/).
 ## Public data client
 
 Settings of the public school data client (`SejongPublicData`) such as cache time, failure memory time and maximum cache entries are in [Common rules](../../data/overview/).
+
+## Example code
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```yaml
+    sejongpeia:
+      timeout-seconds: 10     # request timeout (default 10)
+      max-retry: 3            # portal login retries (default 3)
+      ssl-verification: true  # portal certificate check (default true)
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import SejongAuthClient
+
+    # create your own client only when you need non-default settings
+    client = SejongAuthClient(timeout_seconds=10, max_retry=3, ssl_verification=True)
+    result = client.authenticate(student_id, password)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { SejongAuthClient } from 'pro-sejongpeia';
+
+    // create your own client only when you need non-default settings
+    const client = new SejongAuthClient({ timeoutSeconds: 10, maxRetry: 3, sslVerification: true });
+    const result = await client.authenticate(studentId, password);
+    ```
+  </TabItem>
+</Tabs>

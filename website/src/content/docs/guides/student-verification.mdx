@@ -7,13 +7,66 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 가입 폼에서 받은 학번과 비밀번호로 재학 여부를 확인하고, 학번·이름·학과만 가져옵니다. 비밀번호는 저장하거나 로그에 남기지 않습니다.
 
-<Aside type="caution" title="이 예시는 실행하지 않았습니다">
-실제 포털에 로그인하는 코드라 계정이 필요한데, 이 문서를 쓸 때 쓸 수 있는 계정이 없었습니다. 메서드 이름, 인자, 결과 필드, 에러 코드는 소스(`__init__.py`, `index.ts`, `SuhSejongAuthEngine.java`)와 [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md)를 읽고 맞췄습니다. Python과 Node는 빈 학번·비밀번호로 호출해 `INVALID_INPUT` 분기가 동작하는 것만 실행해 확인했습니다 (네트워크 호출 전에 거절됨). Java는 컴파일만 확인했고, Spring 연결도 확인하지 않았습니다.
-
-실제 계정이 있다면 레포의 `scripts/verify-live.sh`로 세 언어 결과를 비교할 수 있습니다 ([이슈와 PR](../../contribute/issues-and-prs/)).
+<Aside type="note" title="예시 코드는 참고용입니다">
+메서드 이름, 인자, 결과 필드, 에러 코드는 [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md)를 기준으로 합니다. 실제 포털 계정이 있다면 레포의 `scripts/verify-live.sh`로 세 언어 결과를 비교할 수 있습니다 ([이슈와 PR](../../contribute/issues-and-prs/)).
 </Aside>
 
-## 코드
+## 요청 파라미터
+
+필드 이름은 Python `snake_case` 기준이고, Node.js와 Java는 `camelCase`입니다. 포털 로그인이 필요합니다.
+
+| 메서드 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|---|
+| `authenticate` | `student_id` | 문자열 | 예 | | 학번 |
+| | `password` | 문자열 | 예 | | 포털 비밀번호. 저장하거나 로그에 남기지 않음 |
+| | `include_raw` | boolean | 아니오 | `false` | 포털 원문(`rawHtml`, `rawJson`)도 받음 |
+| | `include_extra` | boolean | 아니오 | `false` | 학교가 주는 나머지 SIS 필드를 `extra`로 받음 |
+| `authenticate_dhc` | `student_id`, `password`, `include_raw` | | | | 학번·이름·학과·학년·학적 상태만 필요할 때 (연락처 조회 없이 더 가벼움) |
+
+## 응답 데이터 구조
+
+`authenticate`가 돌려주는 결과(위쪽)와 예시 함수가 가입 폼에 돌려주는 값(아래쪽)입니다. 필드 이름은 Python `snake_case`이고(`student_id`), Node.js와 Java는 `camelCase`(`studentId`, `getStudentId()`)입니다. 값은 형태를 보여 주기 위한 가상의 예시입니다.
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "grade": "3",
+  "status": "재학",
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000",
+  "english_name": "Gildong Hong",
+  "user_category": "학부생"
+}
+```
+
+```json
+{ "verified": true, "student_id": "20000000", "name": "홍길동", "major": "컴퓨터공학과" }
+```
+
+| 필드 | 의미 |
+|---|---|
+| `student_id` / `name` / `major` | 학번 / 이름 / 학과(전공). 예시 함수가 돌려주는 값 |
+| `status` | 학적 상태 (재학, 휴학, 졸업 등). 포털 원문이라 표기가 바뀔 수 있음 |
+| `grade` | 학년 (문자열) |
+| `email` / `phone_number` / `english_name` / `user_category` | 연락처(SIS) 조회 결과. SIS 조회가 실패하면 `null`. 그 밖의 SIS 학교 코드 필드는 생략함 |
+| `verified` | 예시 함수가 `status`를 `재학`과 비교해 만든 값. 라이브러리 필드가 아님 |
+
+전체 필드는 [결과 필드](../../auth/result-fields/)를 보세요.
+
+**실패 시**: 비밀번호 오류, 계정 잠김 등은 `SejongAuthError`(에러 코드 포함)로 던져집니다. [에러 코드](../../auth/error-codes/)
+
+## 알아둘 점
+
+- **틀린 비밀번호를 반복해서 보내지 마세요.** 포털이 계정을 잠급니다. 라이브러리는 첫 실패에서 멈추지만, 누구나 학번을 입력할 수 있는 폼이라면 **학번별 실패 횟수를 제한**하세요. [로그인 판정과 계정 잠금 방지](../../understand/login-verdict/)
+- `status`, `major`는 포털의 원문 문자열입니다. 위 `재학` 비교는 예시이며, 표기가 바뀔 수 있으니 한 곳에 상수로 두세요.
+- 한 번의 `authenticate`는 연락처(SIS) 조회까지 포함합니다. 학번·이름·학과만 필요하면 DHC만 부르는 `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC`가 더 가볍습니다. 결과 필드는 [인증 메서드](../../auth/methods/)와 [결과 필드](../../auth/result-fields/)를 보세요.
+- 서버에서만 호출하세요. 브라우저나 앱에서 직접 부르면 비밀번호가 제3자 코드에 노출됩니다.
+- 분기는 메시지가 아니라 에러 **코드**로 합니다. [에러 코드](../../auth/error-codes/)
+
+## 예시 코드
 
 <Tabs syncKey="language">
   <TabItem label="Java">
@@ -105,11 +158,3 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
     ```
   </TabItem>
 </Tabs>
-
-## 주의할 점
-
-- **틀린 비밀번호를 반복해서 보내지 마세요.** 포털이 계정을 잠급니다. 라이브러리는 첫 실패에서 멈추지만, 누구나 학번을 입력할 수 있는 폼이라면 **학번별 실패 횟수를 제한**하세요. [로그인 판정과 계정 잠금 방지](../../understand/login-verdict/)
-- `status`, `major`는 포털의 원문 문자열입니다. 위 `재학` 비교는 예시이며, 표기가 바뀔 수 있으니 한 곳에 상수로 두세요.
-- 한 번의 `authenticate`는 연락처(SIS) 조회까지 포함합니다. 학번·이름·학과만 필요하면 DHC만 부르는 `authenticate_dhc` / `authenticateDhc` / `authenticateWithDHC`가 더 가볍습니다. 결과 필드는 [인증 메서드](../../auth/methods/)와 [결과 필드](../../auth/result-fields/)를 보세요.
-- 서버에서만 호출하세요. 브라우저나 앱에서 직접 부르면 비밀번호가 제3자 코드에 노출됩니다.
-- 분기는 메시지가 아니라 에러 **코드**로 합니다. [에러 코드](../../auth/error-codes/)

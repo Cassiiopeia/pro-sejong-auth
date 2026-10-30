@@ -1,18 +1,82 @@
 ---
 title: Department and lecture search
-description: Build a small server in Java, Python or Node.js that returns departments and course listings as JSON, with the checked results and notes.
+description: Build a small server in Java, Python or Node.js that returns departments and course listings as JSON, with the response data structure and notes.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 A small server that returns departments and lectures as JSON. A front end only needs these two URLs.
 
-- `GET /departments`: department code, college, department name
-- `GET /lectures?department=<department code>&name=<course name>`: one of the two is required (a rule of this example server; the library returns the whole term when all conditions are empty)
+## Request parameters
 
-The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) and the semester value are the school's own values; list them with `organization_categories()` and `terms(...)` ([Department and term codes](../../data/codes/)).
+The example server's HTTP requests (all `GET`), and the library methods it calls. Names follow Python `snake_case`; Node.js takes a `camelCase` options object and Java takes positional arguments. No login is needed.
 
-## Code
+**Example server**
+
+| URL | Parameter | Required | Meaning |
+|---|---|---|---|
+| `/departments` | | | No parameters |
+| `/lectures` | `department` | No | Department code |
+| | `name` | No | Course name (substring). Requiring one of the two is a rule of this example server |
+
+**Library methods**
+
+| Method | Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|---|
+| `departments` | `category_code` | string | Yes | | Organization category (`20` undergraduate) |
+| | `year` | string | Yes | | Year |
+| | `semester_code` | string | Yes | | Semester code (`10` first, `20` second, `11` and `21` seasonal) |
+| `lectures` | `category_code`, `year`, `semester_code` | string | Yes | | Same as above |
+| | `department_code` | string | No | empty string | Department code |
+| | `course_name` | string | No | empty string | Course name |
+| | `instructor_name` | string | No | empty string | Instructor name. With all three conditions empty you get the whole term |
+
+The example code targets undergraduate (`"20"`); year and semester (`"20"` = second semester) are constants at the top of the code. All code values are the school's own; list them with `organization_categories()` and `terms(...)` ([Department and term codes](../../data/codes/)).
+
+## Response data structure
+
+The JSON the example server returns. The top block is the response of `GET /departments`, the bottom one of `GET /lectures?...`; values only show the shape. Key names follow the Python example; in the Node.js example `course_number` is `courseNumber`. The Java controller returns the library models (`Department`, `Lecture`) as they are, so it has more fields, named in `camelCase`.
+
+```json
+[
+  { "code": "3517", "college": "인공지능융합대학", "name": "AI로봇학과" },
+  { "code": "3331", "college": "연계전공", "name": "스마트투어리즘매니지먼트소프트웨어" }
+]
+```
+
+```json
+[
+  {
+    "course": "알고리즘및실습",
+    "department": "컴퓨터공학과",
+    "schedule": "화13:00-15:00",
+    "credits": "3.0",
+    "course_number": "009954"
+  }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `code` | Department code. Pass it as-is to `/lectures?department=` |
+| `college` / `name` | College / department (or major) name |
+| `course` / `department` | Course name / offering department name |
+| `schedule` | Weekday and time (school text, for example `화13:00-15:00`) |
+| `credits` | Credits (string) |
+| `course_number` | Course number. Usable to continue to the curriculum lookup |
+
+For every field the library returns, see [Course listings](../../data/lectures/#response-data-structure) and [Department and term codes](../../data/codes/#response-data-structure).
+
+**On failure**: when the school server fails you get the last cached value or an empty list, without an exception. The example server returns it as an empty array (`[]`).
+
+## Good to know
+
+- Department code, course name and instructor name of `lectures` are all optional. **With all of them empty you get the whole term**: a response of several MB ([Course listings](../../data/lectures/)), so the example server requires a condition. If you need everything, query department by department.
+- Lecture results include the instructor name (`instructor`). The examples return only selected fields; decide which fields to expose when you publish this.
+- Course-name search matches substrings. Some names return 0 results, so show an empty-result hint.
+- A lecture's `course_number` and `department_code` lead on to the department curriculum entry (grade, semester, course overview) with `curriculum_courses`. [Curriculum](../../data/curriculum/)
+
+## Example code
 
 <Tabs syncKey="language">
   <TabItem label="Java">
@@ -46,7 +110,7 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
       @GetMapping("/lectures")
       List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
                              @RequestParam(defaultValue = "") String name) {
-        if (department.isBlank() && name.isBlank()) { // no condition returns the whole term (about 2.4MB undergraduate), so this server requires one
+        if (department.isBlank() && name.isBlank()) { // no condition returns the whole term (several MB), so this server requires one
           return List.of();
         }
         return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
@@ -68,7 +132,6 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
     UNDERGRADUATE_CATEGORY = "20"     # the school's organization category code (list with organization_categories())
     YEAR, SEMESTER = "2026", "20"     # list terms with terms(UNDERGRADUATE_CATEGORY)
 
-
     def search_lectures(department_code: str, course_name: str) -> list:
         lectures = public_data.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER,
                                         department_code=department_code, course_name=course_name)
@@ -77,7 +140,6 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
              "credits": lecture.credits, "course_number": lecture.course_number}
             for lecture in lectures
         ]
-
 
     class LectureSearchHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -91,7 +153,7 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
                 query = parse_qs(url.query)
                 department_code = query.get("department", [""])[0].strip()
                 course_name = query.get("name", [""])[0].strip()
-                if not department_code and not course_name:  # no condition returns the whole term (about 2.4MB undergraduate), so this server requires one
+                if not department_code and not course_name:  # no condition returns the whole term (several MB), so this server requires one
                     self.send_error(400, "department or name is required")
                     return
                 body = search_lectures(department_code, course_name)
@@ -103,7 +165,6 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(payload)
-
 
     if __name__ == "__main__":
         HTTPServer(("127.0.0.1", 8000), LectureSearchHandler).serve_forever()
@@ -138,7 +199,7 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
       } else if (url.pathname === '/lectures') {
         const departmentCode = (url.searchParams.get('department') ?? '').trim();
         const courseName = (url.searchParams.get('name') ?? '').trim();
-        if (!departmentCode && !courseName) { // no condition returns the whole term (about 2.4MB undergraduate), so this server requires one
+        if (!departmentCode && !courseName) { // no condition returns the whole term (several MB), so this server requires one
           response.writeHead(400).end('department or name is required');
           return;
         }
@@ -152,21 +213,3 @@ The examples target undergraduate, 2026 fall semester. `"20"` (undergraduate) an
     ```
   </TabItem>
 </Tabs>
-
-## What was checked
-
-Checked on 2026-10-30 against the live school servers. Each server was started and called with `curl` (Java: only the library calls were compiled and run, without a server; the Spring wiring was not verified).
-
-- `/departments`: 103 departments (same count in all three languages)
-- `/lectures?name=알고리즘` (a course-name substring): 18 lectures. Shape of one item: `{"course":"알고리즘및실습","department":"컴퓨터공학과","schedule":"화13:00-15:00","credits":"3.0","courseNumber":"009954"}`
-- `/lectures` without a condition: 400 (Python, Node). The Java controller is written to return an empty list in that case, but it was not run as a Spring server (only the library calls were run)
-
-School data changes, so the counts and values above are that day's examples.
-
-## Notes
-
-- Department code, course name and instructor name of `lectures` are all optional. **With all of them empty you get the whole term**: about 2,800 rows and 2.4 MB for undergraduate (as of 2026-10-30, see [Course listings](../../data/lectures/)), so the example server requires a condition. If you need everything, query department by department.
-- Lecture results include the instructor name (`instructor`). The examples return only selected fields; decide which fields to expose when you publish this.
-- Course-name search matched substrings (`알고리즘` 18, `프로그래밍` 73). Some names return 0 (that day `자료구조` returned 0), so show an empty-result hint.
-- A lecture's `course_number` and `department_code` lead on to the department curriculum entry (grade, semester, course overview) with `curriculum_courses`. [Curriculum](../../data/curriculum/)
-- When a school server fails, public data returns an empty list, which looks the same as "no results". Show a hint next to empty results. [Failure isolation and cache](../../understand/failure-isolation-cache/)

@@ -5,59 +5,87 @@ description: The calendar and graduate_calendar methods return undergraduate and
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-Give a date range and get the academic calendar with titles, start dates and end dates. Undergraduate and graduate schedules come from different school sources, so there are two methods. `calendar` reads the homepage calendar (undergraduate `0001`, graduate `0002` to `0007`); `graduate_calendar` reads the per-site graduate school calendars. Both return the same result model (`CalendarEvent`), but **the date formats differ.** Common rules are on [Common rules](../overview/).
+Give a date range and get the academic calendar with titles, start dates and end dates. No login is needed. Undergraduate and graduate schedules come from different school sources, so there are two methods. `calendar` reads the homepage calendar (undergraduate `0001`, graduate `0002` to `0007`); `graduate_calendar` reads the per-site graduate school calendars. Both return the same result model (`CalendarEvent`), but **the date formats differ.** For a widget that shows the next 30 days, see [Academic calendar widget](../../guides/academic-calendar/). Common rules are on [Common rules](../overview/).
 
-## Methods
+## Request parameters
 
-| Language | `calendar` | `graduate_calendar` |
-|---|---|---|
-| Java | `calendar(String startDate, String endDate)`, `calendar(String startDate, String endDate, String categoryCode)` | `graduateCalendar(String siteId, int year, int month)` |
-| Python | `calendar(start, end, category_code="0001")` | `graduate_calendar(site_id, year, month)` |
-| Node.js | `calendar({ start, end, categoryCode? })` | `graduateCalendar({ siteId, year, month })` |
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `start` (`calendar`) | string `yyyy-MM-dd` | required | none | Start of the range |
+| `end` (`calendar`) | string `yyyy-MM-dd` | required | none | End of the range. Several months can be read in one call |
+| `category_code` (`calendar`) | string | optional | `0001` | Selects the category: `0001` undergraduate, `0002` to `0007` graduate. Check the category name in the result's `category_name` |
+| `site_id` (`graduate_calendar`) | string | required | none | The graduate school's site name (for example `graduate`, `gsi`, `mba`). The caller passes it, so a newly created graduate school needs no release. It becomes a host name, so it must match `[a-z0-9][a-z0-9-]{0,30}`, otherwise `INVALID_INPUT` with no request |
+| `year` (`graduate_calendar`) | integer | required | none | Year (Node.js accepts a number or a string) |
+| `month` (`graduate_calendar`) | integer | required | none | Month (Node.js accepts a number or a string) |
 
-- The default `categoryCode` is `0001` (undergraduate). In Java the two-argument version uses it.
-- `start` and `end` are `yyyy-MM-dd` strings.
-- In Node.js, `year` and `month` accept a number or a string.
-- Returns a list of `CalendarEvent`.
+- Naming: Python uses `snake_case`, Node.js and Java use `camelCase` (`categoryCode`, `siteId`). Node.js takes one object: `calendar({ start, end, categoryCode? })`, `graduateCalendar({ siteId, year, month })`. Java is `calendar(startDate, endDate)`, `calendar(startDate, endDate, categoryCode)` and `graduateCalendar(siteId, year, month)`; the two-argument version uses `0001`.
+- `calendar` school request: `GET https://www.sejong.ac.kr/kor/academics/academic-calendar.do?mode=getCalendarData&start=<yyyy-MM-dd>&end=<yyyy-MM-dd>&collDiv=<code>`, answer array `data`.
+- `graduate_calendar` school request: `GET https://<site_id>.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year=<yyyy>&month=<m>&siteId=<site_id>`.
+- `items` in the answer is a JSON string, so the library parses it once more (an array is accepted too). If `success` is not true or `items` is missing, it counts as a school-side failure. A month with no events is a normal answer.
 
-## Request notes
+## Response data structure
 
-### `calendar`
+Example of `calendar` (field names in Python style; Node.js and Java use `camelCase`). School data changes, so the values are examples.
 
-- `GET https://www.sejong.ac.kr/kor/academics/academic-calendar.do?mode=getCalendarData&start=<yyyy-MM-dd>&end=<yyyy-MM-dd>&collDiv=<code>`. Response array `data`.
-- Graduate schedules are also available with `collDiv` `0002` to `0007`, several months at once (dates are `yyyy-MM-dd`).
+```json
+[
+  {
+    "year": "2026", "month": "3", "category_code": "0001", "category_name": "Undergraduate",
+    "title": "Start of classes", "title_en": "Start of classes",
+    "start_date": "2026-03-02", "end_date": "2026-03-02", "extra": {}
+  }
+]
+```
 
-### `graduate_calendar`
+Example of `graduate_calendar`. Dates are `MM.dd`, and `extra` carries the day of the week.
 
-- `GET https://<site_id>.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp?year=<yyyy>&month=<m>&siteId=<site_id>`.
-- The answer has `success`, `startDay`, `lastDay`, `dayList` (calendar cells, not used) and `items`. **`items` is a JSON string**, which the library parses once more. An actual array is accepted too.
-- A `success` that is not true, a missing `items`, or an `items` that is neither a JSON string of an array nor an array is treated as a school-side failure (empty list or last cached value). An empty month is a valid answer.
-- **`site_id` is the school's own site name**, passed by the caller, so a new graduate school needs no release. Names checked on 2026-10-30: `graduate`, `gsi`, `mba`, `pub`, `tourgrad`, `edu`, `arts`. It becomes the host name, so it must match `[a-z0-9][a-z0-9-]{0,30}`; otherwise `INVALID_INPUT` without a request.
-- Scope of the check: the survey notes record the same kind of public JSON on all seven sites and that the calendar answer was checked on two of them. The calendar answers of the other sites were not checked one by one.
+```json
+[
+  {
+    "year": "2026", "month": "3", "category_code": "0002", "category_name": "Graduate school",
+    "title": "Thesis submission", "title_en": "Thesis submission",
+    "start_date": "03.04", "end_date": "03.10", "extra": { "frDtKo": "Wed", "toDtKo": "Tue" }
+  }
+]
+```
 
-## Result fields
-
-Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing.
+All fields are strings, and a missing value is an empty string.
 
 | Field | School key | Meaning |
 |---|---|---|
-| `year`, `month` | `scmYear`, `scmMonth` | Year and month the entry belongs to |
+| `year`, `month` | `scmYear`, `scmMonth` | Year and month the event belongs to |
 | `category_code`, `category_name` | `collDiv`, `collDivNm` | Category code and name (for example `0001`) |
-| `title` | `scmSubject` | Title (school text) |
+| `title` | `scmSubject` | Title (school's own text) |
 | `title_en` | `scmSubjectEng` | English title |
 | `start_date`, `end_date` | `frDt`, `toDt` | Start and end date |
-| `extra` | other fields | for example `frDtKo` and `toDtKo` (weekday of each date) from `graduate_calendar` |
+| `extra` | other fields | For example `frDtKo`, `toDtKo` of `graduate_calendar` (day of the week of each date) |
 
 ### Date format difference
 
 | Method | `start_date` / `end_date` format | Note |
 |---|---|---|
-| `calendar` | `yyyy-MM-dd` | String sort equals date order |
-| `graduate_calendar` | `MM.dd` | The year is the row's `year`; a range crossing a year end is not expanded |
+| `calendar` | `yyyy-MM-dd` | String order equals date order |
+| `graduate_calendar` | `MM.dd` | The year comes from the row's `year`; a range crossing year end is not expanded |
 
-When you merge both into one list, convert the dates yourself. The library does not convert them.
+Convert them yourself when merging both into one list. The library does not convert.
 
-## Examples
+### Failure behaviour
+
+- Cached for one day (86400 seconds by default) per method, category or site, and range. One call sends one request.
+- A school failure (connection, timeout, bad answer, missing expected key) returns the last cached value or an empty list. With no cache, it returns an empty list without a request for 60 seconds (default).
+- The only exception is a malformed site name in `graduate_calendar` (`INVALID_INPUT`). `calendar` never raises.
+- An empty list cannot tell "no events in that range" from "a problem on the school side".
+
+## Known limits
+
+- Titles are the school's own text. If the school changes wording they change, so do not branch on titles.
+- `graduate_calendar` returns only `MM.dd`, so the end year of an event crossing year end is unknown.
+- Which graduate school each `calendar` code `0002` to `0007` stands for, check in the result's `category_name`.
+- The sites share a similar screen, but answers can differ per site, so try your own `site_id`.
+- Business periods that need login are not part of these methods ([Business periods](../../auth/business-periods/)).
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## Example code
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -92,21 +120,3 @@ const graduateEvents = await publicData.graduateCalendar({ siteId: 'graduate', y
 
 </TabItem>
 </Tabs>
-
-For a widget that shows the next 30 days sorted by start date, see [Academic calendar widget](../../guides/academic-calendar/).
-
-## Cache and failure behavior
-
-- Cached for one day (86400 seconds by default) per method, category or site, and period. Opening a widget does not hit the school every time. One request per call.
-- School failures (connection, timeout, bad response, missing expected key) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
-- The only exception is a malformed site name in `graduate_calendar` (`INVALID_INPUT`). `calendar` never raises.
-- An empty list cannot tell "no events in that period" from "a problem on the school side".
-
-## Known limits and what was not verified
-
-- Titles are the school's text. They change when the school changes them, so do not branch on a title.
-- `graduate_calendar` gives only `MM.dd`, so the end year of an entry crossing a year end is unknown.
-- This page does not tabulate which graduate school each of `0002` to `0007` stands for. Read the result's `category_name`.
-- The login-only business periods are not this method ([Academic business periods](../../auth/business-periods/)).
-- Sources that mix in personal data, such as graduate school faculty lists, are not provided.
-- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

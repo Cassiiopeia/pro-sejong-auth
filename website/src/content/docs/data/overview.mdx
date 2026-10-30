@@ -1,6 +1,6 @@
 ---
 title: 공통 규칙
-description: 학교 데이터 15개 메서드가 공유하는 클라이언트, 결과 값 규칙, 캐시, 실패 격리, 요청 방식을 정리합니다.
+description: 학교 데이터 메서드가 공유하는 클라이언트, 결과 값 규칙, 캐시, 실패 격리, 요청 방식을 정리합니다.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
@@ -66,7 +66,7 @@ const publicData = new SejongPublicData(); // 프로세스당 하나만 만들�
 
 Java는 `application.yml`의 `sejongpeia` 접두사 설정(`SejongAuthProperties`)을 쓰고, Spring 없이 쓸 때는 같은 프로퍼티 객체를 만들어 `new SejongPublicData(properties)`로 넘깁니다. 인증과 공유하는 설정은 [설정](../../auth/configuration/)을 보세요.
 
-## 메서드 15개
+## 메서드 목록
 
 | 정보 | Java | Python | Node.js | 페이지 |
 |---|---|---|---|---|
@@ -112,7 +112,7 @@ Java는 `application.yml`의 `sejongpeia` 접두사 설정(`SejongAuthProperties
 - 캐시 없이 실패하면 같은 호출은 `failure_cache_seconds`(기본 60초) 동안 요청 없이 빈 값을 돌려줍니다. 만료된 캐시 값이 있으면 실패해도 그 값을 돌려줍니다.
 - 캐시는 최대 `cache_max_entries`(기본 500)개이고, 가득 차면 가장 오래된 항목을 지웁니다. 항목마다 있는 잠금도 함께 지워져서 사용자가 입력한 검색어를 인자로 써도 메모리가 계속 늘지 않습니다.
 - **같은 인자의 동시 호출은 요청 한 번을 나눠 씁니다.**
-- 호출 한 번에 요청은 한 번입니다. 예외는 `cafeteria_places`로, 최대 10번을 한 건씩 차례로 보냅니다 ([학식](../cafeteria/)).
+- 호출 한 번에 요청은 한 번입니다. 예외는 `cafeteria_places`로, 식당 번호마다 한 건씩 차례로 보냅니다 ([학식](../cafeteria/)).
 - 학교 서버에 부담을 주지 않도록 쓰세요. 봇이나 위젯은 하루 몇 번만 갱신해도 충분합니다.
 
 ## 요청 방식
@@ -121,11 +121,11 @@ Java는 `application.yml`의 `sejongpeia` 접두사 설정(`SejongAuthProperties
 - SIS(`sjpt.sejong.ac.kr`) 요청: 본문은 JSON(`{"dm_search": ...}`), 헤더 `Content-Type: application/json; charset="UTF-8"`, `Accept: application/json`.
 - 폼 요청(기숙사, 비교과): `application/x-www-form-urlencoded; charset=UTF-8`, `X-Requested-With: XMLHttpRequest`.
 - 기숙사(`happydorm`) 응답은 `text/html` 콘텐츠 타입의 JSON입니다. 본문을 항상 JSON으로 해석합니다.
-- 로그인은 쓰지 않습니다. SIS 코드표와 기숙사 소스는 쿠키 없이도 같은 데이터를 주는 것을 확인했습니다 (2026-10-30). 다른 소스의 쿠키 의존 여부를 따로 조사한 기록은 없습니다.
+- 로그인과 쿠키 없이 요청합니다.
 
 ## 더 보기
 
-- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md), 학교의 어디에 무엇이 있는지 조사한 기록은 [spec/REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md), 학교 데이터 출처 정리는 [spec/REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)
 - 사용 예시: [학과·강의 검색](../../guides/department-lecture-search/), [학사일정 위젯](../../guides/academic-calendar/), [기숙사·학식 봇](../../guides/dormitory-cafeteria-bot/)
 - 실패와 캐시가 왜 이렇게 설계됐는지: [실패 격리와 캐시](../../understand/failure-isolation-cache/)
 - 새 출처를 더하는 방법: [새 정보 출처 추가하기](../../contribute/add-data-source/)

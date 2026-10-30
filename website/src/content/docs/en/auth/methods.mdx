@@ -3,9 +3,22 @@ title: Authentication methods
 description: Method names of the integrated, DHC and SIS logins and the academic business periods lookup in Java, Python and Node.js, and what each one guarantees.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 These are the operations that log in to the portal with a student ID and password. The three languages have the same features and the same results; only the naming differs.
+
+## Request parameters
+
+Names follow Python; Java and Node.js use `camelCase` (`includeRaw`, `includeExtra`). Node.js takes options as an object in the last argument (`{ includeRaw: true }`).
+
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `student_id` | string | yes | | Student ID. If blank, `INVALID_INPUT` before any network call |
+| `password` | string | yes | | Portal password. If blank, `INVALID_INPUT` |
+| `year` | 4-digit number or string | business periods only | | Year to look up |
+| `month` | 1-12 or empty | no | empty (whole year) | Month to look up. Business periods only |
+| `include_raw` | boolean | no | `false` | If `true`, keeps the school's raw response (`raw_html`, `raw_json`) in the result. Extension: [Raw response and extra options](../raw-and-extra/) |
+| `include_extra` | boolean | no | `false` | If `true`, puts the remaining unnamed SIS fields in `extra`. Extension: [Raw response and extra options](../raw-and-extra/) |
 
 ## Method table
 
@@ -21,9 +34,21 @@ These are the operations that log in to the portal with a student ID and passwor
 - In Java these are methods of the `SuhSejongAuthEngine` bean that Spring Boot auto-configuration registers. For use without Spring see [Configuration](../configuration/).
 - In Python the module functions (`from sejongpeia import authenticate`) use a client with default settings. Create a `SejongAuthClient` yourself to change them.
 - In Node.js every method returns a `Promise`. Python and Java calls are synchronous.
-- The raw and extra options are on [Raw response and extra options](../raw-and-extra/), the result fields on [Result fields](../result-fields/).
 
-## What each one guarantees
+## Response data structure
+
+Part of an integrated result. The example uses Python `snake_case` names; Java and Node.js use `camelCase` (`studentId`, `phoneNumber`). All fields are on [Result fields](../result-fields/).
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000"
+}
+```
 
 | Method | Always filled | If it fails |
 |---|---|---|
@@ -34,17 +59,41 @@ These are the operations that log in to the portal with a student ID and passwor
 | SIS | Student info, contact, school codes (`grade` and `status` are always empty strings) | Throws |
 | Business periods | List of periods allowed per business | Throws, without retry |
 
+- A blank student ID or password is `INVALID_INPUT`; a wrong password is `AUTHENTICATION_FAILED`. All codes are on [Error codes](../error-codes/).
 - The integrated call logs in to the portal **once** and uses the same session for DHC, SIS and the portal main page. Calling student info and contact separately logs in twice, so prefer the one integrated call.
-- A blank student ID or password is rejected with `INVALID_INPUT` before any network call.
 - A wrong password is not retried: the call stops at the first failure. See [Login verdict and account lock protection](../../understand/login-verdict/) for why.
-
-## Measured time
-
-One integrated authentication (2026-10-24, Seoul, median of 5 runs): Java 0.57 s, Python 0.76 s, Node.js 0.69 s. Most of it is the portal's own response time and it varies with the school server.
+- Most of the time is the portal's own response time, which varies with the school server.
 
 <Aside type="caution">
 Call it from the server only. Calling it directly from a browser or app exposes the password to third-party code. Never store the password or write it to logs.
 </Aside>
+
+## Example code
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);
+    System.out.println(result.getName() + " " + result.getMajor());
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import authenticate
+
+    result = authenticate(student_id, password)
+    print(result.name, result.major)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { authenticate } from 'pro-sejongpeia';
+
+    const result = await authenticate(studentId, password);
+    console.log(result.name, result.major);
+    ```
+  </TabItem>
+</Tabs>
 
 ## Next
 

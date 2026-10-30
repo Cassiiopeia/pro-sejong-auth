@@ -5,33 +5,51 @@ description: 건물과 편의시설의 이름, 위치(위도·경도), 안내 �
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-학교 캠퍼스 지도가 쓰는 장소 목록을 받습니다. 건물과 편의시설의 이름, 위도와 경도, 안내 정보가 들어 있어서 지도 앱이나 학내 안내 서비스에 바로 쓸 수 있습니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
+학교 캠퍼스 지도가 쓰는 장소 목록을 로그인 없이 받습니다. 건물과 편의시설의 이름, 위도와 경도, 안내 정보가 들어 있어서 지도 앱이나 학내 안내 서비스에 바로 쓸 수 있습니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
 
-## 메서드
+## 요청 파라미터
 
-| 언어 | 시그니처 |
-|---|---|
-| Java | `campusPlaces()`, `campusPlaces(String placeType)` |
-| Python | `campus_places(place_type="")` |
-| Node.js | `campusPlaces(placeType = '')` |
+Python은 `snake_case`(`campus_places`), Node.js와 Java는 `camelCase`(`campusPlaces`)입니다. Java는 `campusPlaces()`와 `campusPlaces(String placeType)` 두 형태가 있고, Node.js는 `campusPlaces(placeType = '')`입니다.
 
-- `place_type`은 학교의 장소 유형 값이고 기본값은 빈 문자열입니다. 빈 값으로 받으면 어떤 장소가 오는지, 어떤 유형 값을 학교가 받는지는 이 문서가 표로 정리하지 않았습니다. 결과의 `place_type`과 `category` 값으로 확인하세요.
-- 반환: `CampusPlace` 목록.
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `place_type` | 문자열 | 선택 | `""` | 학교의 장소 유형 값. 고정 목록이 아니라 결과의 `place_type` 값을 그대로 넘겨 거를 수 있고, 비우면 유형 제한 없이 받습니다 |
 
-## 요청 메모
+- 반환은 `CampusPlace` 목록입니다.
 
-- `GET https://www.sejong.ac.kr/kor/intro/campus-map.do?mode=getPlaceUserList&placeType=<유형>`, 응답 배열 `items`. 로그인 불필요.
-- 장소의 개수와 유형 값 목록을 측정한 기록은 계약 문서에 없습니다.
+**학교 요청**
 
-## 결과 필드
+- `GET https://www.sejong.ac.kr/kor/intro/campus-map.do?mode=getPlaceUserList&placeType=<유형>`, 응답 배열 `items`.
 
-필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 값이 없으면 빈 문자열이고, 위도와 경도는 숫자(없거나 읽을 수 없으면 `0.0`)입니다.
+## 응답 데이터 구조
+
+예시 JSON입니다. 필드 이름은 Python `snake_case`이고 Node.js와 Java는 `camelCase`입니다. 학교 데이터는 바뀌므로 값은 예시입니다.
+
+```json
+[
+  {
+    "id": "3",
+    "name": "산들푸드",
+    "name_en": "",
+    "place_type": "WELFARE",
+    "category": "식당",
+    "latitude": 37.5495931628,
+    "longitude": 127.0751638599,
+    "info": "학생회관 B1층",
+    "phone": "02-000-0000",
+    "description": "",
+    "extra": { "orderNo": "1", "useYn": "Y" }
+  }
+]
+```
+
+값이 없으면 빈 문자열이고, 위도와 경도는 숫자(없거나 읽을 수 없으면 `0.0`)입니다.
 
 | 필드 | 학교 키 | 설명 |
 |---|---|---|
 | `id` | `id` | 장소 번호. 식당 번호와는 다른 체계 ([학식](../cafeteria/)) |
 | `name`, `name_en` | `placeName`, `placeNameEn` | 한국어, 영어 이름 |
-| `place_type` | `placeType` | 장소 유형 |
+| `place_type` | `placeType` | 장소 유형 (예: `BUILDING`, `WELFARE`) |
 | `category` | `welfareCategory` | 편의시설 분류 |
 | `latitude`, `longitude` | `latitude`, `longitude` | 위도, 경도 (실수) |
 | `info` | `placeInfo` | 안내 정보 |
@@ -39,7 +57,19 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | `description` | `description` | 설명 |
 | `extra` | 그 밖의 필드 | 학교 원문 필드 |
 
-## 예시
+- 유형 값마다 하루(기본 86400초) 캐시하고, 호출당 학교 요청은 한 번입니다.
+- 학교 쪽 실패(연결, 시간 초과, 비정상 응답, `items` 없음)는 마지막 캐시 값 또는 빈 목록입니다. 캐시가 없으면 60초(기본) 동안 요청 없이 빈 목록입니다.
+- 이 메서드는 예외를 던지지 않습니다.
+- 빈 목록은 「장소가 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
+
+## 알려진 한계
+
+- 장소 `id`는 식당 메뉴의 식당 번호와 다른 체계이고, 둘을 잇는 값이 없습니다.
+- 위도·경도가 없으면 `0.0`이므로 지도에 찍기 전에 확인하세요.
+- `phone`, `info`는 학교가 입력한 값 그대로입니다. 외부에 그대로 내보내기 전에 값을 확인하세요.
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## 예시 코드
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -70,17 +100,3 @@ for (const place of places) console.log(place.name, place.latitude, place.longit
 
 </TabItem>
 </Tabs>
-
-## 캐시와 실패 동작
-
-- 유형 값마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
-- 학교 실패(연결, 시간 초과, 비정상 응답, `items` 없음)는 마지막 캐시 값 또는 빈 목록입니다. 캐시가 없으면 60초(기본) 동안 요청 없이 빈 목록입니다.
-- 이 메서드는 예외를 던지지 않습니다.
-- 빈 목록은 「장소가 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
-
-## 알려진 한계와 확인하지 못한 것
-
-- 장소 id는 식당 메뉴의 식당 번호와 다른 체계이고, 둘을 잇는 값이 없습니다 (2026-10-30).
-- `place_type`과 `category`의 값 목록, 위도·경도가 비어 있는 장소가 있는지는 확인하지 않았습니다. 값이 없으면 위도·경도는 `0.0`이므로 지도에 찍기 전에 확인하세요.
-- `phone`에 어떤 번호가 들어 있는지는 확인하지 않았습니다. 외부에 그대로 내보내기 전에 값을 확인하세요.
-- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

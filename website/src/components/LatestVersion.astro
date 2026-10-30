@@ -1,0 +1,79 @@
+---
+// 최신 릴리스 버전 칩: 저장소 main 의 version.yml 을 브라우저에서 읽어 표시 (번호를 사이트에 적어 두지 않음)
+// 읽기에 실패하면 칩 전체를 숨김. 여러 곳에 놓아도 스크립트와 요청은 한 번만 실행
+import { VERSION_FILE_URL } from '../i18n/landing/constants';
+
+interface Props {
+  label: string;
+  isOnHero?: boolean; // 크림슨 히어로 위에서는 흰 글자
+}
+const { label, isOnHero = false } = Astro.props;
+---
+
+<span class:list={['latest-version', { 'latest-version--on-hero': isOnHero }]} data-latest-version data-version-file-url={VERSION_FILE_URL} hidden>
+  {label} <strong class="latest-version__number" data-latest-version-number></strong>
+</span>
+
+<script>
+  // version.yml 의 `version: "x.y.z"` 줄에서 번호만 추출
+  const VERSION_LINE_PATTERN = /^version:\s*["']?([0-9]+(?:\.[0-9]+)*)["']?/m;
+  const FETCH_TIMEOUT_MILLISECONDS = 5000;
+
+  async function fetchLatestVersion(versionFileUrl: string): Promise<string | null> {
+    const abortController = new AbortController();
+    const timeoutId = window.setTimeout(() => abortController.abort(), FETCH_TIMEOUT_MILLISECONDS);
+    try {
+      const response = await fetch(versionFileUrl, { signal: abortController.signal, cache: 'no-cache' });
+      if (!response.ok) return null;
+      const matched = VERSION_LINE_PATTERN.exec(await response.text());
+      return matched ? matched[1] : null;
+    } catch {
+      return null; // 네트워크 실패, 시간 초과: 칩은 숨긴 채로 둠
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function showLatestVersion() {
+    const chips = document.querySelectorAll<HTMLElement>('[data-latest-version]');
+    if (chips.length === 0) return;
+    const latestVersion = await fetchLatestVersion(chips[0].dataset.versionFileUrl ?? '');
+    if (!latestVersion) return;
+    chips.forEach((chip) => {
+      const numberElement = chip.querySelector('[data-latest-version-number]');
+      if (numberElement) numberElement.textContent = latestVersion;
+      chip.hidden = false;
+    });
+  }
+
+  showLatestVersion();
+</script>
+
+<style>
+  .latest-version {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.7rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  .latest-version[hidden] {
+    display: none;
+  }
+  .latest-version--on-hero {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .latest-version--on-hero .latest-version__number {
+    color: #fff;
+  }
+  .latest-version__number {
+    color: var(--sl-color-white);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

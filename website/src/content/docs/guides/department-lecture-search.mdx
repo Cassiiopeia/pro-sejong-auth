@@ -1,18 +1,82 @@
 ---
 title: 학과·강의 검색
-description: 학과 목록과 개설강좌를 JSON으로 내려주는 작은 서버를 Java, Python, Node.js로 만들고, 확인한 결과와 주의점을 정리합니다.
+description: 학과 목록과 개설강좌를 JSON으로 내려주는 작은 서버를 Java, Python, Node.js로 만들고, 응답 데이터 구조와 주의점을 정리합니다.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 학과 목록과 개설강좌를 JSON으로 내려주는 작은 서버입니다. 프런트엔드는 이 두 주소만 부르면 됩니다.
 
-- `GET /departments`: 학과 코드, 단과대, 학과 이름
-- `GET /lectures?department=<학과 코드>&name=<과목명>`: 둘 중 하나는 필수 (이 예시 서버가 정한 규칙이며, 라이브러리는 조건을 모두 비우면 그 학기 전체를 줍니다)
+## 요청 파라미터
 
-학부·2026년 2학기 기준이며 `"20"`(학부)과 학기 값은 학교 값입니다. 목록은 `organization_categories()`, `terms(...)`로 확인하세요 ([학과·학기 코드](../../data/codes/)).
+예시 서버의 HTTP 요청(모두 `GET`)과, 그 안에서 부르는 라이브러리 메서드입니다. 필드 이름은 Python `snake_case` 기준이고, Node.js는 `camelCase` 객체 인자, Java는 위치 인자입니다. 로그인은 필요 없습니다.
 
-## 코드
+**예시 서버**
+
+| 주소 | 파라미터 | 필수 | 설명 |
+|---|---|---|---|
+| `/departments` | | | 파라미터 없음 |
+| `/lectures` | `department` | 아니오 | 학과 코드 |
+| | `name` | 아니오 | 과목명 (부분 일치). 둘 중 하나는 필수인 것은 이 예시 서버가 정한 규칙 |
+
+**라이브러리 메서드**
+
+| 메서드 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|---|
+| `departments` | `category_code` | 문자열 | 예 | | 소속 분류 (`20` 학부) |
+| | `year` | 문자열 | 예 | | 연도 |
+| | `semester_code` | 문자열 | 예 | | 학기 코드 (`10` 1학기, `20` 2학기, `11`·`21` 계절학기) |
+| `lectures` | `category_code`, `year`, `semester_code` | 문자열 | 예 | | 위와 같음 |
+| | `department_code` | 문자열 | 아니오 | 빈 문자열 | 학과 코드 |
+| | `course_name` | 문자열 | 아니오 | 빈 문자열 | 과목명 |
+| | `instructor_name` | 문자열 | 아니오 | 빈 문자열 | 교수명. 세 조건을 모두 비우면 그 학기 전체 |
+
+예시 코드는 학부(`"20"`)이고 연도와 학기(`"20"` = 2학기)는 코드 상단의 상수입니다. 코드 값은 모두 학교 값이며 목록은 `organization_categories()`, `terms(...)`로 받습니다 ([학과·학기 코드](../../data/codes/)).
+
+## 응답 데이터 구조
+
+예시 서버가 내려주는 JSON입니다. 위쪽이 `GET /departments`, 아래쪽이 `GET /lectures?...`의 응답이며, 값은 형태를 보여 주기 위한 예시입니다. 키 이름은 Python 예시 기준이고 Node.js 예시는 `course_number`가 `courseNumber`입니다. Java 컨트롤러는 라이브러리 모델(`Department`, `Lecture`)을 그대로 돌려주므로 필드가 더 많고 이름은 `camelCase`입니다.
+
+```json
+[
+  { "code": "3517", "college": "인공지능융합대학", "name": "AI로봇학과" },
+  { "code": "3331", "college": "연계전공", "name": "스마트투어리즘매니지먼트소프트웨어" }
+]
+```
+
+```json
+[
+  {
+    "course": "알고리즘및실습",
+    "department": "컴퓨터공학과",
+    "schedule": "화13:00-15:00",
+    "credits": "3.0",
+    "course_number": "009954"
+  }
+]
+```
+
+| 필드 | 의미 |
+|---|---|
+| `code` | 학과 코드. `/lectures?department=`에 그대로 넘김 |
+| `college` / `name` | 단과대 / 학과(또는 전공) 이름 |
+| `course` / `department` | 과목명 / 개설 학과 이름 |
+| `schedule` | 요일과 시간 (학교 원문, 예: `화13:00-15:00`) |
+| `credits` | 학점 (문자열) |
+| `course_number` | 교과목 번호. 교육과정 조회에 이어서 쓸 수 있음 |
+
+라이브러리가 돌려주는 전체 필드(`extra` 포함)는 [개설강좌](../../data/lectures/#응답-데이터-구조)와 [학과·학기 코드](../../data/codes/#응답-데이터-구조)를 보세요.
+
+**실패 시**: 학교 서버가 실패하면 예외 없이 마지막 캐시 또는 빈 목록입니다. 예시 서버는 이를 빈 배열(`[]`)로 내려줍니다.
+
+## 알아둘 점
+
+- `lectures`의 학과 코드, 과목명, 교수명은 모두 선택입니다. **모두 비우면 그 학기 전체**를 받는데 응답이 수 MB로 크므로([개설강좌](../../data/lectures/)), 예시 서버는 조건을 필수로 했습니다. 전체가 필요하면 학과 단위로 나눠 조회하세요.
+- 강의 결과에는 교수 이름(`instructor`)도 들어 있습니다. 예시는 필요한 필드만 골라서 내려주고, 외부에 공개할 때는 어떤 필드를 낼지 직접 정하세요.
+- 과목명 검색은 부분 일치입니다. 결과가 0건인 이름도 있으므로 빈 결과 안내가 필요합니다.
+- 강의의 `course_number`와 `department_code`로 학과 교육과정의 학년·학기·교과목 개요(`curriculum_courses`)를 이어서 조회할 수 있습니다. [교육과정](../../data/curriculum/)
+
+## 예시 코드
 
 <Tabs syncKey="language">
   <TabItem label="Java">
@@ -46,7 +110,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
       @GetMapping("/lectures")
       List<Lecture> lectures(@RequestParam(defaultValue = "") String department,
                              @RequestParam(defaultValue = "") String name) {
-        if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+        if (department.isBlank() && name.isBlank()) { // 조건이 없으면 그 학기 전체(수 MB)라서 이 서버는 조건을 필수로 함
           return List.of();
         }
         return publicData.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER, department, name, "");
@@ -68,7 +132,6 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
     UNDERGRADUATE_CATEGORY = "20"     # 학교의 소속 분류 코드 (organization_categories()로 확인)
     YEAR, SEMESTER = "2026", "20"     # 학기 목록은 terms(UNDERGRADUATE_CATEGORY)
 
-
     def search_lectures(department_code: str, course_name: str) -> list:
         lectures = public_data.lectures(UNDERGRADUATE_CATEGORY, YEAR, SEMESTER,
                                         department_code=department_code, course_name=course_name)
@@ -77,7 +140,6 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
              "credits": lecture.credits, "course_number": lecture.course_number}
             for lecture in lectures
         ]
-
 
     class LectureSearchHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -91,7 +153,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
                 query = parse_qs(url.query)
                 department_code = query.get("department", [""])[0].strip()
                 course_name = query.get("name", [""])[0].strip()
-                if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+                if not department_code and not course_name:  # 조건이 없으면 그 학기 전체(수 MB)라서 이 서버는 조건을 필수로 함
                     self.send_error(400, "department or name is required")
                     return
                 body = search_lectures(department_code, course_name)
@@ -103,7 +165,6 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(payload)
-
 
     if __name__ == "__main__":
         HTTPServer(("127.0.0.1", 8000), LectureSearchHandler).serve_forever()
@@ -138,7 +199,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
       } else if (url.pathname === '/lectures') {
         const departmentCode = (url.searchParams.get('department') ?? '').trim();
         const courseName = (url.searchParams.get('name') ?? '').trim();
-        if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(학부 약 2.4MB)라서 이 서버는 조건을 필수로 함
+        if (!departmentCode && !courseName) { // 조건이 없으면 그 학기 전체(수 MB)라서 이 서버는 조건을 필수로 함
           response.writeHead(400).end('department or name is required');
           return;
         }
@@ -152,21 +213,3 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
     ```
   </TabItem>
 </Tabs>
-
-## 확인한 결과
-
-2026-10-30, 실제 학교 서버로 확인했습니다. 각 서버를 띄우고 `curl`로 호출했습니다 (Java는 서버 없이 라이브러리 호출만 컴파일·실행했고, Spring 연결은 확인하지 않았습니다).
-
-- `/departments`: 학과 103건 (세 언어 모두 같은 건수)
-- `/lectures?name=알고리즘`: 18건. 한 건의 모양: `{"course":"알고리즘및실습","department":"컴퓨터공학과","schedule":"화13:00-15:00","credits":"3.0","courseNumber":"009954"}`
-- 조건 없이 `/lectures`: 400 (Python, Node). Java 컨트롤러는 같은 경우 빈 목록을 돌려주게 썼지만 Spring 서버로는 실행하지 않았습니다 (라이브러리 호출만 실행)
-
-학교 데이터는 바뀌므로 위 건수와 값은 그날의 예입니다.
-
-## 참고
-
-- `lectures`의 학과 코드, 과목명, 교수명은 모두 선택입니다. **모두 비우면 그 학기 전체**를 받는데 학부는 약 2,800행, 2.4MB라서(2026-10-30 기준, [개설강좌](../../data/lectures/)), 예시 서버는 조건을 필수로 했습니다. 전체가 필요하면 학과 단위로 나눠 조회하세요.
-- 강의 결과에는 교수 이름(`instructor`)도 들어 있습니다. 예시는 필요한 필드만 골라서 내려주고, 외부에 공개할 때는 어떤 필드를 낼지 직접 정하세요.
-- 과목명 검색은 부분 일치였습니다 (`알고리즘` 18건, `프로그래밍` 73건). 결과가 0건인 이름도 있으므로(예: 이 날 `자료구조`는 0건) 빈 결과 안내가 필요합니다.
-- 강의의 `course_number`와 `department_code`로 학과 교육과정의 학년·학기·교과목 개요(`curriculum_courses`)를 이어서 조회할 수 있습니다. [교육과정](../../data/curriculum/)
-- 공개 데이터는 학교 서버가 실패하면 빈 목록을 돌려줍니다. 「결과 없음」과 구분되지 않으니 화면에 안내를 두세요. [실패 격리와 캐시](../../understand/failure-isolation-cache/)
