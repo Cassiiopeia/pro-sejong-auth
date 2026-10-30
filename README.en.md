@@ -142,7 +142,7 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "")
 System.out.println(departments.size() + " " + lectures.get(0).getName());
 ```
 
-Example output (Python, three calls to the school server in 0.3 s).
+Example output (Python).
 
 <p align="center">
   <img src="docs/assets/demo/public-data-run.png" alt="SejongPublicData example output: department list, Software department lectures and academic calendar" width="760">
