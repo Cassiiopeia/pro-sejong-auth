@@ -14,90 +14,101 @@
 
 **From student login to departments, lectures, the academic calendar and cafeterias,<br>one call from Java, Python or Node.js.**
 
-Fast and light, gentle on requests, never stores a password.
+Sejong University has no official API, so doing it yourself means solving the portal login and parsing the school's pages.<br>This library has already solved that part.
 
 **[Documentation](https://cassiiopeia.github.io/pro-sejongpeia/en/)** &nbsp;·&nbsp; [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/en/#demo) &nbsp;·&nbsp; [Quick start](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) &nbsp;·&nbsp; [School data](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/)
 
-[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia) [![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/) [![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia) [![License](docs/assets/badges/license-mit.svg)](LICENSE)<br>
-[![Checked against the real portal every day](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+</div>
+
+| | Doing it yourself | pro-sejongpeia |
+|---|---|---|
+| **Portal login** | Handle the legacy TLS cipher, the User-Agent the firewall blocks and SSO cookies on three domains | One line: `authenticate(studentId, password)` |
+| **Login result** | A failed login still returns HTTP 200, so you read a value inside a script in the response | Stops at the first failure and tells cases apart by error code such as `AUTHENTICATION_FAILED` |
+| **School data** | Parse a different address, HTML or JSON for every page and throttle the load yourself | Same-shaped objects, a 24-hour cache, the last value when the school fails |
+| **Three languages** | Implement it separately per language | Same features, same result fields, same error codes |
+
+<sub>How each row was solved is in [What this library does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/) and [Understand](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/legacy-tls/).</sub>
+
+```bash
+pip install pro-sejongpeia      # Python 3.9+
+npm install pro-sejongpeia      # Node 18+ (Java: see Try it right now below)
+```
+
+<div align="center">
+
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia) [![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/) [![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia) [![License](docs/assets/badges/license-mit.svg)](LICENSE) [![Checked against the real portal every day](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 </div>
 
+## At a glance
+
+One call goes through the cache, TLS and User-Agent handling and failure isolation, and the school's response comes back in the same shape.
+
+<!-- diagram:overview:start -->
+```mermaid
+flowchart LR
+  app["<b>Your app</b><br/>Java · Python<br/>Node.js"]:::neutral
+  lib["<b>PRO-SEJONGPEIA</b><br/>Cache<br/>TLS · User-Agent<br/>Failure isolation"]:::accent
+  school["<b>School servers</b><br/>Portal login<br/>Student info<br/>Public pages"]:::neutral
+  result["<b>Result</b><br/>Same fields<br/>Same error codes"]:::soft
+  app -->|"one call"| lib
+  lib -->|"requests"| school
+  school -->|"converted"| result
+
+  classDef neutral fill:#F3F4F6,stroke:#8B9099,stroke-width:1.5px,color:#1F2328
+  classDef accent fill:#C20F2F,stroke:#8E0A22,stroke-width:1.5px,color:#FFFFFF
+  classDef soft fill:#FDEEF1,stroke:#C20F2F,stroke-width:1.5px,color:#4A0610
+  classDef muted fill:#FFFFFF,stroke:#8B9099,stroke-width:1.5px,stroke-dasharray:5 4,color:#1F2328
+```
+<!-- diagram:overview:end -->
+
 ## What you get
 
-Not just student verification. The public data the school serves without a login comes in the same shape. The full list is in the [Features](#features) table below.
+Not just student verification. The public data the school serves without a login comes in the same shape. **Everything works the same in all three languages**; only the naming follows each language's convention (Python uses snake_case).
 
 | | Feature | What you get |
 |:-:|---|---|
-| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **[Student verification](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/)** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and school codes such as the department code. Pick integrated, DHC or SIS |
+| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **[Student verification](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/)** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, contact info. Pick integrated, DHC or SIS |
 | <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **[Department and term codes](https://cassiiopeia.github.io/pro-sejongpeia/en/data/codes/)** | Organization categories (undergraduate and graduate), the term list and the full department list |
 | <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **[Lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/lectures/)** | The whole term or a search by department, course name or instructor, with schedule and room |
 | <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **[Curriculum and course overview](https://cassiiopeia.github.io/pro-sejongpeia/en/data/curriculum/)** | Suggested year and semester, credits and the course overview of a department's curriculum |
-| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **[Academic calendar](https://cassiiopeia.github.io/pro-sejongpeia/en/data/calendar/)** | Undergraduate and graduate schedules, plus the per-business allowed periods (course registration, certificate printing) you see after login |
+| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **[Academic calendar](https://cassiiopeia.github.io/pro-sejongpeia/en/data/calendar/)** | Undergraduate and graduate schedules, plus the per-business allowed periods you see after login (course registration, certificate printing) |
 | <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **[Dormitory](https://cassiiopeia.github.io/pro-sejongpeia/en/data/dormitory/)** | Seven days of menus and the notices |
 | <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **[Cafeterias](https://cassiiopeia.github.io/pro-sejongpeia/en/data/cafeteria/)** | The list of cafeterias and daily menus with prices |
 | <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **[Campus places](https://cassiiopeia.github.io/pro-sejongpeia/en/data/campus-places/)** | Buildings and welfare facilities with name, coordinates and info |
 | <img src="docs/assets/icons/events.svg" width="22" alt=""> | **[Extracurricular events](https://cassiiopeia.github.io/pro-sejongpeia/en/data/extracurricular/)** | Event schedule with category and location |
 
-## Why this library
+## Where to start
 
-Four promises, each with proof you can check in the code or the tests.
+Pick the page to read by what you need.
 
-### <img src="docs/assets/icons/fast.svg" width="22" alt="" align="top"> Fast and light
+<!-- diagram:choose:start -->
+```mermaid
+flowchart LR
+  need(["<b>What do you<br/>need?</b>"]):::soft
+  verify["<b>Verify students</b><br/>check enrollment"]:::neutral
+  lectures["<b>Lecture search</b><br/>find open courses"]:::neutral
+  calendar["<b>Calendar widget</b><br/>this month's events"]:::neutral
+  dining["<b>Dorm and cafeteria bot</b><br/>today's menu"]:::neutral
+  data["<b>School data reference</b><br/>everything else"]:::neutral
+  need --> verify
+  need --> lectures
+  need --> calendar
+  need --> dining
+  need --> data
 
-- **Zero dependencies** (Python, Node): standard library only (`dependencies = []`, `"dependencies": {}`).
-- **Measured**: the department list and one department's lectures take about 0.1 s, the whole term's lectures about 1 s. Cached answers take microseconds (Python, Seoul, median of 5 fresh clients; most of the time is the school server's own response).
-- **One login**: the integrated call signs in to the portal once and reads DHC and SIS with the same session. 0.6 to 0.8 s in all three languages (median of 5).
+  classDef neutral fill:#F3F4F6,stroke:#8B9099,stroke-width:1.5px,color:#1F2328
+  classDef accent fill:#C20F2F,stroke:#8E0A22,stroke-width:1.5px,color:#FFFFFF
+  classDef soft fill:#FDEEF1,stroke:#C20F2F,stroke-width:1.5px,color:#4A0610
+  classDef muted fill:#FFFFFF,stroke:#8B9099,stroke-width:1.5px,stroke-dasharray:5 4,color:#1F2328
+```
+<!-- diagram:choose:end -->
 
-→ [What this library does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/)
+[Verify students](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/student-verification/) · [Department and lecture search](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/department-lecture-search/) · [Academic calendar widget](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/academic-calendar/) · [Dormitory and cafeteria bot](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/dormitory-cafeteria-bot/) · [School data reference](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/). Every example comes in all three languages ([Integration examples](docs/INTEGRATION_EXAMPLES.en.md)).
 
-### <img src="docs/assets/icons/efficient.svg" width="22" alt="" align="top"> Gentle on requests
+## Try it right now
 
-- Results are cached in memory for **24 hours**, and **simultaneous calls with the same arguments share one request**. The cache holds at most 500 entries (default) and evicts the oldest first.
-- A call sends one request. The only exception is the cafeteria list, which sends one per number in a range (10 by default), **one after the other**, per refresh.
-- A failed call is **remembered for 60 seconds** so the school's servers are not hammered. Proof: the cache section of [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
-
-→ [Cache and failure isolation](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/failure-isolation-cache/)
-
-### <img src="docs/assets/icons/safe.svg" width="22" alt="" align="top"> Safe
-
-- **The password is never stored.** It is only used for the portal login request and never put into error messages (test `test_error_message_never_contains_password`).
-- **Stops at the first failure.** A wrong password ends with `AUTHENTICATION_FAILED` and no retry, so the account is not locked by the library, and a locked account is reported as `ACCOUNT_LOCKED`.
-- The SIS extra fields (`extra`) **always exclude** session values, client IP, account state, resident number, bank account, address and staff names, and server-internal error details are never returned.
-- A failing school server does not shake your app: public data returns the last cached value or an empty list instead of throwing.
-
-→ [Login verdict and account lock avoidance](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/login-verdict/)
-
-### <img src="docs/assets/icons/reliable.svg" width="22" alt="" align="top"> Trustworthy
-
-- **Checked against the real portal every day**: at 09:00 KST all three languages sign in to the live portal, and a failure opens an issue automatically (see the badge above).
-- **Same results in three languages**: shared values live in [spec/contract.json](spec/contract.json), and each language's tests fail when they drift.
-- **Method list drift check**: CI verifies that the public method list matches across [spec/api-index.json](spec/api-index.json), the three sources and the docs, and the shape of the school's responses is checked daily without an account.
-
-→ [The daily live portal check](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/daily-live-check/)
-
-The hard parts of doing it yourself (the one cipher the portal accepts, firewall User-Agents, SSO cookies across three domains, verdicts hidden in 200 responses) are already solved. See the [project site](https://cassiiopeia.github.io/pro-sejongpeia/) for details.
-
-## Features
-
-**Everything is supported in all three languages**, with the same features and the same result shape. Only the naming follows each language's convention (snake_case in Python).
-
-| Feature | Java | Python | Node |
-|---|:-:|:-:|:-:|
-| **[Student verification](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/)**: integrated · DHC · SIS · SIS business periods | ✓ | ✓ | ✓ |
-| **[Codes and lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/codes/)**: categories · terms · departments · lectures · course types · selective domains · curriculum | ✓ | ✓ | ✓ |
-| **[Schedule and campus life](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/)**: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✓ | ✓ | ✓ |
-| [Raw response, SIS codes and `extra` options](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/raw-and-extra/) | ✓ | ✓ | ✓ |
-
-All method names (per language, including the Java raw-response variants) are listed in [Authentication methods](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) and [School data: common rules](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/).
-
-- **Integrated** returns student info + classic reading + contact, **DHC** student info + classic reading, **SIS** student info + contact.
-- SIS business periods are not the public academic calendar (`calendar`): they are the per-business allowed periods of the student's own SIS screen. [SIS business periods](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/business-periods/)
-- The public-data contract is [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
-
-## Try it now
-
-No student ID, no password. This fetches the department list and the lectures of the Software department (3220). Same call and same result in all three languages.
+No student ID or password needed. This fetches the department list and the open lectures of the Software department (3220). All three languages make the same call and return the same result.
 
 **Python** · `pip install pro-sejongpeia`
 
@@ -122,25 +133,25 @@ const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
-**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<version>"` ([check the latest version](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia))
+**Java / Spring Boot** · `implementation "kr.suhsaechan:sejongpeia:<version>"` ([check the latest version](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia), Java 17+, Maven Central)
 
 ```java
-SejongPublicData publicData = new SejongPublicData();   // a bean in Spring
+SejongPublicData publicData = new SejongPublicData();   // inject as a bean in Spring
 List<Department> departments = publicData.departments("20", "2026", "20");
 List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "");
 System.out.println(departments.size() + " " + lectures.get(0).getName());
 ```
 
-Example output (Python, 3 calls to the school servers in 0.3 s). The school data itself is Korean.
+Example output (Python, three calls to the school server in 0.3 s).
 
 <p align="center">
-  <img src="docs/assets/demo/public-data-run.png" alt="Example output of SejongPublicData: department list, Software department lectures and the academic calendar" width="760">
+  <img src="docs/assets/demo/public-data-run.png" alt="SejongPublicData example output: department list, Software department lectures and academic calendar" width="760">
 </p>
 
-### Student verification in one line
+### Student login is one line too
 
 ```python
-result = authenticate("21011234", "password")             # Python
+result = authenticate("21011234", "password")              # Python
 print(result.name, result.major, result.grade)
 ```
 
@@ -150,159 +161,69 @@ console.log(result.name, result.major, result.grade);
 ```
 
 ```java
-SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);   // Java, a Spring Boot bean
+SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);   // Java, Spring Boot bean
 System.out.println(result.getName() + " " + result.getMajor() + " " + result.getGrade());
 ```
 
-Error handling and Spring setup are in the [quick start](#quick-start-java--spring-boot) below. Student verification can also be tried in the browser first.
+> [!WARNING]
+> The portal locks an account after several wrong passwords. The library never retries a rejected login, but if anyone can type a student ID into your service, **limit failed attempts per student ID yourself**. A locked account is only unlocked by [resetting the password at the portal](https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp).
+
+You can also try student login in the browser first.
 
 <p align="center">
-  <a href="https://cassiiopeia.github.io/pro-sejongpeia/#demo">
-    <img src="docs/assets/demo-en-dark.png" alt="Live authentication demo on the project page" width="760">
+  <a href="https://cassiiopeia.github.io/pro-sejongpeia/en/#demo">
+    <img src="docs/assets/demo-en-dark.png" alt="The live authentication demo on the introduction page" width="760">
   </a>
   <br>
-  <sub>Live demo on the project page (click to try). A real authentication result with personal fields replaced by sample values.</sub>
+  <sub>The live demo on the introduction page (click to try). These are real authentication results; only the personal-data cells were replaced with sample values.</sub>
 </p>
 
-## Use cases
+Error handling, Spring setup and plain-Java usage are on the [Quick start page](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) with tabs for all three languages.
 
-- [**Verifying Sejong students**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/student-verification/): club or student council sign-up, major or year checks for campus events, classic-reading helpers
-- [**Department and lecture search**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/department-lecture-search/): a lecture search page by department
-- [**Academic calendar widget**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/academic-calendar/): show this month's schedule
-- [**Dormitory and cafeteria bot**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/dormitory-cafeteria-bot/): today's menu alerts
+## Why this library
 
-Every example comes in all three languages ([integration examples](docs/INTEGRATION_EXAMPLES.en.md)).
+Every promise has proof you can check in the code or the tests.
 
-## Quick start: Java / Spring Boot
-
-The same steps are on the [Quick start page](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/).
-
-[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
-
-Published to **Maven Central** (no extra repository needed). Java 17+, Spring Boot 3.x. Spring Boot auto-configuration registers the `SuhSejongAuthEngine` and `SejongPublicData` beans.
-
-```groovy
-dependencies {
-    implementation "kr.suhsaechan:sejongpeia:<version>"
-}
-```
-
-```xml
-<dependency>
-    <groupId>kr.suhsaechan</groupId>
-    <artifactId>sejongpeia</artifactId>
-    <version><!-- version --></version>
-</dependency>
-```
-
-Put the latest version in `<version>`. Check it on the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
-
-```java
-@RestController
-@RequiredArgsConstructor
-public class AuthController {
-
-    private final SuhSejongAuthEngine sejongAuthEngine;   // kr.suhsaechan.sejongpeia.auth.service
-
-    @PostMapping("/auth/sejong")
-    public SejongAuthResult authenticate(@RequestParam String studentId,
-                                         @RequestParam String password) {
-        return sejongAuthEngine.authenticate(studentId, password);
-    }
-}
-```
-
-Plain Java without Spring: call `SejongTlsSupport.ensureLegacyCipherEnabled()` first thing in `main()`. The code that wires the objects is in [Configuration](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/configuration/), and reading the classic-reading status is in [Result fields](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/result-fields/).
-
-## Quick start: Python · Node.js
-
-See all three languages side by side in tabs on the [Quick start page](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/).
-
-Python 3.9+ or Node 18+ (zero dependencies, TypeScript types, ESM and CommonJS, server-side only). Branch on the error `code`, not on the message.
-
-```python
-from sejongpeia import authenticate, SejongAuthError, ErrorCode
-
-try:
-    result = authenticate("21011234", "password")
-except SejongAuthError as error:
-    if error.code == ErrorCode.AUTHENTICATION_FAILED:
-        print("Wrong student ID or password")
-    elif error.code == ErrorCode.ACCOUNT_LOCKED:
-        print("Portal account locked: reset the password on the portal")
-```
-
-```js
-import { authenticate, SejongAuthError, ErrorCode } from 'pro-sejongpeia';
-
-try {
-  const result = await authenticate('21011234', 'password');
-} catch (error) {
-  if (error instanceof SejongAuthError && error.code === ErrorCode.AUTHENTICATION_FAILED) console.log('Wrong student ID or password');
-  else if (error instanceof SejongAuthError && error.code === ErrorCode.ACCOUNT_LOCKED) console.log('Portal account locked');
-}
-```
-
-## School data without login
-
-For the method list see [Features](#features) above, and for the first call see [Try it now](#try-it-now). Request parameters and response shapes are listed per feature in the [school data reference](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/). Here is an example that continues from a lecture to its curriculum (Node and Java use the same method names in camelCase).
-
-```python
-from sejongpeia import SejongPublicData
-
-public_data = SejongPublicData()
-departments = public_data.departments("20", "2026", "20")          # undergraduate, term values are the school's
-lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
-# the course overview and suggested year/semester in that department's curriculum (empty list if not part of it)
-courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)
-```
-
-- **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change, and school fields that are not mapped land in `extra`.
-- On failure you get the last cached value or an empty list, not an exception (only invalid input raises). Please be gentle with the school's servers.
-
-- With department, course name and instructor all empty, the lecture search returns the whole term in one call (the response is large, so prefer one department at a time when you can). [Lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/lectures/)
-- `cafeteria_places` is built from the menu answers because the school has no list endpoint, so a cafeteria with no menu that day can be missing. [Cafeterias](https://cassiiopeia.github.io/pro-sejongpeia/en/data/cafeteria/)
-
-## Result fields
-
-Names are Java / Node; Python uses snake_case. Common fields (`studentId`, `name`, `major`, `grade`, `status`), classic reading, the SIS contact and school codes, and the optional `extra` and raw response are in the [result fields table](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/result-fields/) and [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md). `extra` and the raw response can contain session values and a client IP, so never pass them to an external client as-is.
-
-## Error codes
-
-Every language raises one error type with a `code`. The meaning of all codes (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, `ACCOUNT_UNAVAILABLE`, `INVALID_INPUT`, `CONNECTION_FAILED` and more) is in [Error codes](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/error-codes/).
-
-> **Account lock.** The portal locks an account after repeated wrong passwords, and the library never retries a rejected login. Unlocking needs a password reset at <https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp>. If your service lets anyone type a student ID, limit failed attempts per student ID.
-
-## Configuration
-
-All optional. Defaults: 10 second timeout, 3 login retries, certificate verification on.
-
-| Java (`application.yml`) | Python | Node |
+| Promise | Proof | Details |
 |---|---|---|
-| `sejongpeia.timeout-seconds: 10` | `SejongAuthClient(timeout_seconds=10)` | `new SejongAuthClient({ timeoutSeconds: 10 })` |
-| `sejongpeia.max-retry: 3` | `max_retry=3` | `maxRetry: 3` |
-| `sejongpeia.ssl-verification: true` | `ssl_verification=True` | `sslVerification: true` |
+| <img src="docs/assets/icons/fast.svg" width="20" alt="" align="top"> **Fast and light** | Zero dependencies (Python, Node). The department list and one department's lectures take about 0.1 s; the integrated login takes 0.6 to 0.8 s with one sign-in (median of 5) | [What it does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/) |
+| <img src="docs/assets/icons/efficient.svg" width="20" alt="" align="top"> **Gentle on requests** | 24-hour cache, simultaneous calls with the same arguments share one request, a failure is remembered for 60 seconds | [Cache and failure isolation](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/failure-isolation-cache/) |
+| <img src="docs/assets/icons/safe.svg" width="20" alt="" align="top"> **Safe** | The password is never stored or put into error messages. SIS extra fields always exclude session values, client IP, resident number, bank account and similar | [Login verdict](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/login-verdict/) |
+| <img src="docs/assets/icons/reliable.svg" width="20" alt="" align="top"> **Trustworthy** | A real portal login check every day at 09:00 KST; values shared by all three languages live in [spec/contract.json](spec/contract.json) | [Daily check](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/daily-live-check/) |
 
-Because of the portal's legacy cipher, Java changes the TLS setting of the whole JVM. Spring Boot does this automatically; otherwise call `SejongTlsSupport.ensureLegacyCipherEnabled()` first thing in `main()`. Details are in [Legacy TLS](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/legacy-tls/); the portal flow is in [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md), the [DHC login flow](docs/DHC_LOGIN_FLOW.en.md) and the [SIS login flow](docs/SIS_LOGIN_FLOW.en.md).
+## When it does not fit
 
-## More: integration examples and API stability
+> [!IMPORTANT]
+> If any of these applies, read this before adopting the library.
 
-- [Integration examples](docs/INTEGRATION_EXAMPLES.en.md): student verification (club sign-up), department and lecture search, an academic calendar widget and a dormitory/cafeteria bot in Java, Python and Node.
-- [API stability policy](docs/API_STABILITY.en.md): what is public API and what is internal, and the version rule. **Backward compatibility is not guaranteed, so pin the version.**
-- [Using with coding agents](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/agents/): [llms.txt](https://cassiiopeia.github.io/pro-sejongpeia/llms.txt), [api.json](https://cassiiopeia.github.io/pro-sejongpeia/api.json) and prompt examples for agents such as Claude Code, Cursor and Codex. An agent contributing to this repository reads [AGENTS.md](AGENTS.md).
+- **You need an API the school guarantees.** It follows the unofficial addresses the school's web pages use, not a documented API. When the school changes them it can stop working; it is checked daily and fixed through an issue, but no fix date is promised.
+- **You need backward compatibility.** Breaking changes can happen even within the same `1.x`, so pin the version ([API stability](docs/API_STABILITY.en.md)).
+- **You want to call it from a browser or an app.** The password would be exposed to third-party code, so call it from a server only.
+- **You need live values.** Public data is cached for 24 hours by default. When the school fails it returns the last value or an empty list instead of throwing, so an empty list cannot tell "no data" from "a problem on the school side".
+- **You want the school's values processed for you.** They are the school's own strings, with no code table or name mapping.
+
+This is not an official Sejong University library. It is a personal open-source project by a Sejong student and is not affiliated with the university.
+
+## Learn more
+
+The details live on the documentation site and are not repeated here.
+
+| What you want | Where it is |
+|---|---|
+| Install to first call, Spring setup | [Quick start](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) |
+| Authentication methods, result fields, error codes, settings | [Authentication reference](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) ([result fields](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/result-fields/), [error codes](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/error-codes/), [settings](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/configuration/)) |
+| Request and response shape per method | [School data reference](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/) |
+| How the portal blocks you and how it was solved | [Understand](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/legacy-tls/) ([SSO flow](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/sso-flow/)), login flows: [DHC](docs/DHC_LOGIN_FLOW.en.md), [SIS](docs/SIS_LOGIN_FLOW.en.md) |
+| Contracts and result schema | [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md), [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md), [spec/PORTAL_FLOW.md](spec/PORTAL_FLOW.md) |
+| Integration examples, API stability | [Integration examples](docs/INTEGRATION_EXAMPLES.en.md), [API stability policy](docs/API_STABILITY.en.md) |
+| Using it with coding agents | [Agent guide](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/agents/) ([llms.txt](https://cassiiopeia.github.io/pro-sejongpeia/llms.txt), [api.json](https://cassiiopeia.github.io/pro-sejongpeia/api.json)); agents contributing here read [AGENTS.md](AGENTS.md) |
 
 ## FAQ
 
 <details>
-<summary><b>Is this an official Sejong University library?</b></summary>
-
-No. It is a personal open-source project by a Sejong student and is not affiliated with the university.
-</details>
-
-<details>
 <summary><b>Authentication suddenly fails / my portal account got locked</b></summary>
 
-Try the [demo](https://cassiiopeia.github.io/pro-sejongpeia/#demo) first. If the demo also fails, the portal has probably changed: please open an [issue](https://github.com/Cassiiopeia/pro-sejongpeia/issues) with the error code.
+Try the [demo](https://cassiiopeia.github.io/pro-sejongpeia/en/#demo) first. If the demo also fails, the portal has probably changed: please open an [issue](https://github.com/Cassiiopeia/pro-sejongpeia/issues) with the error code.
 `ACCOUNT_LOCKED` means the portal locked the account: reset the password at <https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp> (identity verification required). Waiting does not unlock it.
 </details>
 
@@ -313,7 +234,7 @@ More questions are answered in the [site FAQ](https://cassiiopeia.github.io/pro-
 Bug reports, portal-change fixes and docs improvements are all welcome. A portal change is fixed in all three languages in one PR. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md). To add a new school data source, see [Add a data source](https://cassiiopeia.github.io/pro-sejongpeia/en/contribute/add-data-source/), for the layout [Repository structure](https://cassiiopeia.github.io/pro-sejongpeia/en/contribute/structure/), and for issues and PRs [Issues and PRs](https://cassiiopeia.github.io/pro-sejongpeia/en/contribute/issues-and-prs/).
 Report security issues privately as described in [SECURITY.md](SECURITY.md).
 
-If this library saved you time, a ⭐ helps other Sejong developers find it.
+If this library saved you time, a GitHub Star helps other Sejong developers find it.
 
 ## License
 

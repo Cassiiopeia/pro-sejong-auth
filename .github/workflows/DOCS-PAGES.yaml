@@ -25,6 +25,8 @@ on:
       # 브랜드 이미지 원본 (website/scripts/sync-brand-assets.mjs 가 빌드 때 website/ 로 복사)
       - "docs/assets/sejong-seal.png"
       - "docs/assets/og.png"
+      # 플로우차트 mermaid 원본 (사이트가 빌드 때 직접 읽음, README 와 같은 파일)
+      - "docs/assets/diagrams/**"
       # llms.txt, api.json 의 원본 (website/scripts/generate-llms.mjs 가 빌드 때 읽음)
       - "spec/api-index.json"
       - "python/src/sejongpeia/public_data/models.py"
@@ -37,6 +39,8 @@ on:
       # 브랜드 이미지 원본 (website/scripts/sync-brand-assets.mjs 가 빌드 때 website/ 로 복사)
       - "docs/assets/sejong-seal.png"
       - "docs/assets/og.png"
+      # 플로우차트 mermaid 원본 (사이트가 빌드 때 직접 읽음, README 와 같은 파일)
+      - "docs/assets/diagrams/**"
       # llms.txt, api.json 의 원본 (website/scripts/generate-llms.mjs 가 빌드 때 읽음)
       - "spec/api-index.json"
       - "python/src/sejongpeia/public_data/models.py"

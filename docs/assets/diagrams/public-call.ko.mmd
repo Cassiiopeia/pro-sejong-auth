@@ -1,0 +1,15 @@
+%% alt: 공개 데이터 호출은 24시간 안의 캐시가 있으면 그대로 돌려주고, 없으면 학교에 요청 한 번을 보낸다. 성공하면 저장하고 돌려주며, 실패하면 마지막 캐시 값이나 빈 목록을 돌려준다
+flowchart TB
+  start["<b>공개 데이터 호출</b>"]:::neutral
+  cacheHit{"24시간 안의<br/>캐시가 있나요?"}:::soft
+  cached["<b>캐시 값 반환</b><br/>요청 없음"]:::neutral
+  sendRequest["<b>학교에 요청 1번</b><br/>동시 호출은 합침"]:::accent
+  succeeded{"성공했나요?"}:::soft
+  stored["<b>저장하고 반환</b>"]:::neutral
+  fallback["<b>마지막 값 또는</b><br/><b>빈 목록</b><br/>예외 없음<br/>실패 60초 기억"]:::muted
+  start --> cacheHit
+  cacheHit -->|"있음"| cached
+  cacheHit -->|"없음"| sendRequest
+  sendRequest --> succeeded
+  succeeded -->|"예"| stored
+  succeeded -->|"아니오"| fallback

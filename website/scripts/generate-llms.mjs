@@ -18,6 +18,7 @@ const PUBLIC_DIRECTORY = join(WEBSITE_DIRECTORY, 'public');
 const API_INDEX_PATH = join(REPOSITORY_DIRECTORY, 'spec/api-index.json');
 const PYTHON_MODELS_PATH = join(REPOSITORY_DIRECTORY, 'python/src/sejongpeia/public_data/models.py');
 const PYTHON_ERRORS_PATH = join(REPOSITORY_DIRECTORY, 'python/src/sejongpeia/common/errors.py');
+const DIAGRAM_DIRECTORY = join(REPOSITORY_DIRECTORY, 'docs/assets/diagrams');
 const VERSION_FILE_PATH = join(REPOSITORY_DIRECTORY, 'version.yml');
 const LOCALES = ['ko', 'en'];
 const SITE_ROOT_URL = `${SITE_URL}${BASE_PATH}/`;
@@ -72,6 +73,9 @@ function convertMdxToMarkdown(document) {
     const tab = trimmed.match(/^<TabItem label="([^"]+)"/);
     if (tab) { output.push(`**${tab[1]}**`, ''); continue; }
     if (/^<\/?(Tabs|TabItem|Steps|CardGrid|Card)\b/.test(trimmed)) continue;
+    // <Diagram name="..." /> > 다이어그램 대체 설명 한 줄 (원본: docs/assets/diagrams/<이름>.<언어>.mmd 첫 줄)
+    const diagram = trimmed.match(/^<Diagram name="([^"]+)"\s*\/>$/);
+    if (diagram) { output.push(`> ${document.locale === 'en' ? 'Diagram' : '다이어그램'}: ${readDiagramAltText(diagram[1], document.locale)}`, ''); continue; }
     const link = trimmed.match(/^<LinkCard title="([^"]+)"(?: description="([^"]*)")? href="([^"]+)"/);
     if (link) { output.push(`- [${link[1]}](${resolveLink(link[3], pageUrl)})${link[2] ? `: ${link[2]}` : ''}`); continue; }
     const asideOpen = trimmed.match(/^<Aside(?:\s+type="[^"]*")?(?:\s+title="([^"]*)")?>$/);
@@ -81,6 +85,11 @@ function convertMdxToMarkdown(document) {
     output.push(isInAside ? `> ${content}` : content);
   }
   return output.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function readDiagramAltText(name, locale) {
+  const source = readFileSync(join(DIAGRAM_DIRECTORY, `${name}.${locale}.mmd`), 'utf8');
+  return source.match(/^%% alt: (.+)$/m)?.[1] ?? name;
 }
 
 // 상대 링크 > 절대 주소 (이어 붙인 문서에서도 열리도록)

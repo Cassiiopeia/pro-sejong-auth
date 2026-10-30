@@ -1,0 +1,10 @@
+%% alt: Your app makes one call, the library handles caching, TLS and User-Agent, and failure isolation while talking to the school servers, and returns a result with the same shape
+%% narrow: TB
+flowchart LR
+  app["<b>Your app</b><br/>Java · Python<br/>Node.js"]:::neutral
+  lib["<b>PRO-SEJONGPEIA</b><br/>Cache<br/>TLS · User-Agent<br/>Failure isolation"]:::accent
+  school["<b>School servers</b><br/>Portal login<br/>Student info<br/>Public pages"]:::neutral
+  result["<b>Result</b><br/>Same fields<br/>Same error codes"]:::soft
+  app -->|"one call"| lib
+  lib -->|"requests"| school
+  school -->|"converted"| result

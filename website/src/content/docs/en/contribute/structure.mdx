@@ -3,6 +3,9 @@ title: Repository structure
 description: Repository folders, development commands, live-portal tests, the rule for portal changes, documentation languages and the feature exposure checklist.
 ---
 
+import Diagram from '../../../../components/Diagram.astro';
+
+
 ## Folders
 
 | Folder | What |
@@ -16,6 +19,12 @@ description: Repository folders, development commands, live-portal tests, the ru
 | `docs/` | Integration examples, API stability, login flow documents and images |
 
 All three languages share one version number. `version.yml` holds it and the release workflow updates it. The folder layout inside each language (`common`, `auth`, `public_data`) is in the table on [Add a new data source](../add-data-source/).
+
+## Layers and dependency direction
+
+The common layer calls no source, and authentication and public data never call each other. Tests enforce the rule ([Add a new data source](../add-data-source/)).
+
+<Diagram name="structure" />
 
 ## Development setup
 

@@ -3,11 +3,24 @@ title: Introduction
 description: pro-sejongpeia is an open-source library that gives Java, Python and Node.js the same Sejong University portal login and login-free school data.
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Diagram from '../../../../components/Diagram.astro';
 
 pro-sejongpeia is an **integrated library for Sejong University**. It offers the **portal login** that verifies a student with a student ID and password, and the **school data** the university serves publicly without login (department codes, course listings, the academic calendar, dormitory menus, cafeterias and more). Java, Python and Node.js get the same features, the same result fields and the same error codes.
 
 The portal login, SSO redirects, session cookies, the old TLS setup and HTML and JSON parsing are handled by the library.
+
+<Aside type="note" title="At a glance">
+- **Student verification** needs a student ID and password; **school data** does not.
+- Java, Python and Node.js share the same features, result fields and error codes.
+- It follows the unofficial addresses the school's web pages use, so it can stop working when the school changes them.
+</Aside>
+
+## How it works at a glance
+
+One call goes through the library to the school servers, and the response comes back in the same shape.
+
+<Diagram name="overview" />
 
 ## Who it is for
 
@@ -59,6 +72,12 @@ The portal login, SSO redirects, session cookies, the old TLS setup and HTML and
 | Java 17+, Spring Boot 3.x. Plain Java works too | Python 3.9+, no dependencies beyond the standard library | Node 18+, no dependencies, TypeScript types included, ESM and CommonJS. Server only |
 
 Java uses OkHttp for HTTP and jsoup for HTML parsing.
+
+## Which page should I read?
+
+Pick what you need and it leads to the right guide. Click a box to open that page.
+
+<Diagram name="choose" />
 
 ## Next
 

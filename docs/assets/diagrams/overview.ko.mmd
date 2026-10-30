@@ -1,0 +1,10 @@
+%% alt: 내 앱이 라이브러리를 한 번 호출하면 라이브러리가 캐시, TLS와 User-Agent 처리, 실패 격리를 맡아 학교 서버에 요청하고, 같은 모양의 결과로 돌려준다
+%% narrow: TB
+flowchart LR
+  app["<b>내 앱</b><br/>Java · Python<br/>Node.js"]:::neutral
+  lib["<b>PRO-SEJONGPEIA</b><br/>캐시<br/>TLS · User-Agent 처리<br/>실패 격리"]:::accent
+  school["<b>학교 서버</b><br/>포털 로그인<br/>학생 정보<br/>공개 페이지"]:::neutral
+  result["<b>결과</b><br/>같은 필드<br/>같은 에러 코드"]:::soft
+  app -->|"호출 한 번"| lib
+  lib -->|"요청"| school
+  school -->|"응답을 변환"| result

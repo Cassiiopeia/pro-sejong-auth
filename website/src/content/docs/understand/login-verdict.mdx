@@ -4,6 +4,7 @@ description: 포털이 200 응답 안의 스크립트 값으로 로그인 결과
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../components/Diagram.astro';
 
 ## 왜 어려운가
 
@@ -14,6 +15,10 @@ var result = '<값>'
 ```
 
 게다가 비밀번호가 틀릴 때마다 포털의 실패 횟수가 올라가고, 일정 횟수를 넘으면 계정이 잠깁니다. 실패한 로그인을 습관처럼 재시도하면 사용자의 계정을 잠그게 됩니다.
+
+## 판정 흐름 한눈에
+
+<Diagram name="verify" />
 
 ## 판정값과 에러 코드
 

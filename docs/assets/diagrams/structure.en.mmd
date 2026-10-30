@@ -1,0 +1,13 @@
+%% alt: The entry point assembles authentication and public data, and both import only the common layer. Authentication and public data never import each other
+flowchart TB
+  entry["<b>Entry point</b> (assembly only)<br/>authenticate<br/>SejongPublicData<br/>Spring auto-configuration"]:::soft
+  subgraph sources["Sources · never import each other"]
+    auth["<b>Authentication auth</b><br/>portal login<br/>SSO · parsing"]:::neutral
+    pub["<b>Public data</b><br/><b>public_data</b><br/>one file per source"]:::neutral
+  end
+  common["<b>Common common</b><br/>errors · HTTP · version"]:::accent
+  entry --> auth
+  entry --> pub
+  auth --> common
+  pub --> common
+  style sources fill:none,stroke:#8B9099,stroke-width:1.5px,stroke-dasharray:5 4

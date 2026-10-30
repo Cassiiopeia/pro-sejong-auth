@@ -4,6 +4,7 @@ description: 학교 데이터 메서드가 공유하는 클라이언트, 결과 
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../components/Diagram.astro';
 
 학교 데이터(공개 데이터)는 학번과 비밀번호 없이 학교가 공개로 내려주는 정보입니다. Java, Python, Node.js가 같은 메서드, 같은 결과 필드, 같은 값 규칙을 가집니다. 이 페이지는 모든 메서드가 공유하는 규칙입니다. 메서드별 내용은 왼쪽 메뉴의 각 페이지를 보세요.
 
@@ -97,6 +98,10 @@ Java는 `application.yml`의 `sejongpeia` 접두사 설정(`SejongAuthProperties
 - **`extra`**: 매핑에 쓰지 않은 학교 필드를 `문자열: 문자열` 맵으로 담습니다. 비어 있거나 `null`인 값, 아래 제외 목록은 뺍니다. 객체나 배열 값은 공백 없는 JSON 문자열이 됩니다. 학교가 필드를 더하면 새 릴리스 없이도 `extra`에 나타날 수 있습니다. 기숙사 모델과 학식 메뉴 항목(`CafeteriaMenuItem`)에는 `extra`가 없습니다.
 - **`extra` 제외 목록**: `CD_ALIAS1`~`CD_ALIAS3`(과 `_ENG`), `regname`, `regid`, `STACK_TRACE`. 직원 이름은 `extra`에 들어가지 않습니다.
 - **Python 이름 표기**: 결과 필드는 Python이 `snake_case`, Node.js와 Java가 `camelCase`입니다. 이 문서의 필드 표는 Python 이름을 쓰고, Node.js와 Java는 `camelCase`로 바꿔 읽으면 됩니다 (예: `start_date` > `startDate`).
+
+## 호출 한 번의 흐름
+
+<Diagram name="public-call" />
 
 ## 실패 격리
 

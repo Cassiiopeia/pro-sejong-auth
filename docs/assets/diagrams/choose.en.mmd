@@ -1,0 +1,18 @@
+%% alt: Pick the page to read by what you need: student verification, lecture search, academic calendar, dormitory and cafeteria, or other school data
+flowchart LR
+  need(["<b>What do you<br/>need?</b>"]):::soft
+  verify["<b>Verify students</b><br/>check enrollment"]:::neutral
+  lectures["<b>Lecture search</b><br/>find open courses"]:::neutral
+  calendar["<b>Calendar widget</b><br/>this month's events"]:::neutral
+  dining["<b>Dorm and cafeteria bot</b><br/>today's menu"]:::neutral
+  data["<b>School data reference</b><br/>everything else"]:::neutral
+  need --> verify
+  need --> lectures
+  need --> calendar
+  need --> dining
+  need --> data
+  click verify "{{site:/guides/student-verification/}}"
+  click lectures "{{site:/guides/department-lecture-search/}}"
+  click calendar "{{site:/guides/academic-calendar/}}"
+  click dining "{{site:/guides/dormitory-cafeteria-bot/}}"
+  click data "{{site:/data/overview/}}"

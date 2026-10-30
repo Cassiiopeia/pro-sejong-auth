@@ -4,6 +4,7 @@ description: The client, result value rules, cache, failure isolation and reques
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../../components/Diagram.astro';
 
 School data (public data) is what the school serves publicly, with no student ID or password. Java, Python and Node.js have the same methods, the same result fields and the same value rules. This page covers the rules every method shares. For each method, see its own page in the left menu.
 
@@ -97,6 +98,10 @@ Identical in the three languages. Field mapping is defined by [`scripts/generate
 - **`extra`**: school fields not used by the mapping, as a string-to-string map. Null and empty values and the deny list below are left out. Object or array values become compact JSON strings (no spaces). A field the school adds can show up in `extra` without a release. The dormitory models and the cafeteria menu item (`CafeteriaMenuItem`) have no `extra`.
 - **`extra` deny list**: `CD_ALIAS1` to `CD_ALIAS3` (and their `_ENG` variants), `regname`, `regid`, `STACK_TRACE`. Staff names never appear in `extra`.
 - **Field names**: Python uses `snake_case`, Node.js and Java use `camelCase`. Field tables in these docs use the Python names; read them as `camelCase` for Node.js and Java (for example `start_date` is `startDate`).
+
+## The flow of one call
+
+<Diagram name="public-call" />
 
 ## Failure isolation
 

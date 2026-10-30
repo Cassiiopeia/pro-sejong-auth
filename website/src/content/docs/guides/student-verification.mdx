@@ -4,12 +4,19 @@ description: 가입 폼의 학번과 비밀번호로 세종대 재학 여부를 
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../components/Diagram.astro';
 
 가입 폼에서 받은 학번과 비밀번호로 재학 여부를 확인하고, 학번·이름·학과만 가져옵니다. 비밀번호는 저장하거나 로그에 남기지 않습니다.
 
 <Aside type="note" title="예시 코드는 참고용입니다">
 메서드 이름, 인자, 결과 필드, 에러 코드는 [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md)를 기준으로 합니다. 실제 포털 계정이 있다면 레포의 `scripts/verify-live.sh`로 세 언어 결과를 비교할 수 있습니다 ([이슈와 PR](../../contribute/issues-and-prs/)).
 </Aside>
+
+## 인증 흐름
+
+비밀번호가 틀리면 첫 실패에서 멈춥니다. 재시도가 없어서 라이브러리가 계정을 잠그지 않습니다.
+
+<Diagram name="verify" />
 
 ## 요청 파라미터
 
