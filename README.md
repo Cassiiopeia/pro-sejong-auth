@@ -22,10 +22,10 @@
 
 | | 직접 만들면 | pro-sejongpeia |
 |---|---|---|
-| **포털 로그인** | 오래된 TLS 암호, 방화벽이 막는 User-Agent, 도메인 3곳의 SSO 쿠키를 직접 처리 | `authenticate(학번, 비밀번호)` 한 줄 |
-| **로그인 결과** | 실패해도 HTTP 200이라 응답 속 스크립트 값을 읽어 판정 | 첫 실패에서 멈추고 `AUTHENTICATION_FAILED` 같은 에러 코드로 구분 |
-| **학교 데이터** | 화면마다 다른 주소·HTML·JSON을 파싱하고 서버 부담도 직접 조절 | 같은 모양의 객체, 24시간 캐시, 실패하면 마지막 값 |
-| **세 언어** | 언어마다 따로 구현 | 같은 기능, 같은 결과 필드, 같은 에러 코드 |
+| **포털&nbsp;로그인** | 오래된 TLS 암호, 방화벽이 막는 User-Agent, 도메인 3곳의 SSO 쿠키를 직접 처리 | `authenticate(학번, 비밀번호)` 한 줄 |
+| **로그인&nbsp;결과** | 실패해도 HTTP 200이라 응답 속 스크립트 값을 읽어 판정 | 첫 실패에서 멈추고 `AUTHENTICATION_FAILED` 같은 에러 코드로 구분 |
+| **학교&nbsp;데이터** | 화면마다 다른 주소·HTML·JSON을 파싱하고 서버 부담도 직접 조절 | 같은 모양의 객체, 24시간 캐시, 실패하면 마지막 값 |
+| **세&nbsp;언어** | 언어마다 따로 구현 | 같은 기능, 같은 결과 필드, 같은 에러 코드 |
 
 <sub>각 항목이 어떻게 풀렸는지는 [이 라이브러리가 하는 일](https://cassiiopeia.github.io/pro-sejongpeia/start/introduction/)과 [이해하기](https://cassiiopeia.github.io/pro-sejongpeia/understand/legacy-tls/)에 있습니다.</sub>
 
@@ -186,10 +186,10 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
 
 | 약속 | 근거 | 자세히 |
 |---|---|---|
-| <img src="docs/assets/icons/fast.svg" width="20" alt="" align="top"> **빠르고 가볍게** | 의존성 0개 (Python, Node). 학과 목록과 한 학과 강좌는 0.1초 안팎, 통합 인증은 로그인 한 번으로 0.6~0.8초 (5회 중앙값) | [하는 일](https://cassiiopeia.github.io/pro-sejongpeia/start/introduction/) |
-| <img src="docs/assets/icons/efficient.svg" width="20" alt="" align="top"> **요청은 아끼고** | 24시간 캐시, 같은 인자의 동시 호출은 요청 1번, 실패는 60초간 기억 | [캐시와 실패 격리](https://cassiiopeia.github.io/pro-sejongpeia/understand/failure-isolation-cache/) |
+| <img src="docs/assets/icons/fast.svg" width="20" alt="" align="top"> **빠르고&nbsp;가볍게** | 의존성 0개 (Python, Node). 학과 목록과 한 학과 강좌는 0.1초 안팎, 통합 인증은 로그인 한 번으로 0.6~0.8초 (5회 중앙값) | [하는 일](https://cassiiopeia.github.io/pro-sejongpeia/start/introduction/) |
+| <img src="docs/assets/icons/efficient.svg" width="20" alt="" align="top"> **요청은&nbsp;아끼고** | 24시간 캐시, 같은 인자의 동시 호출은 요청 1번, 실패는 60초간 기억 | [캐시와 실패 격리](https://cassiiopeia.github.io/pro-sejongpeia/understand/failure-isolation-cache/) |
 | <img src="docs/assets/icons/safe.svg" width="20" alt="" align="top"> **안전하게** | 비밀번호는 저장하지 않고 오류 메시지에도 담지 않음. SIS 부가 필드에서 세션값·접속 IP·주민번호·계좌 등은 항상 제외 | [로그인 판정](https://cassiiopeia.github.io/pro-sejongpeia/understand/login-verdict/) |
-| <img src="docs/assets/icons/reliable.svg" width="20" alt="" align="top"> **믿을 수 있게** | 매일 09:00(KST) 실제 포털 로그인 점검, 세 언어 공통 값은 [spec/contract.json](spec/contract.json) 한 곳 | [매일 점검](https://cassiiopeia.github.io/pro-sejongpeia/understand/daily-live-check/) |
+| <img src="docs/assets/icons/reliable.svg" width="20" alt="" align="top"> **믿을&nbsp;수&nbsp;있게** | 매일 09:00(KST) 실제 포털 로그인 점검, 세 언어 공통 값은 [spec/contract.json](spec/contract.json) 한 곳 | [매일 점검](https://cassiiopeia.github.io/pro-sejongpeia/understand/daily-live-check/) |
 
 ## 이럴 땐 맞지 않습니다
 
