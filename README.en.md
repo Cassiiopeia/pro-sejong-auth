@@ -12,9 +12,9 @@ Fast and light, gentle on requests, never stores a password, and checked against
 
 **📖 [Documentation](https://cassiiopeia.github.io/pro-sejongpeia/en/)** · [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/en/#demo) · [Quick start](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/) · [School data](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/) · [Authentication](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) · [What you get](#what-you-get) · [한국어](README.md) | English
 
-[![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
-[![PyPI](https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60?logo=pypi&logoColor=white)](https://pypi.org/project/pro-sejongpeia/)
-[![npm](https://img.shields.io/badge/npm-pro--sejongpeia-324D60?logo=npm&logoColor=white)](https://www.npmjs.com/package/pro-sejongpeia)
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/)
+[![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
@@ -161,7 +161,7 @@ Error handling and Spring setup are in the [quick start](#quick-start-java--spri
 
 ## Quick start: Java / Spring Boot
 
-[![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
 Published to **Maven Central** (no extra repository needed). Java 17+, Spring Boot 3.x. Spring Boot auto-configuration registers the `SuhSejongAuthEngine` and `SejongPublicData` beans.
 

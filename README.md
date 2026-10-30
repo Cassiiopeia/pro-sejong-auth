@@ -15,9 +15,9 @@
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
 ## 최신 버전 : v1.2.69 (2026-10-30)
 
-[![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
-[![PyPI](https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60?logo=pypi&logoColor=white)](https://pypi.org/project/pro-sejongpeia/)
-[![npm](https://img.shields.io/badge/npm-pro--sejongpeia-324D60?logo=npm&logoColor=white)](https://www.npmjs.com/package/pro-sejongpeia)
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/)
+[![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
 [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
@@ -164,7 +164,7 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
 
 ## 빠른 시작: Java / Spring Boot
 
-[![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
 **Maven Central**에서 배포합니다 (저장소 추가 불필요). Java 17+, Spring Boot 3.x. Spring Boot 자동 설정이 `SuhSejongAuthEngine`과 `SejongPublicData` 빈을 등록합니다.
 
