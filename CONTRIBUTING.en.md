@@ -80,14 +80,14 @@ Live tests log in to the real Sejong portal, so they only run when you provide a
 How to add new data the school serves (course lists, menus, other public data). Sources are independent and share only the common layer (`common`: errors, HTTP transport, version). Authentication (`auth`) is one source just like public data, so you can build yours without touching the others.
 
 1. **Propose it in an issue** (use the `새 정보 출처 제안` template): where it is served, whether login is needed, the request form (JSON or HTML), the fields, and whether it contains personal data. Information that exists only as HTML is not used as a primary source.
-2. **Write the contract first**: add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used. Add the same method to the agent-facing method list `spec/api-index.json` too (parameters, return model, Java signatures). `python3 scripts/check-api-index.py` fails if it drifts from the three implementations.
-3. **Create synthetic fixtures and expected results**: add them to `FIXTURES` and `map_all()` in `scripts/generate-public-data-fixtures.py` and run it. Never copy a real response, and never put in values that identify a person, such as a staff name.
-4. **Implement Java, Python and Node in the same PR.** Reuse the common helpers of `SejongPublicData` for requests, cache and failure isolation, and follow the contract's value rules (empty string when missing, `extra`).
+2. **Write the contract first**: put the address, request keys and fixed values under `publicData` in `spec/contract.json` (each language keeps its own constants and its contract test compares them), then add the method, request and field mapping to `spec/PUBLIC_DATA.md`, one line each, with the date checked and the account type you used. Add the same method to the agent-facing method list `spec/api-index.json` too (parameters, return model, Java signatures). `python3 scripts/check-api-index.py` fails if it drifts from the three implementations.
+3. **Create synthetic fixtures and expected results**: add them to `FIXTURES` and the per-source `map_*()` functions (merged by `map_all()`) in `scripts/generate-public-data-fixtures.py` and run it. Never copy a real response, and never put in values that identify a person, such as a staff name.
+4. **Implement Java, Python and Node in the same PR.** Put the request building and mapping in one file per source (`<source>_source.py`, `<source>Source.ts`, `<source>Source.java`) and add only a one-line public method to `SejongPublicData`. Reuse the shared file (`fetcher`) for cache and failure isolation, and follow the contract's value rules (empty string when missing, `extra`).
 5. **Write only the tests you need**: one test that the fixture result equals the expected result is enough. Do not add tests that call the school's servers.
 6. **Add a shape check** (add a row to `SOURCES` in `scripts/probe-public-data.py`, runs without an account).
 7. Go through the exposure list in `When you add a feature` below.
 
-Tests enforce the dependency rule, which has three layers: common (`common`) imports no source, and each source (`auth`, `public_data`) imports only common and never another source (`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). If a rule fails, move what needs sharing into `common`. The top-level entry points (`__init__.py`, `index.ts`, Spring `config`) only assemble, so they may import every layer.
+Tests enforce the dependency rule, which has three layers: common (`common`) imports no source, and each source (`auth`, `public_data`) imports only common and never another source (`python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`). Inside public data, source files (`*_source`) never import each other or the entry point (`client`); they use only the shared files (`fetcher`, `row_reader`, `models`). If a rule fails, move what needs sharing into `common`. The top-level entry points (`__init__.py`, `index.ts`, Spring `config`) only assemble, so they may import every layer.
 
 **Folder layout** (same shape in all three languages)
 
@@ -95,16 +95,16 @@ Tests enforce the dependency rule, which has three layers: common (`common`) imp
 |---|---|---|---|
 | Common | `common/` (`errors`, `transport`, `version`) | `common/` (`errors`, `transport`, `version`) | `common/` (`exception`, `util`, `http`, `config`) |
 | Authentication | `auth/` (`client`, `parsers`, `portal_main_parser`, `models`) | `auth/` (`client`, `parsers`, `portalMainParser`, `models`) | `auth/` (`client`, `parser`, `model`, `service`) |
-| Public data | `public_data/` (`client`, `models`) | `publicData/` (`client`, `models`) | `publicdata/` (`model`) |
+| Public data | `public_data/` (`client`, `fetcher`, `row_reader`, `models`, `*_source`) | `publicData/` (`client`, `fetcher`, `rowReader`, `queries`, `models`, `*Source`) | `publicdata/` (`SejongPublicData`, `*Source`, `PublicDataFetcher`, `model`) |
 | Assembly | `__init__.py` | `index.ts` | `config/` (Spring auto-configuration, TLS setup) |
 
 **Where the code goes** (for a public-data source; one method maps to three files)
 
 | Language | Method and request | Result model | Test |
 |---|---|---|---|
-| Python | `python/src/sejongpeia/public_data/client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
-| Node | `node/src/publicData/client.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
-| Java | `publicdata/SejongPublicData.java`, mapping in `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
+| Python | `python/src/sejongpeia/public_data/<source>_source.py` (request, mapping), the public method line in `client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData/<source>Source.ts` (request, mapping), the public method line in `client.ts`, argument objects in `queries.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
+| Java | `publicdata/<source>Source.java` (request, mapping), the public methods in `SejongPublicData.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
 
 - Method names are `snake_case` in Python and `camelCase` in Node and Java. School fields you do not map go into `extra`.
 - Login-required sources are not covered by this procedure. Sources cannot import each other, so how a login session would be shared needs a design; agree on the direction in an issue first.
@@ -133,6 +133,7 @@ Building a feature is not the end: it has to show up everywhere people look. Che
 - Branch from `main`.
 - Add tests when behavior changes. Parser changes need a fixture in `spec/fixtures/` and the same expected values for all languages.
 - Make sure no password or personal data ends up in logs or exception messages.
+- Keep code comments to one-line summaries. Parameter, return and failure details go in `spec/api-index.json` (the site `api.json` and docs are generated from it).
 
 ## License
 

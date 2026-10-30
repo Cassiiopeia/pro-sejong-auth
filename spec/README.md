@@ -7,7 +7,7 @@ Everything the library knows about the school's services lives here. Java, Pytho
 | Kind | Location | Tracked | Rule |
 |---|---|---|---|
 | Request and response contract, field meanings, limits | `spec/<source>.md` (for example `PORTAL_FLOW.md`, `REFERENCE_DATA.md`) | yes | One document per source. Write only what was verified, and say what was not |
-| Values shared by the implementations (URLs, error messages) | `spec/contract.json` | yes | The single source. Each language's contract test fails if its constants drift |
+| Values shared by the implementations (portal and public-data URLs, request keys, fixed values, error messages) | `spec/contract.json` | yes | The single source. Each language's contract test fails if its constants drift; `scripts/probe-public-data.py` reads it too. Docs describe the values and point to it instead of repeating them |
 | Where the school serves what, dead ends, what was not checked | `spec/REFERENCE_DATA_SURVEY.md` | yes | Read it before searching again. Update it when you look somewhere new |
 | Sample responses for tests | `spec/fixtures/` | yes | Synthetic only. Never copy a real response, and never keep personal data, session values or staff names |
 | Shape drift detection | `scripts/probe-*.py` | yes | No credentials needed. One entry per source |
@@ -27,4 +27,4 @@ Everything the library knows about the school's services lives here. Java, Pytho
 - A failure in one source never blocks another (authentication in particular): return an empty value or the last cached value.
 - Do not log or return internal server details (stack traces, session identifiers, IP addresses, password-state flags).
 - Public pages and endpoints: be gentle (cache, spacing, a bounded number of requests per refresh).
-- Each implementation keeps three layers: `common` (errors, transport, version), `auth` and `public_data` (`publicData`, `publicdata`). A source imports only `common` and never another source. A test per language enforces it (see [CONTRIBUTING](../CONTRIBUTING.md)).
+- Each implementation keeps three layers: `common` (errors, transport, version), `auth` and `public_data` (`publicData`, `publicdata`). A source imports only `common` and never another source; inside public data, per-source files use only the shared fetcher and row reader. A test per language enforces it (see [CONTRIBUTING](../CONTRIBUTING.md)).

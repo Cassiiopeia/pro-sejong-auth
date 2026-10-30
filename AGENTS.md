@@ -19,12 +19,12 @@ pro-sejongpeia is a Sejong University library with the **same behavior in three 
 | `website/` | Astro Starlight docs site (Korean default, English under `/en/`), deployed by `DOCS-PAGES` when merged to `main` |
 | root `*.md`, `docs/` | README, CONTRIBUTING (Korean + `.en.md`), integration examples, API stability |
 
-Public data lives in one file per language: `python/.../public_data/client.py` + `models.py`, `node/src/publicData/client.ts` + `models.ts`, `java/.../publicdata/SejongPublicData.java` + `PublicDataMapper.java` + `model/`.
+Public data is split per school source in each language, with the same structure: `*_source` files (academic, calendar, dormitory, cafeteria, campus, extracurricular) hold request building and mapping, `client` (`SejongPublicData`) keeps the 15 public methods, `fetcher` + `row_reader` (+ `queries`, `models`) are shared. Python `python/.../public_data/`, Node `node/src/publicData/`, Java `java/.../publicdata/` (`*Source.java`, `PublicDataFetcher`, `PublicDataRowReader`, `model/`). Files stay under 300 lines.
 
 ## Dependency rule (three layers)
 
 `common` imports no source. `auth` and `public_data` import only `common`, never each other. Entry points (`__init__.py`, `index.ts`, Java `config/`) only assemble. If two sources need to share something, move it to `common`.
-Enforced by `python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`.
+Inside public data, source files never import each other or the entry point; they use only the shared helpers (`fetcher`, `row_reader`, `queries`, `models`). Enforced by `python/tests/test_dependency_rules.py`, `node/test/dependencyRules.test.mjs`, Java `DependencyRulesTest`.
 
 ## Commands (run what you touched; all must pass before you say done)
 
@@ -41,9 +41,9 @@ cd website && npm ci && npm run build && node scripts/check-links.mjs   # docs s
 ## Add a new public data source (7 steps, details in `CONTRIBUTING.md` and `website/.../contribute/add-data-source`)
 
 1. Propose it as an issue (source location, login needed or not, request shape, fields, personal data). HTML-only sources are not a base source.
-2. Contract first: add a row to the Methods table in `spec/PUBLIC_DATA.md` (request, field mapping, date checked).
-3. Synthetic fixture and expected output: extend `FIXTURES` and `map_all()` in `scripts/generate-public-data-fixtures.py`, then run it (`python3 scripts/generate-public-data-fixtures.py`).
-4. Implement Java, Python and Node **in the same PR**, using the shared helpers of `SejongPublicData` for request, cache and failure isolation.
+2. Contract first: put the address, request keys and fixed values under `publicData` in `spec/contract.json` (each language keeps its own constants, its contract test compares them), then add a row to the Methods table in `spec/PUBLIC_DATA.md` (request, field mapping, date checked).
+3. Synthetic fixture and expected output: extend `FIXTURES` and the per-source `map_*()` functions (merged by `map_all()`) in `scripts/generate-public-data-fixtures.py`, then run it (`python3 scripts/generate-public-data-fixtures.py`).
+4. Implement Java, Python and Node **in the same PR**: one source file per school source (`<source>_source.py`, `<source>Source.ts`, `<source>Source.java`) for request building and mapping, a one-line public method on `SejongPublicData`, and the shared `fetcher` for cache and failure isolation.
 5. Add one test per language that compares fixture output to the expected JSON. No test calls the school.
 6. Add a line to `SOURCES` in `scripts/probe-public-data.py`.
 7. Update `spec/api-index.json` (methods, parameters, Java signatures, return model), then everything in the "exposure" list below. `scripts/check-api-index.py` fails until all three languages and the spec table agree.
@@ -65,7 +65,7 @@ cd website && npm ci && npm run build && node scripts/check-links.mjs   # docs s
 - Never log or print a password, a session cookie or a token. Log only what the existing `[sejong ...]` messages log.
 - No backward-compatibility promise (maintainer decision): do not add compatibility shims or deprecated aliases.
 - Java: Javadoc cannot see Lombok builders, so never name builder types in signatures or `{@link}`. Models use `@Getter @Builder`.
-- Comments and docstrings are short Korean one-liners (summary, `input > output`, `A > B` flow). No narrative paragraphs, no change history. Logs are English with a `[feature]` prefix.
+- 코드에는 한 줄 요약, 상세 인자·반환·실패는 spec/api-index.json: comments and docstrings are short Korean one-liners (summary, `input > output`, `A > B` flow), no `@param`/`@return`/`@throws` blocks, no multi-line docstrings, no narrative paragraphs, no change history. Parameter, return and failure details live only in `spec/api-index.json` (the site `api.json` and docs are generated from it). Logs are English with a `[feature]` prefix.
 
 ## Do not
 

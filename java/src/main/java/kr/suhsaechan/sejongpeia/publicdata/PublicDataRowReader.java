@@ -1,10 +1,13 @@
 package kr.suhsaechan.sejongpeia.publicdata;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
  * 학교 응답 행 읽기: 값 > 문자열 변환(null 은 빈 문자열), 매핑에 안 쓴 필드 > extra
@@ -62,6 +65,17 @@ final class PublicDataRowReader {
       }
     }
     return extra;
+  }
+
+  /** 응답의 배열 필드 > 행마다 변환한 변경 불가 목록 (캐시 공유) */
+  static <T> Function<JsonNode, List<T>> listOf(String arrayName, Function<JsonNode, T> rowMapper) {
+    return root -> {
+      List<T> models = new ArrayList<>();
+      for (JsonNode row : requireArray(root, arrayName)) {
+        models.add(rowMapper.apply(row));
+      }
+      return List.copyOf(models);
+    };
   }
 
   /** 필수 배열 꺼내기 (없거나 배열이 아니면 실패 > 호출부가 격리) */

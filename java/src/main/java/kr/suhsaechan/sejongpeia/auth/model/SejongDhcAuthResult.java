@@ -4,11 +4,7 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
-/**
- * 대양휴머니티칼리지(DHC) 인증 결과
- * - classic.sejong.ac.kr에서 획득
- * - 고전독서 인증 정보 보장
- */
+/** 대양휴머니티칼리지(DHC) 인증 결과: classic.sejong.ac.kr 에서 획득, 고전독서 인증 정보 보장 */
 @Getter
 @Builder
 public class SejongDhcAuthResult {

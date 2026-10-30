@@ -53,6 +53,18 @@ def resolve_python_default(node, module_constants):
     return ast.literal_eval(node)
 
 
+def read_python_literal_constants(module):
+    """모듈 최상위 `NAME = 리터럴` > {이름: 값}"""
+    constants = {}
+    for statement in module.body:
+        if isinstance(statement, ast.Assign) and len(statement.targets) == 1 and isinstance(statement.targets[0], ast.Name):
+            try:
+                constants[statement.targets[0].id] = ast.literal_eval(statement.value)
+            except ValueError:
+                continue  # re.compile(...) 같은 호출 값은 기본값 후보가 아님
+    return constants
+
+
 def read_python_class(path, class_name):
     """Python 클래스 > {공개 메서드 이름: (인자 [(이름, 기본값 또는 NO_DEFAULT)], 반환 모델 이름 또는 None)}"""
     module = ast.parse(path.read_text(encoding="utf-8"))
@@ -63,6 +75,9 @@ def read_python_class(path, class_name):
                 module_constants[statement.targets[0].id] = ast.literal_eval(statement.value)
             except ValueError:
                 pass  # 리터럴이 아닌 모듈 상수(함수 호출 등)는 기본값 비교에 쓰지 않으므로 건너뜀
+    # 기본값 상수가 출처 모듈(*_source.py)에 있을 수 있어 같은 폴더의 출처 파일 상수도 읽음
+    for source_path in sorted(path.parent.glob("*_source.py")):
+        module_constants.update(read_python_literal_constants(ast.parse(source_path.read_text(encoding="utf-8"))))
     class_node = next(node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name)
     methods = {}
     for function in class_node.body:
@@ -169,6 +184,9 @@ def read_node_parameters(source, parameters_text):
 def read_node_class(path, class_name):
     """Node 클래스 > {공개 메서드 이름: (평탄화 인자, 구조, 반환 모델 이름과 목록 여부)}"""
     source = path.read_text(encoding="utf-8")
+    queries_path = path.parent / "queries.ts"  # 인자 객체 인터페이스가 별도 파일에 있을 수 있음
+    if queries_path.exists():
+        source += "\n" + queries_path.read_text(encoding="utf-8")
     class_match = re.search(r"export class " + class_name + r"\b[^{]*\{", source)
     class_end = find_matching_close(source, class_match.end() - 1, "{", "}")
     body = source[class_match.end():class_end + 1]

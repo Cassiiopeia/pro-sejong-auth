@@ -14,6 +14,7 @@ import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.common.http.SejongHttpSupport;
+import kr.suhsaechan.sejongpeia.common.util.JsonMapperSupport;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -46,7 +47,7 @@ public class SejongSisClient {
   private final SejongAuthProperties properties;
   private final OkHttpClient baseClient;
   private final SejongSisParser sisParser = new SejongSisParser();
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapperSupport.PLAIN_JSON_MAPPER;
 
   public SejongSisClient(SejongAuthProperties properties) {
     this(properties, SejongHttpSupport.buildBaseClient(properties));
@@ -58,14 +59,7 @@ public class SejongSisClient {
     this.baseClient = baseClient;
   }
 
-  /**
-   * 세종포털 로그인 후 학사정보시스템에서 사용자 정보 JSON 반환
-   *
-   * @param studentId 학번
-   * @param password 비밀번호
-   * @return initUserInfo.do API 응답 JSON
-   * @throws SejongAuthException 인증 실패 시
-   */
+  /** 세종포털 로그인 후 학사정보시스템에서 사용자 정보 JSON 반환 */
   public String authenticateAndFetchJson(String studentId, String password) {
     return SejongPortalHttpSupport.runPortalStep("SIS authentication", () -> {
       OkHttpClient sessionClient = SejongPortalHttpSupport.newSessionClient(baseClient);
@@ -74,20 +68,12 @@ public class SejongSisClient {
     });
   }
 
-  /**
-   * 로그인된 세션 > sjpt SSO > initUserInfo JSON (통합 인증: 포털 로그인 1회로 연락처 조회)
-   *
-   * @throws SejongAuthException 세션 거부(401)·조회 실패·연결 실패
-   */
+  /** 로그인된 세션 > sjpt SSO > initUserInfo JSON (통합 인증: 포털 로그인 1회로 연락처 조회) */
   public String fetchInitUserInfoJson(SejongPortalSession session) {
     return SejongPortalHttpSupport.runPortalStep("SIS lookup", () -> fetchUserInfoWithSessionClient(session.sessionClient()));
   }
 
-  /**
-   * 포털 로그인 (rtUrl sjpt) > 로그인된 세션 (학사 업무 기간처럼 같은 세션에서 여러 SIS 요청을 이어갈 때)
-   *
-   * @throws SejongAuthException 틀린 비밀번호·잠금·연결 실패
-   */
+  /** 포털 로그인 (rtUrl sjpt) > 로그인된 세션 (학사 업무 기간처럼 같은 세션에서 여러 SIS 요청을 이어갈 때) */
   public SejongPortalSession openSession(String studentId, String password) {
     return SejongPortalHttpSupport.runPortalStep("SIS portal login", () -> {
       OkHttpClient sessionClient = SejongPortalHttpSupport.newSessionClient(baseClient);
@@ -96,17 +82,7 @@ public class SejongSisClient {
     });
   }
 
-  /**
-   * 학사일정조회: 메뉴 목록 > 화면 열기 > 목록 JSON (요청 실패 시 재시도 없이 중단)
-   *
-   * @param session SSO·initUserInfo 를 마친 SIS 세션
-   * @param runValues initUserInfo 응답의 실행 파라미터 원천값
-   * @param schoolFields initUserInfo 응답의 조직·사용자 구분·메뉴 코드
-   * @param year 연도 4자리
-   * @param month 1~12 (빈 문자열은 연간 전체)
-   * @return doList 응답 JSON
-   * @throws SejongAuthException 세션 종료(SESSION_ERROR)·SIS 오류·조회 실패·연결 실패
-   */
+  /** 학사일정조회: 메뉴 목록 > 화면 열기 > 목록 JSON (요청 실패 시 재시도 없이 중단) */
   public String fetchBusinessPeriodsJson(SejongPortalSession session, SisRunValues runValues,
       SejongSisSchoolFields schoolFields, String year, String month) {
     return SejongPortalHttpSupport.runPortalStep("SIS schedule", () -> {
@@ -217,10 +193,7 @@ public class SejongSisClient {
     }
   }
 
-  /**
-   * initUserInfo.do API 호출
-   * - 401 응답: 로그인 실패 (학번/비밀번호 불일치)
-   */
+  /** initUserInfo.do API 호출 */
   private String fetchInitUserInfo(OkHttpClient client) throws IOException {
     String addParam = generateEmptyAddParam();
     String apiUrl = SJPT_INIT_USER_INFO_URL + "?addParam=" + addParam;

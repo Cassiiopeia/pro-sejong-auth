@@ -1,5 +1,5 @@
 {
-  "_comment": "Single source for values shared by Java, Python and Node. Each language has a test that compares its constants with this file. Change the value here first, then in every language.",
+  "_comment": "Single source for values shared by Java, Python and Node (login flow and school public-data requests). Each language has a test that compares its constants with this file. Change the value here first, then in every language.",
   "portal": {
     "loginUrl": "https://portal.sejong.ac.kr/jsp/login/login_action.jsp",
     "referer": "https://portal.sejong.ac.kr",
@@ -38,6 +38,63 @@
     "programKey": "SELF_STUDSELF_SUB_20SELF_MENU_10SudBaseScheSelfServQ",
     "systemKey": "SCH",
     "menuSystemDiv": "SCH"
+  },
+  "publicData": {
+    "_comment": "Login-free school sources (spec/PUBLIC_DATA.md). queryKeys and formKeys are the request parameter names in send order; urlTemplate marks the host part {siteId}.",
+    "jsonAccept": "application/json",
+    "formContentType": "application/x-www-form-urlencoded; charset=UTF-8",
+    "formRequestedWith": "XMLHttpRequest",
+    "sisTimetable": {
+      "baseUrl": "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/",
+      "contentType": "application/json; charset=\"UTF-8\"",
+      "searchKey": "dm_search",
+      "onloadEndpoint": "doOnload.do",
+      "termListEndpoint": "doYearsmtlist.do",
+      "departmentListEndpoint": "doLesndeptgroup.do",
+      "lectureListEndpoint": "doList.do",
+      "lectureEmptyFilterKeys": ["SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD"]
+    },
+    "curriculum": {
+      "url": "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do",
+      "queryKeys": ["curiNo", "deptNo"]
+    },
+    "calendar": {
+      "url": "https://www.sejong.ac.kr/kor/academics/academic-calendar.do",
+      "queryKeys": ["mode", "start", "end", "collDiv"],
+      "mode": "getCalendarData",
+      "defaultCategoryCode": "0001"
+    },
+    "graduateCalendar": {
+      "urlTemplate": "https://{siteId}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp",
+      "queryKeys": ["year", "month", "siteId"],
+      "siteIdPattern": "[a-z0-9][a-z0-9-]{0,30}"
+    },
+    "dormitory": {
+      "menuUrl": "https://happydorm.sejong.ac.kr/food/indexFoodList.do",
+      "menuFormKeys": ["locgbn"],
+      "noticeUrl": "https://happydorm.sejong.ac.kr/bbs/getBbsList.do",
+      "noticeFormKeys": ["cPage", "rows", "bbs_locgbn", "bbs_id", "sType", "sWord"],
+      "noticeBoardId": "notice",
+      "noticeSearchType": "subject",
+      "defaultLocation": "SJ"
+    },
+    "cafeteria": {
+      "url": "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do",
+      "queryKeys": ["mode", "placeId"],
+      "menuMode": "getMenuList",
+      "defaultMaxPlaceId": 10,
+      "limitMaxPlaceId": 50
+    },
+    "campusMap": {
+      "url": "https://www.sejong.ac.kr/kor/intro/campus-map.do",
+      "queryKeys": ["mode", "placeType"],
+      "mode": "getPlaceUserList"
+    },
+    "extracurricular": {
+      "url": "https://do.sejong.ac.kr/ko/process/schedule/getEvents",
+      "formKeys": ["cid", "category", "start", "end", "start_year", "end_year"],
+      "cid": "eco"
+    }
   },
   "opensslCiphers": "DEFAULT:AES256-SHA:@SECLEVEL=1",
   "errorMessageByCode": {

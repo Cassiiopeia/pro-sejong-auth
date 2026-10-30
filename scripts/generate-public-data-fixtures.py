@@ -125,9 +125,9 @@ FIXTURES = {
 }
 
 
-# ---- 참조 매핑 (spec/PUBLIC_DATA.md 와 같은 내용)
-def map_all() -> dict:
-    f = FIXTURES
+# ---- 참조 매핑 (spec/PUBLIC_DATA.md 와 같은 내용), 출처별 함수 (세 언어 구현의 출처 파일과 같은 단위)
+def map_academic(f: dict) -> dict:
+    """학사 기준 정보·강의·학과 교육과정"""
     orgn = [{"code": r["COM_CD"], "name": r["CD_NM"], "name_en": text(r.get("CD_NM_ENG")),
              "extra": extra_of(r, {"COM_CD", "CD_NM", "CD_NM_ENG"})} for r in f["reference_onload.json"]["dl_code_orgn"]]
     terms = [{"year": r["YEAR"], "semester_code": r["SMT_CD"], "code": r["YEAR_SMT_CD"], "name": r["YEAR_SMT_NM"],
@@ -159,20 +159,36 @@ def map_all() -> dict:
                            "lecture_hours": text(r["lecTmNum"]), "practice_hours": text(r["exeTmNum"]), "total_hours": text(r["curiTm"]),
                            "grade_level": text(r["stuYearCd"]), "semester_code": text(r["smtDanCd"]), "semester_name": text(r["smtDanNm"]),
                            "overview": text(r["remark"]), "extra": extra_of(r, curriculum_used)} for r in f["curriculum_course.json"]["items"]]
-    calendar = [{"year": text(r["scmYear"]), "month": text(r["scmMonth"]), "category_code": r["collDiv"], "category_name": text(r["collDivNm"]),
-                 "title": text(r["scmSubject"]), "title_en": text(r["scmSubjectEng"]), "start_date": r["frDt"], "end_date": r["toDt"],
-                 "extra": extra_of(r, {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"})}
-                for r in f["calendar.json"]["data"]]
-    graduate_calendar = [{"year": text(r["scmYear"]), "month": text(r["scmMonth"]), "category_code": r["collDiv"], "category_name": text(r["collDivNm"]),
-                          "title": text(r["scmSubject"]), "title_en": text(r["scmSubjectEng"]), "start_date": r["frDt"], "end_date": r["toDt"],
-                          "extra": extra_of(r, {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"})}
-                         for r in json.loads(f["graduate_calendar.json"]["items"])]
+    return {"organization_categories": orgn, "terms": terms, "departments": depts, "course_types": course_types, "selective_domains": domains,
+            "lectures": lectures, "curriculum_courses": curriculum_courses}
+
+
+def map_calendar_event(r: dict) -> dict:
+    """학사일정 행 > 일정 (홈페이지와 대학원 사이트 공통)"""
+    return {"year": text(r["scmYear"]), "month": text(r["scmMonth"]), "category_code": r["collDiv"], "category_name": text(r["collDivNm"]),
+            "title": text(r["scmSubject"]), "title_en": text(r["scmSubjectEng"]), "start_date": r["frDt"], "end_date": r["toDt"],
+            "extra": extra_of(r, {"scmYear", "scmMonth", "collDiv", "collDivNm", "scmSubject", "scmSubjectEng", "frDt", "toDt"})}
+
+
+def map_calendar(f: dict) -> dict:
+    """학부·대학원 홈페이지 달력, 대학원 사이트별 달력"""
+    return {"calendar": [map_calendar_event(r) for r in f["calendar.json"]["data"]],
+            "graduate_calendar": [map_calendar_event(r) for r in json.loads(f["graduate_calendar.json"]["items"])]}
+
+
+def map_dormitory(f: dict) -> dict:
+    """기숙사 식단 7일, 공지 (고정 공지 + 일반 공지 + 전체 건수)"""
     row = f["dormitory_menu.json"]["root"][0]
     dorm_menu = [{"date": row[f"fo_date{i}"], "breakfast": text(row[f"fo_menu_mor{i}"]), "lunch": text(row[f"fo_menu_lun{i}"]),
                   "dinner": text(row[f"fo_menu_eve{i}"]), "alternative": text(row[f"fo_sub_menu{i}"])} for i in range(1, 8)]
     block = f["dormitory_notices.json"]["root"][0]
     def notice(r): return {"id": text(r["seq"]), "title": text(r["subject"]), "date": text(r["regdate"]), "views": int(r["visitcnt"] or 0), "file_name": text(r["file_name1"])}
     dorm_notices = {"total": int(block["totalCount"][0]["cnt"]), "pinned": [notice(r) for r in block["topList"]], "items": [notice(r) for r in block["list"]]}
+    return {"dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices}
+
+
+def map_cafeteria(f: dict) -> dict:
+    """학식 메뉴, 식당 목록"""
     cafeteria = [{"building_name": text(r["buildingName"]), "location": text(r["location"]), "place_id": text(r["placeId"]), "place_name": text(r["placeName"]),
                   "date": text(r["menuDate"]), "day": text(r["day"]), "meal_type_id": text(r["mealTypeId"]), "meal_name": text(r["mealName"]),
                   "menu_name": text(r["menuName"]), "price": text(r["price"])} for r in f["cafeteria.json"]["items"]]
@@ -182,17 +198,31 @@ def map_all() -> dict:
     for r in f["cafeteria.json"]["items"][:1]:
         cafeteria_places.append({"place_id": text(r["placeId"]), "place_name": text(r["placeName"]), "building_name": text(r["buildingName"]),
                                  "location": text(r["location"]), "extra": extra_of(r, menu_used)})
+    return {"cafeteria_menu": cafeteria, "cafeteria_places": cafeteria_places}
+
+
+def map_campus(f: dict) -> dict:
+    """캠퍼스 지도 장소"""
     places = [{"id": text(r["id"]), "name": text(r["placeName"]), "name_en": text(r["placeNameEn"]), "place_type": text(r["placeType"]),
                "category": text(r["welfareCategory"]), "latitude": float(r["latitude"]), "longitude": float(r["longitude"]), "info": text(r["placeInfo"]),
                "phone": text(r["telNum"]), "description": text(r["description"]),
                "extra": extra_of(r, {"id", "placeName", "placeNameEn", "placeType", "welfareCategory", "latitude", "longitude", "placeInfo", "telNum", "description"})}
               for r in f["campus_places.json"]["items"]]
+    return {"campus_places": places}
+
+
+def map_extracurricular(f: dict) -> dict:
+    """비교과 일정"""
     events = [{"id": text(r["id"]), "title": text(r["title"]), "start": text(r["start"]), "end": text(r["end"]), "category_title": text(r["category_title"]),
                "url": text(r["data"].get("url")), "description": text(r["data"].get("description")), "location": text(r["data"].get("location"))}
               for r in f["extracurricular_events.json"]["events"]]
-    return {"organization_categories": orgn, "terms": terms, "departments": depts, "course_types": course_types, "selective_domains": domains,
-            "lectures": lectures, "curriculum_courses": curriculum_courses, "calendar": calendar, "graduate_calendar": graduate_calendar, "dormitory_menu": dorm_menu, "dormitory_notices": dorm_notices,
-            "cafeteria_menu": cafeteria, "cafeteria_places": cafeteria_places, "campus_places": places, "extracurricular_events": events}
+    return {"extracurricular_events": events}
+
+
+def map_all() -> dict:
+    """출처별 매핑을 합침 (순서는 세 언어 출처 파일과 같음)"""
+    return {**map_academic(FIXTURES), **map_calendar(FIXTURES), **map_dormitory(FIXTURES), **map_cafeteria(FIXTURES),
+            **map_campus(FIXTURES), **map_extracurricular(FIXTURES)}
 
 
 def main() -> None:

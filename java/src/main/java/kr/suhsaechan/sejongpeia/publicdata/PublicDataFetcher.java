@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import kr.suhsaechan.sejongpeia.common.util.JsonMapperSupport;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,14 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 final class PublicDataFetcher {
 
   // 학교 SIS 가 오류를 200 응답의 JSON 으로 돌려줄 때 쓰는 키
-  private static final String SUBMIT_ERROR_KEY = "_SUBMIT_ERROR_";
+  static final String SUBMIT_ERROR_KEY = "_SUBMIT_ERROR_";
 
   private final PublicDataHttpCaller httpCaller;
   private final Clock clock;
   private final Duration cacheTimeToLive;
   private final Duration failureMemoryDuration;
   private final int cacheMaxEntries;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapperSupport.PLAIN_JSON_MAPPER;
   // 삽입 순서 유지: 맨 앞이 가장 오래된 항목 (접근은 모두 cacheByKey 모니터 안에서)
   private final LinkedHashMap<String, CachedValue> cacheByKey = new LinkedHashMap<>();
   private final ConcurrentHashMap<String, CompletableFuture<Object>> inFlightByKey = new ConcurrentHashMap<>();

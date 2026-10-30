@@ -27,13 +27,7 @@ public class SejongStudentInfoParser {
   private static final String LABEL_GRADE = "학년";
   private static final String LABEL_STATUS = "사용자 상태";
 
-  /**
-   * 사용자 정보 표 1회 파싱 > 학과, 학번, 이름, 학년, 상태
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 학생 기본 정보 (없는 값은 빈 문자열)
-   * @throws SejongAuthException 표를 찾지 못하거나 파싱 실패 시
-   */
+  /** 사용자 정보 표 1회 파싱 > 학과, 학번, 이름, 학년, 상태 */
   public SejongStudentInfo parseStudentInfo(String html) {
     Map<String, String> valueByLabel = parseTableData(html);
     return new SejongStudentInfo(
@@ -44,57 +38,27 @@ public class SejongStudentInfoParser {
         findLabelValue(valueByLabel, LABEL_STATUS));
   }
 
-  /**
-   * HTML에서 학과명 파싱
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 학과명
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** HTML에서 학과명 파싱 */
   public String parseMajor(String html) {
     return findLabelValue(parseTableData(html), LABEL_MAJOR);
   }
 
-  /**
-   * HTML에서 학번 파싱
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 학번
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** HTML에서 학번 파싱 */
   public String parseStudentId(String html) {
     return findLabelValue(parseTableData(html), LABEL_STUDENT_ID);
   }
 
-  /**
-   * HTML에서 이름 파싱
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 이름
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** HTML에서 이름 파싱 */
   public String parseName(String html) {
     return findLabelValue(parseTableData(html), LABEL_NAME);
   }
 
-  /**
-   * HTML에서 학년 파싱
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 학년
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** HTML에서 학년 파싱 */
   public String parseGrade(String html) {
     return findLabelValue(parseTableData(html), LABEL_GRADE);
   }
 
-  /**
-   * HTML에서 재학 상태 파싱
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 재학 상태
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** HTML에서 재학 상태 파싱 */
   public String parseStatus(String html) {
     return findLabelValue(parseTableData(html), LABEL_STATUS);
   }

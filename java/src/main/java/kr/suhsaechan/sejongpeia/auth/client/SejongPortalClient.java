@@ -37,23 +37,12 @@ public class SejongPortalClient {
     this.baseClient = baseClient;
   }
 
-  /**
-   * 세종포털 로그인 후 고전독서인증현황 페이지 HTML 반환
-   *
-   * @param studentId 학번
-   * @param password 비밀번호
-   * @return 고전독서인증현황 페이지 HTML
-   * @throws SejongAuthException 인증 실패 시
-   */
+  /** 세종포털 로그인 후 고전독서인증현황 페이지 HTML 반환 */
   public String authenticateAndFetchHtml(String studentId, String password) {
     return fetchClassicStatusHtml(openSession(studentId, password));
   }
 
-  /**
-   * 포털 로그인 > 로그인된 세션 (rtUrl 고전독서, 같은 세션으로 학사정보시스템 SSO 도 가능)
-   *
-   * @throws SejongAuthException 틀린 비밀번호·잠금·연결 실패
-   */
+  /** 포털 로그인 > 로그인된 세션 (rtUrl 고전독서, 같은 세션으로 학사정보시스템 SSO 도 가능) */
   public SejongPortalSession openSession(String studentId, String password) {
     return SejongPortalHttpSupport.runPortalStep("portal login", () -> {
       OkHttpClient sessionClient = SejongPortalHttpSupport.newSessionClient(baseClient);
@@ -62,11 +51,7 @@ public class SejongPortalClient {
     });
   }
 
-  /**
-   * 로그인된 세션 > 고전독서 SSO > 고전독서인증현황 페이지 HTML
-   *
-   * @throws SejongAuthException 세션 만료(401)·조회 실패·연결 실패
-   */
+  /** 로그인된 세션 > 고전독서 SSO > 고전독서인증현황 페이지 HTML */
   public String fetchClassicStatusHtml(SejongPortalSession session) {
     return SejongPortalHttpSupport.runPortalStep("classic reading lookup", () -> {
       handleSsoRedirect(session.sessionClient());
@@ -74,11 +59,7 @@ public class SejongPortalClient {
     });
   }
 
-  /**
-   * 로그인된 세션 > 포털 메인 HTML (보조 조회: 재시도 없음, 기존 타임아웃 그대로)
-   *
-   * @throws SejongAuthException 비 2xx·빈 본문·로그인 페이지(세션 만료)·연결 실패 (사유는 detail, 응답 본문은 담지 않음)
-   */
+  /** 로그인된 세션 > 포털 메인 HTML (보조 조회: 재시도 없음, 기존 타임아웃 그대로) */
   public String fetchPortalMainHtml(SejongPortalSession session) {
     Request request = new Request.Builder()
         .url(PORTAL_MAIN_URL)
@@ -121,11 +102,7 @@ public class SejongPortalClient {
     }
   }
 
-  /**
-   * 고전독서인증현황 페이지 HTML 가져오기
-   * - 401 응답: 로그인 실패 (학번/비밀번호 불일치)
-   * - 그 외 실패: 데이터 조회 실패
-   */
+  /** 고전독서인증현황 페이지 HTML 가져오기 */
   private String fetchClassicStatusPage(OkHttpClient client) throws IOException {
     Request request = new Request.Builder()
         .url(properties.getClassicStatusUrl())
