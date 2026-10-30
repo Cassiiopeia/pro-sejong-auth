@@ -49,11 +49,15 @@
 - **실측**: 학과 목록과 한 학과 강좌는 0.1초 안팎, 학기 전체 강좌도 1초 안팎이고 캐시에 있으면 마이크로초입니다 (Python, 서울, 새 클라이언트 5회 중앙값. 시간 대부분은 학교 서버 응답입니다).
 - **로그인 한 번**: 통합 인증은 포털에 한 번만 로그인해 DHC와 SIS를 함께 읽습니다. 세 언어 모두 0.6~0.8초 (5회 중앙값).
 
+→ [이 라이브러리가 하는 일](https://cassiiopeia.github.io/pro-sejongpeia/start/introduction/)
+
 ### <img src="docs/assets/icons/efficient.svg" width="22" alt="" align="top"> 요청은 아끼고
 
 - 결과를 메모리에 **24시간 캐시**하고, 같은 인자의 **동시 호출은 요청 1번으로 합칩니다**. 캐시는 최대 500개이고 가득 차면 오래된 것부터 지웁니다.
 - 호출 하나가 보내는 요청은 1번입니다. 예외는 학식 식당 목록 하나로, 한 번 갱신에 번호 범위(기본 10)만큼 **순서대로** 보냅니다.
 - 실패한 호출은 **60초간 기억**해 학교 서버를 반복해서 두드리지 않습니다. 근거: [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)의 캐시 절.
+
+→ [캐시와 실패 격리](https://cassiiopeia.github.io/pro-sejongpeia/understand/failure-isolation-cache/)
 
 ### <img src="docs/assets/icons/safe.svg" width="22" alt="" align="top"> 안전하게
 
@@ -62,11 +66,15 @@
 - SIS 부가 필드(`extra`)에서 세션값·접속 IP·계정 상태·주민번호·계좌·주소·직원 이름을 **항상 제외**하고, 학교 서버의 내부 오류 정보는 돌려주지 않습니다.
 - 학교 서버가 실패해도 앱이 흔들리지 않습니다. 공개 데이터는 예외 대신 마지막 캐시 값이나 빈 목록을 줍니다.
 
+→ [로그인 판정과 계정 잠금 방지](https://cassiiopeia.github.io/pro-sejongpeia/understand/login-verdict/)
+
 ### <img src="docs/assets/icons/reliable.svg" width="22" alt="" align="top"> 믿을 수 있게
 
 - **매일 실제 포털 점검**: 매일 09:00(KST)에 세 언어가 실제 포털에 로그인하고, 실패하면 이슈가 자동으로 열립니다 (위 배지).
 - **세 언어가 같은 결과**: 공통 값은 [spec/contract.json](spec/contract.json) 한 곳에 두고, 어긋나면 언어별 테스트가 실패합니다.
 - **목록 어긋남 점검**: 공개 메서드 목록이 [spec/api-index.json](spec/api-index.json)과 세 언어 소스, 문서에서 같은지 CI가 검사하고, 학교 응답 형태는 계정 없이 매일 확인합니다.
+
+→ [매일 도는 실제 포털 점검](https://cassiiopeia.github.io/pro-sejongpeia/understand/daily-live-check/)
 
 직접 구현할 때 만나는 어려운 부분(포털이 허용하는 암호 하나, 방화벽 User-Agent, 도메인 3곳의 SSO 쿠키, 200 응답 속 판정)도 이미 풀려 있습니다. 자세히는 [문서 사이트](https://cassiiopeia.github.io/pro-sejongpeia/)를 보세요.
 
@@ -76,10 +84,10 @@
 
 | 기능 | Java | Python | Node |
 |---|:-:|:-:|:-:|
-| **학번 인증**: 통합 · DHC · SIS · SIS 학사 업무 기간 | ✓ | ✓ | ✓ |
-| **코드·강좌**: 분류 · 학기 · 학과 · 개설강좌 · 강좌 유형 · 선택 영역 · 교육과정 | ✓ | ✓ | ✓ |
-| **일정·생활**: 학사일정(학부·대학원) · 기숙사 식단·공지 · 학식 식당·메뉴 · 캠퍼스 장소 · 비교과 일정 | ✓ | ✓ | ✓ |
-| 원본 응답, SIS 코드와 `extra` 옵션 | ✓ | ✓ | ✓ |
+| **[학번 인증](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/)**: 통합 · DHC · SIS · SIS 학사 업무 기간 | ✓ | ✓ | ✓ |
+| **[코드·강좌](https://cassiiopeia.github.io/pro-sejongpeia/data/codes/)**: 분류 · 학기 · 학과 · 개설강좌 · 강좌 유형 · 선택 영역 · 교육과정 | ✓ | ✓ | ✓ |
+| **[일정·생활](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/)**: 학사일정(학부·대학원) · 기숙사 식단·공지 · 학식 식당·메뉴 · 캠퍼스 장소 · 비교과 일정 | ✓ | ✓ | ✓ |
+| [원본 응답, SIS 코드와 `extra` 옵션](https://cassiiopeia.github.io/pro-sejongpeia/auth/raw-and-extra/) | ✓ | ✓ | ✓ |
 
 메서드 이름 전체(언어별 표기, Java 원본 응답 변형 포함)는 [인증 메서드](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/)와 [학교 데이터 공통 규칙](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/)에 있습니다.
 
@@ -158,9 +166,16 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
 
 ## 이런 곳에 씁니다
 
-동아리·학생회 가입 시 **세종대 학생 인증**, 학과·학년 조건이 있는 이벤트 확인, 고전독서 현황 도우미, 학과·강의 검색, 학사일정 위젯, 기숙사·학식 봇 ([통합 예시](docs/INTEGRATION_EXAMPLES.md)).
+- [**세종대 학생 인증**](https://cassiiopeia.github.io/pro-sejongpeia/guides/student-verification/): 동아리·학생회 가입, 학과·학년 조건이 있는 이벤트 확인, 고전독서 현황 도우미
+- [**학과·강의 검색**](https://cassiiopeia.github.io/pro-sejongpeia/guides/department-lecture-search/): 학과별 개설강좌 검색 페이지
+- [**학사일정 위젯**](https://cassiiopeia.github.io/pro-sejongpeia/guides/academic-calendar/): 이번 달 학사일정 보여 주기
+- [**기숙사·학식 봇**](https://cassiiopeia.github.io/pro-sejongpeia/guides/dormitory-cafeteria-bot/): 오늘의 식단 알림
+
+모든 예시는 세 언어로 있습니다 ([통합 예시](docs/INTEGRATION_EXAMPLES.md)).
 
 ## 빠른 시작: Java / Spring Boot
+
+설치부터 첫 호출까지 [빠른 시작 페이지](https://cassiiopeia.github.io/pro-sejongpeia/start/quickstart/)에도 정리돼 있습니다.
 
 [![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
@@ -201,6 +216,8 @@ Spring 없이 쓰는 일반 Java는 `main()` 맨 앞에서 `SejongTlsSupport.ens
 
 ## 빠른 시작: Python · Node.js
 
+[빠른 시작 페이지](https://cassiiopeia.github.io/pro-sejongpeia/start/quickstart/)에서 세 언어를 탭으로 나란히 볼 수 있습니다.
+
 Python 3.9+ 또는 Node 18+ (의존성 0개, TypeScript 타입 포함, ESM·CommonJS, 서버 전용). 에러는 메시지가 아니라 `code`로 분기하세요.
 
 ```python
@@ -228,7 +245,7 @@ try {
 
 ## 로그인 없이 쓰는 학교 데이터
 
-메서드 목록은 위 [기능](#기능), 첫 호출은 [바로 해 보기](#바로-해-보기)를 보세요. 강의에서 교육과정으로 이어 가는 예시입니다 (Node·Java는 같은 이름의 camelCase 메서드).
+메서드 목록은 위 [기능](#기능), 첫 호출은 [바로 해 보기](#바로-해-보기)를 보세요. 요청 파라미터와 응답 구조는 기능별로 [학교 데이터 레퍼런스](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/)에 있습니다. 강의에서 교육과정으로 이어 가는 예시입니다 (Node·Java는 같은 이름의 camelCase 메서드).
 
 ```python
 from sejongpeia import SejongPublicData
@@ -293,7 +310,7 @@ Java는 포털의 레거시 cipher 때문에 JVM 전체 TLS 설정을 바꿉니�
 
 ## 기여하기
 
-버그 제보, 포털 변경 대응, 문서 개선 모두 환영합니다. 포털이 바뀌면 세 언어를 한 PR에서 같이 고칩니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 보세요.
+버그 제보, 포털 변경 대응, 문서 개선 모두 환영합니다. 포털이 바뀌면 세 언어를 한 PR에서 같이 고칩니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 보세요. 새 학교 정보 출처는 [새 출처 추가하기](https://cassiiopeia.github.io/pro-sejongpeia/contribute/add-data-source/), 구조는 [레포 구조](https://cassiiopeia.github.io/pro-sejongpeia/contribute/structure/), 이슈·PR은 [이슈와 PR](https://cassiiopeia.github.io/pro-sejongpeia/contribute/issues-and-prs/)를 참고하세요.
 보안 문제는 [SECURITY.md](SECURITY.md)의 비공개 신고를 이용해 주세요.
 
 이 라이브러리로 시간을 아꼈다면 ⭐ 하나가 다른 세종대 개발자들이 찾는 데 도움이 됩니다.

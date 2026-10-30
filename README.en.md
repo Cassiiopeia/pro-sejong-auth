@@ -49,11 +49,15 @@ Four promises, each with proof you can check in the code or the tests.
 - **Measured**: the department list and one department's lectures take about 0.1 s, the whole term's lectures about 1 s. Cached answers take microseconds (Python, Seoul, median of 5 fresh clients; most of the time is the school server's own response).
 - **One login**: the integrated call signs in to the portal once and reads DHC and SIS with the same session. 0.6 to 0.8 s in all three languages (median of 5).
 
+→ [What this library does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/)
+
 ### <img src="docs/assets/icons/efficient.svg" width="22" alt="" align="top"> Gentle on requests
 
 - Results are cached in memory for **24 hours**, and **simultaneous calls with the same arguments share one request**. The cache holds at most 500 entries (default) and evicts the oldest first.
 - A call sends one request. The only exception is the cafeteria list, which sends one per number in a range (10 by default), **one after the other**, per refresh.
 - A failed call is **remembered for 60 seconds** so the school's servers are not hammered. Proof: the cache section of [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md).
+
+→ [Cache and failure isolation](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/failure-isolation-cache/)
 
 ### <img src="docs/assets/icons/safe.svg" width="22" alt="" align="top"> Safe
 
@@ -62,11 +66,15 @@ Four promises, each with proof you can check in the code or the tests.
 - The SIS extra fields (`extra`) **always exclude** session values, client IP, account state, resident number, bank account, address and staff names, and server-internal error details are never returned.
 - A failing school server does not shake your app: public data returns the last cached value or an empty list instead of throwing.
 
+→ [Login verdict and account lock avoidance](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/login-verdict/)
+
 ### <img src="docs/assets/icons/reliable.svg" width="22" alt="" align="top"> Trustworthy
 
 - **Checked against the real portal every day**: at 09:00 KST all three languages sign in to the live portal, and a failure opens an issue automatically (see the badge above).
 - **Same results in three languages**: shared values live in [spec/contract.json](spec/contract.json), and each language's tests fail when they drift.
 - **Method list drift check**: CI verifies that the public method list matches across [spec/api-index.json](spec/api-index.json), the three sources and the docs, and the shape of the school's responses is checked daily without an account.
+
+→ [The daily live portal check](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/daily-live-check/)
 
 The hard parts of doing it yourself (the one cipher the portal accepts, firewall User-Agents, SSO cookies across three domains, verdicts hidden in 200 responses) are already solved. See the [project site](https://cassiiopeia.github.io/pro-sejongpeia/) for details.
 
@@ -76,10 +84,10 @@ The hard parts of doing it yourself (the one cipher the portal accepts, firewall
 
 | Feature | Java | Python | Node |
 |---|:-:|:-:|:-:|
-| **Student verification**: integrated · DHC · SIS · SIS business periods | ✓ | ✓ | ✓ |
-| **Codes and lectures**: categories · terms · departments · lectures · course types · selective domains · curriculum | ✓ | ✓ | ✓ |
-| **Schedule and campus life**: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✓ | ✓ | ✓ |
-| Raw response, SIS codes and `extra` options | ✓ | ✓ | ✓ |
+| **[Student verification](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/)**: integrated · DHC · SIS · SIS business periods | ✓ | ✓ | ✓ |
+| **[Codes and lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/codes/)**: categories · terms · departments · lectures · course types · selective domains · curriculum | ✓ | ✓ | ✓ |
+| **[Schedule and campus life](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/)**: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✓ | ✓ | ✓ |
+| [Raw response, SIS codes and `extra` options](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/raw-and-extra/) | ✓ | ✓ | ✓ |
 
 All method names (per language, including the Java raw-response variants) are listed in [Authentication methods](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) and [School data: common rules](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/).
 
@@ -158,9 +166,16 @@ Error handling and Spring setup are in the [quick start](#quick-start-java--spri
 
 ## Use cases
 
-**Verifying Sejong students** when they join a club or student council, checking major or year for campus events, classic-reading progress helpers, department and lecture search, academic calendar widgets, dormitory and cafeteria bots ([integration examples](docs/INTEGRATION_EXAMPLES.en.md)).
+- [**Verifying Sejong students**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/student-verification/): club or student council sign-up, major or year checks for campus events, classic-reading helpers
+- [**Department and lecture search**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/department-lecture-search/): a lecture search page by department
+- [**Academic calendar widget**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/academic-calendar/): show this month's schedule
+- [**Dormitory and cafeteria bot**](https://cassiiopeia.github.io/pro-sejongpeia/en/guides/dormitory-cafeteria-bot/): today's menu alerts
+
+Every example comes in all three languages ([integration examples](docs/INTEGRATION_EXAMPLES.en.md)).
 
 ## Quick start: Java / Spring Boot
+
+The same steps are on the [Quick start page](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/).
 
 [![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
@@ -201,6 +216,8 @@ Plain Java without Spring: call `SejongTlsSupport.ensureLegacyCipherEnabled()` f
 
 ## Quick start: Python · Node.js
 
+See all three languages side by side in tabs on the [Quick start page](https://cassiiopeia.github.io/pro-sejongpeia/en/start/quickstart/).
+
 Python 3.9+ or Node 18+ (zero dependencies, TypeScript types, ESM and CommonJS, server-side only). Branch on the error `code`, not on the message.
 
 ```python
@@ -228,7 +245,7 @@ try {
 
 ## School data without login
 
-For the method list see [Features](#features) above, and for the first call see [Try it now](#try-it-now). Here is an example that continues from a lecture to its curriculum (Node and Java use the same method names in camelCase).
+For the method list see [Features](#features) above, and for the first call see [Try it now](#try-it-now). Request parameters and response shapes are listed per feature in the [school data reference](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/). Here is an example that continues from a lecture to its curriculum (Node and Java use the same method names in camelCase).
 
 ```python
 from sejongpeia import SejongPublicData
@@ -293,7 +310,7 @@ More questions are answered in the [site FAQ](https://cassiiopeia.github.io/pro-
 
 ## Contributing
 
-Bug reports, portal-change fixes and docs improvements are all welcome. A portal change is fixed in all three languages in one PR. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md).
+Bug reports, portal-change fixes and docs improvements are all welcome. A portal change is fixed in all three languages in one PR. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md). To add a new school data source, see [Add a data source](https://cassiiopeia.github.io/pro-sejongpeia/en/contribute/add-data-source/), for the layout [Repository structure](https://cassiiopeia.github.io/pro-sejongpeia/en/contribute/structure/), and for issues and PRs [Issues and PRs](https://cassiiopeia.github.io/pro-sejongpeia/en/contribute/issues-and-prs/).
 Report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 If this library saved you time, a ⭐ helps other Sejong developers find it.
