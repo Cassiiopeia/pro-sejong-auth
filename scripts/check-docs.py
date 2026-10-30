@@ -84,6 +84,12 @@ def main():
             for missing_name in find_missing_language_links(text_by_path[path], path, group):
                 problems.append(f"{path}: missing language link -> {missing_name}")
 
+    # README 의 mermaid 블록이 docs/assets/diagrams 원본과 같은지 (scripts/sync-diagrams.py)
+    diagram_check = subprocess.run([sys.executable, os.path.join(repository_root, "scripts", "sync-diagrams.py"), "--check"],
+                                   capture_output=True, text=True)
+    if diagram_check.returncode != 0:
+        problems.append(diagram_check.stdout.strip() or "diagram sync check failed")
+
     for problem in problems:
         print(f"[docs check] {problem}")
     print(f"[docs check] {len(markdown_paths)} files, {len(problems)} problem(s)")

@@ -1,0 +1,15 @@
+%% alt: A public data call returns the cache if it is under 24 hours old. Otherwise it sends one request to the school; on success it stores and returns the result, on failure it returns the last cached value or an empty list
+flowchart TB
+  start["<b>Public data call</b>"]:::neutral
+  cacheHit{"Cache newer<br/>than 24 hours?"}:::soft
+  cached["<b>Return cache</b><br/>no request"]:::neutral
+  sendRequest["<b>One request</b><br/>to the school"]:::accent
+  succeeded{"Succeeded?"}:::soft
+  stored["<b>Store and return</b>"]:::neutral
+  fallback["<b>Last value or</b><br/><b>empty list</b><br/>no exception<br/>failure kept 60 s"]:::muted
+  start --> cacheHit
+  cacheHit -->|"yes"| cached
+  cacheHit -->|"no"| sendRequest
+  sendRequest --> succeeded
+  succeeded -->|"yes"| stored
+  succeeded -->|"no"| fallback

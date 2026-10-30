@@ -3,6 +3,9 @@ title: Add a new data source
 description: The 7-step procedure for adding new public school data to all three languages, with code locations, dependency rules and safety rules.
 ---
 
+import Diagram from '../../../../components/Diagram.astro';
+
+
 How to add new data the school serves publicly (course lists, menus, other public data). Sources are independent and share only the common layer (`common`: errors, HTTP transport, version). Authentication (`auth`) is one source just like public data, so you can build yours without touching the others.
 
 ## Procedure
@@ -30,6 +33,8 @@ For a public-data source. One method maps to three files.
 - When you add or change a public method or result field, check that the "Public API" list in [API stability](../../api-stability/) and the [integration examples](../../guides/student-verification/) are still correct.
 
 ## Dependency rule
+
+<Diagram name="structure" />
 
 The rule has three layers. Common (`common`) imports no source, and each source (`auth`, `public_data`) imports only common and never another source. The top-level entry points (`__init__.py`, `index.ts`, Spring `config`) only assemble, so they may import every layer. Tests enforce it.
 

@@ -4,10 +4,15 @@ description: The isolation rules that keep one data source failing from affectin
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../../components/Diagram.astro';
 
 ## Why it is needed
 
 School servers can be slow (the extracurricular schedule sometimes takes tens of seconds), can stop answering for a while, or can change the shape of a response. If the whole app stopped whenever one place failed, that would be a problem. And sending the same request to the school once per user would put load on its servers.
+
+## The flow of one call
+
+<Diagram name="public-call" />
 
 ## Failure isolation of public data
 

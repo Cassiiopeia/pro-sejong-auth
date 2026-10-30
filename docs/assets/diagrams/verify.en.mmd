@@ -1,0 +1,11 @@
+%% alt: After the portal login the library reads the verdict inside the response. A wrong password or a locked account stops at the first failure with an error code, and success queries DHC and SIS in the same session
+flowchart TB
+  login["<b>Portal login</b><br/>student ID · password"]:::neutral
+  verdict{"Verdict in<br/>the response"}:::soft
+  stop["<b>Stops at first failure</b><br/>no retry<br/>no account lock<br/>AUTHENTICATION_FAILED<br/>ACCOUNT_LOCKED"]:::muted
+  session["<b>Same session</b><br/>DHC · SIS"]:::accent
+  result["<b>Student info result</b>"]:::neutral
+  login --> verdict
+  verdict -->|"wrong · locked"| stop
+  verdict -->|"OK"| session
+  session --> result

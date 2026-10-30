@@ -3,11 +3,24 @@ title: 소개
 description: pro-sejongpeia는 세종대학교 포털 로그인과 로그인 없이 쓰는 학교 데이터를 Java, Python, Node.js에서 같은 모양으로 쓰게 해 주는 오픈소스 라이브러리입니다.
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Diagram from '../../../components/Diagram.astro';
 
 pro-sejongpeia는 **세종대학교 통합 라이브러리**입니다. 학번과 비밀번호로 재학생인지 확인하는 **포털 로그인**과, 로그인 없이 학교가 공개로 내려주는 **학교 데이터**(학과 코드, 개설강좌, 학사일정, 기숙사 식단, 학식 등)를 Java, Python, Node.js 어느 쪽에서든 같은 기능, 같은 결과 필드, 같은 에러 코드로 씁니다.
 
 포털 로그인, SSO 리다이렉트, 세션 쿠키, 오래된 TLS 방식, HTML·JSON 파싱은 라이브러리가 처리합니다.
+
+<Aside type="note" title="한눈에">
+- **학생 인증**은 학번과 비밀번호가 필요하고, **학교 데이터**는 필요 없습니다.
+- Java, Python, Node.js가 같은 기능, 같은 결과 필드, 같은 에러 코드를 씁니다.
+- 학교 웹 화면이 쓰는 비공식 주소를 따라가므로, 학교가 바꾸면 멈출 수 있습니다.
+</Aside>
+
+## 동작 한눈에 보기
+
+호출 한 번이 라이브러리를 거쳐 학교 서버로 가고, 응답은 같은 모양의 결과로 돌아옵니다.
+
+<Diagram name="overview" />
 
 ## 누가 쓰나요
 
@@ -59,6 +72,12 @@ pro-sejongpeia는 **세종대학교 통합 라이브러리**입니다. 학번과
 | Java 17 이상, Spring Boot 3.x. 일반 Java도 가능 | Python 3.9 이상, 표준 라이브러리 외 의존성 없음 | Node 18 이상, 의존성 없음, TypeScript 타입 포함, ESM·CommonJS. 서버 전용 |
 
 Java의 HTTP는 OkHttp, HTML 파싱은 jsoup을 씁니다.
+
+## 어떤 문서부터 읽을까요
+
+필요한 것을 고르면 맞는 가이드로 이어집니다. 상자를 누르면 그 문서로 갑니다.
+
+<Diagram name="choose" />
 
 ## 다음으로
 

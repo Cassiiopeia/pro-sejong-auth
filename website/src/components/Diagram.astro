@@ -1,0 +1,138 @@
+---
+// 플로우차트: docs/assets/diagrams 의 mermaid 원본(README 와 같은 파일)을 빌드 때 읽고, 브라우저에서 그린다
+// 사용: <Diagram name="overview" /> (한국어·영어 원본은 사이트 주소의 /en/ 으로 고름)
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { BASE_PATH } from '../../site.config.mjs';
+
+interface Props {
+  name: string;
+}
+
+const { name } = Astro.props;
+const isEnglishPage = Astro.url.pathname.startsWith(`${BASE_PATH}/en/`);
+const language = isEnglishPage ? 'en' : 'ko';
+// 빌드는 website/ 에서 실행하므로 원본 폴더는 한 단계 위 (스크립트가 복사하지 않고 직접 읽음)
+const diagramDirectory = join(process.cwd(), '..', 'docs', 'assets', 'diagrams');
+const sourceText = readFileSync(join(diagramDirectory, `${name}.${language}.mmd`), 'utf8');
+const styleText = readFileSync(join(diagramDirectory, '_classes.mmd'), 'utf8');
+
+// `%% alt: ...` 는 스크린 리더용 설명, `%% narrow: TB` 는 좁은 곳에서 방향을 바꾸라는 표시(figure 의 data 로 전달), 본문의 `{{site:/경로/}}` 는 이 사이트의 언어·base 가 붙은 주소로 바꿈
+const altText = sourceText.match(/^%% alt: (.+)$/m)?.[1] ?? '';
+const siteLinkPrefix = `${BASE_PATH}${isEnglishPage ? '/en' : ''}`;
+const narrowDirection = sourceText.match(/^%% narrow: (TB|LR)$/m)?.[1] ?? '';
+const mermaidText = [
+  ...sourceText.split('\n').filter((line) => !line.startsWith('%%')),
+  ...styleText.split('\n').filter((line) => line.trim()).map((line) => `  ${line}`),
+]
+  .join('\n')
+  .replace(/\{\{site:([^}]+)\}\}/g, (_, path) => `${siteLinkPrefix}${path}`);
+---
+
+<figure class="diagram not-content" data-diagram-state="loading" data-diagram-source={mermaidText} data-diagram-narrow-direction={narrowDirection}>
+  <div class="diagram__canvas" role="img" aria-label={altText}></div>
+  <noscript><pre class="diagram__fallback"><code>{mermaidText}</code></pre></noscript>
+</figure>
+
+<script>
+  // 다이어그램이 있는 페이지에서만 mermaid 를 내려받는다 (라이브러리 패키지와 무관한 사이트 전용 의존성)
+  const diagramFigures = Array.from(document.querySelectorAll<HTMLElement>('.diagram[data-diagram-source]'));
+
+  function readCssColor(variableName: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+  }
+
+  // classDef 색은 노드에 인라인(!important)으로 박혀 CSS 로 못 덮으므로, 그리기 뒤에 테마 색 변수로 다시 입힌다
+  // 클래스 이름 4개(neutral, accent, soft, muted)는 docs/assets/diagrams/_classes.mmd 와 custom.css 의 --diagram-* 변수가 짝
+  const DIAGRAM_NODE_CLASSES = ['neutral', 'accent', 'soft', 'muted'];
+  function applyThemeColorsToNodes(canvas: HTMLElement) {
+    for (const className of DIAGRAM_NODE_CLASSES) {
+      for (const node of canvas.querySelectorAll(`.node.${className}`)) {
+        for (const shape of node.querySelectorAll<SVGElement>('rect, polygon, path, circle, ellipse')) {
+          shape.style.setProperty('fill', `var(--diagram-${className}-fill)`, 'important');
+          shape.style.setProperty('stroke', `var(--diagram-${className}-stroke)`, 'important');
+        }
+        for (const label of node.querySelectorAll<HTMLElement>('foreignObject *')) {
+          label.style.setProperty('color', `var(--diagram-${className}-text)`, 'important');
+        }
+      }
+    }
+  }
+
+  // 이 폭(px)보다 좁은 칸에서는 가로 배치(LR)를 세로(TB)로 바꿔 글자가 줄어들지 않게 한다 (원본의 `%% narrow: TB` 표시가 있는 차트만)
+  const NARROW_CANVAS_WIDTH_PIXELS = 820;
+  const renderedStateByFigure = new Map<HTMLElement, string>();
+
+  function shouldUseNarrowDirection(figure: HTMLElement): boolean {
+    return figure.dataset.diagramNarrowDirection === 'TB' && figure.clientWidth < NARROW_CANVAS_WIDTH_PIXELS;
+  }
+
+  async function renderAllDiagrams() {
+    const { default: mermaid } = await import('mermaid');
+    mermaid.initialize({
+      startOnLoad: false,
+      // 링크(click)를 쓰는 길 고르기 차트용. 원본은 이 저장소의 파일뿐
+      securityLevel: 'loose',
+      theme: 'base',
+      fontFamily: getComputedStyle(document.body).fontFamily,
+      themeVariables: {
+        fontSize: '15px',
+        lineColor: readCssColor('--sl-color-gray-3'),
+        textColor: readCssColor('--sl-color-text'),
+        edgeLabelBackground: readCssColor('--sl-color-bg'),
+        clusterBkg: 'transparent',
+        clusterBorder: readCssColor('--sl-color-gray-3'),
+        titleColor: readCssColor('--sl-color-text'),
+      },
+      flowchart: { htmlLabels: true, curve: 'linear', padding: 12, nodeSpacing: 30, rankSpacing: 40 },
+    });
+    const themeName = document.documentElement.dataset.theme ?? '';
+    let diagramIndex = 0;
+    for (const figure of diagramFigures) {
+      const isNarrow = shouldUseNarrowDirection(figure);
+      const stateKey = `${themeName}|${isNarrow}`;
+      if (renderedStateByFigure.get(figure) === stateKey) continue;
+      const canvas = figure.querySelector<HTMLElement>('.diagram__canvas')!;
+      const source = figure.dataset.diagramSource ?? '';
+      const text = isNarrow ? source.replace(/^flowchart LR/m, 'flowchart TB') : source;
+      try {
+        const { svg, bindFunctions } = await mermaid.render(`diagram-svg-${themeName || 'light'}-${diagramIndex++}-${Date.now()}`, text);
+        canvas.innerHTML = svg;
+        applyThemeColorsToNodes(canvas);
+        bindFunctions?.(canvas);
+        figure.dataset.diagramState = 'ready';
+        renderedStateByFigure.set(figure, stateKey);
+      } catch {
+        // 그리기에 실패하면 원본 텍스트를 보여 준다
+        canvas.innerHTML = '';
+        const fallback = document.createElement('pre');
+        fallback.className = 'diagram__fallback';
+        fallback.textContent = source;
+        canvas.append(fallback);
+        figure.dataset.diagramState = 'failed';
+      }
+    }
+  }
+
+  if (diagramFigures.length > 0) {
+    let isRendering = false;
+    let isRenderQueued = false;
+    // 그리는 중에 테마나 폭이 또 바뀌면 끝난 뒤 한 번 더 그린다
+    const renderOnce = async () => {
+      if (isRendering) {
+        isRenderQueued = true;
+        return;
+      }
+      isRendering = true;
+      do {
+        isRenderQueued = false;
+        await renderAllDiagrams();
+      } while (isRenderQueued);
+      isRendering = false;
+    };
+    renderOnce();
+    // 라이트·다크 전환과 화면 폭 구간이 바뀔 때 다시 그린다
+    new MutationObserver(renderOnce).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    window.addEventListener('resize', renderOnce);
+  }
+</script>

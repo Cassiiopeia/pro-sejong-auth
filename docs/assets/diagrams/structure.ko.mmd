@@ -1,0 +1,13 @@
+%% alt: 진입점이 인증과 공개 데이터를 조립하고, 둘 다 공통 계층만 불러온다. 인증과 공개 데이터는 서로 불러오지 않는다
+flowchart TB
+  entry["<b>진입점</b> (조립만 함)<br/>authenticate<br/>SejongPublicData<br/>Spring 자동 설정"]:::soft
+  subgraph sources["소스 · 서로 불러오지 않음"]
+    auth["<b>인증 auth</b><br/>포털 로그인<br/>SSO · 파싱"]:::neutral
+    pub["<b>공개 데이터</b><br/><b>public_data</b><br/>출처마다 파일 하나"]:::neutral
+  end
+  common["<b>공통 common</b><br/>에러 · HTTP 전송 · 버전"]:::accent
+  entry --> auth
+  entry --> pub
+  auth --> common
+  pub --> common
+  style sources fill:none,stroke:#8B9099,stroke-width:1.5px,stroke-dasharray:5 4

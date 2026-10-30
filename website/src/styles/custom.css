@@ -35,18 +35,67 @@ body {
   word-break: normal;
 }
 
-/* 표는 좁은 화면에서 가로 스크롤 */
-.sl-markdown-content table:not(:where(.not-content *)) {
+/* 읽기 편한 본문: 제목은 본문보다 한 단계만 크게, 문단·목록은 한 줄이 너무 길어지지 않게 */
+:root {
+  --sl-text-h1: 2rem;
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.2rem;
+  --sl-text-h4: 1.0625rem;
+}
+.sl-markdown-content {
+  line-height: 1.75;
+}
+.sl-markdown-content :is(h2, h3, h4) {
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.sl-markdown-content h2 {
+  margin-top: 2.75rem;
+}
+.sl-markdown-content h3 {
+  margin-top: 2rem;
+}
+.sl-markdown-content > :is(p, ul, ol, dl, blockquote),
+.sl-markdown-content > .sl-link-card {
+  max-width: 50rem;
+}
+
+/* 안내 상자(note): 기본 파란색 대신 브랜드 색 계열로 */
+.starlight-aside--note {
+  --sl-color-asides-text-accent: var(--sl-color-text-accent);
+  border-color: var(--sl-color-accent);
+  background-color: var(--sl-color-gray-6);
+}
+
+/* 표: astro.config.mjs 의 스크립트가 table 을 .table-scroll 로 감싼다 (스크립트 전에는 기존처럼 표 자체가 가로 스크롤). 표는 본문 폭을 채우고, 좁은 화면에서는 감싼 상자가 가로로 스크롤 */
+.sl-markdown-content .table-scroll {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+.sl-markdown-content table:not(:where(.not-content *, .table-scroll > table)) {
   display: block;
   overflow-x: auto;
 }
+/* 가로로 더 스크롤할 수 있는 쪽에 그림자를 보여 줌 (좁은 화면에서 잘린 표가 스크롤 가능하다는 단서) */
+.sl-markdown-content .table-scroll {
+  background:
+    linear-gradient(to right, var(--sl-color-bg) 30%, transparent) left center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--sl-color-bg) 30%, transparent) right center / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.28), transparent) left center / 0.9rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.28), transparent) right center / 0.9rem 100% no-repeat scroll;
+}
+.sl-markdown-content .table-scroll > table {
+  display: table;
+  width: 100%;
+  margin: 0;
+}
 /* 파라미터·필드 표는 열이 많아 셀 좌우 여백을 줄여 설명 열에 폭을 남김 */
-.sl-markdown-content table:not(:where(.not-content *)) :is(th, td) {
+.sl-markdown-content .table-scroll :is(th, td) {
   padding-inline: 0.6rem;
 }
-/* 좁은 화면에서는 설명 열이 한 글자씩 접히지 않도록 최소 폭을 주고 표를 가로로 스크롤 */
+/* 좁은 화면에서는 설명 열이 한 글자씩 접히지 않도록 최소 폭을 주고 상자를 가로로 스크롤 */
 @media (max-width: 50rem) {
-  .sl-markdown-content table:not(:where(.not-content *)) td:last-child {
+  .sl-markdown-content .table-scroll td:last-child {
     min-width: 12rem;
   }
 }
@@ -783,11 +832,79 @@ body {
   .main-pane { width: 100% !important; flex: 1 1 auto !important; }
 }
 
-/* 표: 칸 여백을 줄이고 코드는 어디서든 줄바꿈해 열 수가 많아도 본문 안에 들어오게 */
+/* 표: 칸 여백을 줄이고 코드는 어디서든 줄바꿈해 열 수가 많아도 본문 안에 들어오게. 칸 최소 폭을 둬서 짧은 값(false 등)이 한 글자씩 접히지 않게 */
 .sl-markdown-content table th,
-.sl-markdown-content table td { padding: 0.5rem 0.6rem; }
+.sl-markdown-content table td { padding: 0.5rem 0.6rem; min-width: 3.5rem; }
 .sl-markdown-content table th:first-child,
 .sl-markdown-content table td:first-child { min-width: 7rem; }
 .sl-markdown-content table code { font-size: 0.78rem; padding: 0.05rem 0.25rem; overflow-wrap: anywhere; }
 /* 첫 열의 짧은 이름(파라미터, 필드)은 중간에서 끊지 않음 */
 .sl-markdown-content table td:first-child code { white-space: nowrap; overflow-wrap: normal; }
+
+/* ===== 플로우차트 (src/components/Diagram.astro, 원본은 docs/assets/diagrams) ===== */
+/* mermaid 원본의 classDef 색은 README(GitHub)용 고정 색이라, 사이트에서는 Diagram.astro 가 아래 변수로 덮어씀 (neutral, accent, soft, muted) */
+:root {
+  --diagram-neutral-fill: #f3f4f6;
+  --diagram-neutral-stroke: #8b9099;
+  --diagram-neutral-text: #1f2328;
+  --diagram-accent-fill: var(--sejong-crimson);
+  --diagram-accent-stroke: #8e0a22;
+  --diagram-accent-text: #ffffff;
+  --diagram-soft-fill: #fdeef1;
+  --diagram-soft-stroke: var(--sejong-crimson);
+  --diagram-soft-text: #4a0610;
+  --diagram-muted-fill: #ffffff;
+  --diagram-muted-stroke: #8b9099;
+  --diagram-muted-text: #1f2328;
+}
+:root[data-theme='dark'] {
+  --diagram-neutral-fill: #2a2e38;
+  --diagram-neutral-stroke: #6b7280;
+  --diagram-neutral-text: #e6e8ee;
+  --diagram-accent-fill: #c8223f;
+  --diagram-accent-stroke: #ff9fb0;
+  --diagram-soft-fill: #3a1a22;
+  --diagram-soft-stroke: #ff9fb0;
+  --diagram-soft-text: #ffe3e8;
+  --diagram-muted-fill: #171a21;
+  --diagram-muted-stroke: #8b93a3;
+  --diagram-muted-text: #e6e8ee;
+}
+.diagram {
+  margin: 1.5rem 0;
+  padding: 1.25rem 0.75rem;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 14px;
+  background: var(--sl-color-bg);
+}
+.diagram__canvas {
+  display: flex;
+  justify-content: center;
+  min-height: 9rem;
+}
+.diagram__canvas svg {
+  max-width: 100%;
+  height: auto;
+}
+.diagram[data-diagram-state='loading'] .diagram__canvas {
+  align-items: center;
+  color: var(--sl-color-gray-3);
+  font-size: 0.85rem;
+}
+.diagram__fallback {
+  margin: 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.78rem;
+  text-align: left;
+}
+.diagram .node a,
+.diagram a:has(.node) {
+  cursor: pointer;
+}
+/* 화살표 위 글자: 배경과 같은 색 바탕에 본문 색으로 */
+.diagram .edgeLabel,
+.diagram .edgeLabel * {
+  background-color: var(--sl-color-bg) !important;
+  color: var(--sl-color-gray-2) !important;
+}

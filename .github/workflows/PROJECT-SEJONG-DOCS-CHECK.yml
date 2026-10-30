@@ -9,6 +9,8 @@ on:
     paths:
       - "**.md"
       - "scripts/check-docs.py"
+      - "scripts/sync-diagrams.py"
+      - "docs/assets/diagrams/**"
       - "scripts/check-fixed-values.py"
       - "scripts/check-api-index.py"
       - "version.yml"
@@ -22,6 +24,8 @@ on:
     paths:
       - "**.md"
       - "scripts/check-docs.py"
+      - "scripts/sync-diagrams.py"
+      - "docs/assets/diagrams/**"
       - "scripts/check-fixed-values.py"
       - "scripts/check-api-index.py"
       - "version.yml"

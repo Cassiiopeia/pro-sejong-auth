@@ -1,0 +1,18 @@
+%% alt: 필요한 것에 따라 읽을 문서를 고른다. 학생 인증, 강의 검색, 학사일정, 기숙사와 학식, 그 밖의 학교 데이터
+flowchart LR
+  need(["<b>무엇이<br/>필요한가요?</b>"]):::soft
+  verify["<b>학생 인증 붙이기</b><br/>재학생 확인"]:::neutral
+  lectures["<b>학과·강의 검색</b><br/>개설강좌 찾기"]:::neutral
+  calendar["<b>학사일정 위젯</b><br/>이번 달 일정"]:::neutral
+  dining["<b>기숙사·학식 봇</b><br/>오늘의 식단"]:::neutral
+  data["<b>학교 데이터</b><br/>레퍼런스"]:::neutral
+  need --> verify
+  need --> lectures
+  need --> calendar
+  need --> dining
+  need --> data
+  click verify "{{site:/guides/student-verification/}}"
+  click lectures "{{site:/guides/department-lecture-search/}}"
+  click calendar "{{site:/guides/academic-calendar/}}"
+  click dining "{{site:/guides/dormitory-cafeteria-bot/}}"
+  click data "{{site:/data/overview/}}"

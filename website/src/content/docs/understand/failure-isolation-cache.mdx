@@ -4,10 +4,15 @@ description: 한 정보 출처가 실패해도 나머지가 동작하게 하는 
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../components/Diagram.astro';
 
 ## 왜 필요한가
 
 학교 서버는 느리거나(비교과 일정은 수십 초가 걸리기도 합니다), 일시적으로 응답하지 않거나, 응답 모양을 바꿀 수 있습니다. 이런 일이 한 곳에서 생겼다고 앱 전체가 멈추면 곤란합니다. 또 같은 요청을 사용자 수만큼 학교에 보내면 학교 서버에 부담이 됩니다.
+
+## 호출 한 번의 흐름
+
+<Diagram name="public-call" />
 
 ## 공개 데이터의 실패 격리
 

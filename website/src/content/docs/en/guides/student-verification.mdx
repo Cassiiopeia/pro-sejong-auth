@@ -4,12 +4,19 @@ description: Check Sejong enrollment from the student ID and password of a sign-
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import Diagram from '../../../../components/Diagram.astro';
 
 Take the student ID and password from a sign-up form, check enrollment, and fetch only student ID, name and major. The password is neither stored nor logged.
 
 <Aside type="note" title="The example code is for reference">
 Method names, arguments, result fields and error codes follow [RESULT_SCHEMA](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md). With a real portal account, `scripts/verify-live.sh` in the repository compares the three languages ([Issues and pull requests](../../contribute/issues-and-prs/)).
 </Aside>
+
+## Verification flow
+
+A wrong password stops at the first failure. There is no retry, so the library never locks the account.
+
+<Diagram name="verify" />
 
 ## Request parameters
 
