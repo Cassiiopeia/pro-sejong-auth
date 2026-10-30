@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-30T02:24:13Z",
-    "currentVersion": "1.2.72",
+    "lastUpdated": "2026-10-30T03:29:39Z",
+    "currentVersion": "1.2.79",
     "projectType": "spring",
-    "totalReleases": 29,
+    "totalReleases": 30,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,30 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.79",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-30",
+      "pr_number": 154,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * 읽기 편한 README와 문서 사이트로 정돈하고 흐름을 보여 주는 도식 5종 추가\n  * 기능 이름에서 문서 사이트의 해당 페이지로 바로 이동하는 링크 추가\n  * 카카오톡 등 공유 미리보기의 제목과 설명 정리\n  * 예시 출력 화면에서 날짜와 개수 제거",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "읽기 편한 README와 문서 사이트로 정돈하고 흐름을 보여 주는 도식 5종 추가",
+            "기능 이름에서 문서 사이트의 해당 페이지로 바로 이동하는 링크 추가",
+            "카카오톡 등 공유 미리보기의 제목과 설명 정리",
+            "예시 출력 화면에서 날짜와 개수 제거"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.72",
       "project_type": "spring",
