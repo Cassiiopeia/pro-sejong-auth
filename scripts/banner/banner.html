@@ -2,7 +2,7 @@
 <!--
   README·공유 이미지 배너 원본 (단일 원본). PNG 는 scripts/generate-banner.py 가 이 파일을 헤드리스 Chrome 으로 렌더링해 만든다.
   주소 인자: ?variant=a|b|c  &lang=ko|en  &layout=banner|og
-  규칙: 크림슨이 주인공, 요소는 적게 (워드마크, 제목, 한 줄 소개, 코드 창, 칩), 영문은 모두 대문자, 교표는 넣지 않음 (README 맨 위에 따로 있음)
+  규칙: 크림슨이 주인공, 요소는 적게 (워드마크, 제목, 한 줄 소개, 언어 이름, 코드 창), 영문은 모두 대문자, 교표는 넣지 않음 (README 맨 위에 따로 있음)
   문구는 아래 COPY 한 곳에서만 고친다 (코드 창의 2,786 은 2026-10-30 학부 2026학년도 2학기 실측값)
 -->
 <html lang="ko">
@@ -36,13 +36,13 @@
   /* 왼쪽: 워드마크, 제목, 한 줄 소개, 칩 */
   .copy { position: relative; z-index: 1; width: 400px; }
   .wordmark { font-size: 13px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text-sub); }
-  h1 { margin-top: 18px; font-size: 46px; line-height: 1.2; font-weight: 800; letter-spacing: -0.035em; color: var(--text-main); }
+  h1 { margin-top: 18px; font-size: 41px; line-height: 1.2; font-weight: 800; letter-spacing: -0.035em; color: var(--text-main); }
   h1 em { font-style: normal; color: var(--accent-text); }
-  html[lang="en"] h1 { font-size: 35px; line-height: 1.22; letter-spacing: -0.01em; text-transform: uppercase; font-weight: 800; }
+  html[lang="en"] h1 { font-kerning: normal; text-rendering: optimizeLegibility; font-size: 31px; line-height: 1.25; letter-spacing: 0.01em; text-transform: uppercase; font-weight: 800; }
+  .tight { letter-spacing: -0.07em; }
   .sub { margin-top: 18px; font-size: 17px; line-height: 1.55; word-break: keep-all; color: var(--text-sub); letter-spacing: -0.01em; }
   html[lang="en"] .sub { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; line-height: 1.8; }
-  .chips { display: flex; gap: 20px; margin-top: 26px; }
-  .chip { font-size: 12.5px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-main); padding-bottom: 6px; border-bottom: 2px solid var(--chip-line); }
+  .languages { margin-top: 22px; font-size: 12.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-main); }
 
   /* 오른쪽: 코드 창 하나 */
   .window { position: relative; z-index: 1; width: 330px; border-radius: 12px; background: var(--window-background); border: 1px solid var(--window-border); box-shadow: var(--window-shadow); overflow: hidden; }
@@ -56,7 +56,7 @@
   body[data-variant="a"] {
     --stage-background: linear-gradient(115deg, #D9163C 0%, #C20F2F 42%, #8E0A22 100%);
     --stage-decoration: radial-gradient(520px 340px at 92% 0%, rgba(255,255,255,0.22), transparent 70%), radial-gradient(360px 260px at 0% 110%, rgba(60,0,12,0.35), transparent 70%);
-    --text-main: #FFFFFF; --text-sub: rgba(255,255,255,0.84); --text-faint: #8B93A3; --accent-text: #FFFFFF; --chip-line: rgba(255,255,255,0.55);
+    --text-main: #FFFFFF; --text-sub: rgba(255,255,255,0.84); --text-faint: #8B93A3; --accent-text: #FFFFFF; 
     --window-background: #14161C; --window-border: rgba(255,255,255,0.10); --window-bar: #1B1E26; --window-dot: #343A47; --window-shadow: 0 22px 44px rgba(50,0,10,0.45);
     --code-text: #D7DBE4; --code-keyword: #FF7A90; --code-string: #7FD6A8; --code-comment: #6F7889; --code-number: #FFD27A;
   }
@@ -64,7 +64,7 @@
   body[data-variant="b"] {
     --stage-background: linear-gradient(120deg, #A30D27 0%, #7A0A1F 55%, #4E0614 100%);
     --stage-decoration: radial-gradient(480px 320px at 88% 10%, rgba(255,75,103,0.35), transparent 70%);
-    --text-main: #FFFFFF; --text-sub: rgba(255,255,255,0.80); --text-faint: #8A95A3; --accent-text: #FFB3C0; --chip-line: rgba(255,179,192,0.6);
+    --text-main: #FFFFFF; --text-sub: rgba(255,255,255,0.80); --text-faint: #8A95A3; --accent-text: #FFB3C0; 
     --window-background: #FFFFFF; --window-border: rgba(255,255,255,0.4); --window-bar: #F6F1EE; --window-dot: #D9D2CB; --window-shadow: 0 22px 44px rgba(30,0,6,0.5);
     --code-text: #2B3745; --code-keyword: #C20F2F; --code-string: #1F7A4D; --code-comment: #8A95A3; --code-number: #A15B00;
   }
@@ -72,7 +72,7 @@
   body[data-variant="c"] {
     --stage-background: #FBF8F4;
     --stage-decoration: linear-gradient(115deg, transparent 0 56%, #C20F2F 56% 100%), radial-gradient(420px 300px at 100% 0%, rgba(255,255,255,0.25), transparent 70%);
-    --text-main: #1B2733; --text-sub: #4A5868; --text-faint: #8B93A3; --accent-text: #C20F2F; --chip-line: #C20F2F;
+    --text-main: #1B2733; --text-sub: #4A5868; --text-faint: #8B93A3; --accent-text: #C20F2F; 
     --window-background: #14161C; --window-border: rgba(255,255,255,0.10); --window-bar: #1B1E26; --window-dot: #343A47; --window-shadow: 0 22px 44px rgba(50,0,10,0.35);
     --code-text: #D7DBE4; --code-keyword: #FF7A90; --code-string: #7FD6A8; --code-comment: #6F7889; --code-number: #FFD27A;
   }
@@ -84,7 +84,7 @@
     <div class="wordmark">Pro Sejongpeia</div>
     <h1 id="title"></h1>
     <p class="sub" id="sub"></p>
-    <div class="chips"><span class="chip">Java</span><span class="chip">Python</span><span class="chip">Node.js</span></div>
+    <p class="languages">Java · Python · Node.js</p>
   </div>
   <div class="window">
     <div class="window-bar"><span></span><span></span><span></span><b>main.py</b></div>
@@ -97,8 +97,8 @@ data.lectures(<span class="s">"20"</span>, <span class="s">"2026"</span>, <span 
 <script>
   // 문구 단일 원본 (영문은 CSS 로 대문자 처리)
   const COPY = {
-    ko: { title: '세종대학교를<br><em>라이브러리 하나로</em>', sub: '학번 인증부터 학과·강의·학사일정·학식까지', rows: '2,786행' },
-    en: { title: 'Sejong University<br><em>in one library</em>', sub: 'Student login · departments · lectures<br>calendar · cafeteria · campus', rows: '2,786 rows' },
+    ko: { title: '세종대 개발에 필요한<br><em>모든 것을 한 번에</em>', sub: '학번 인증부터 학과·강의·학사일정·학식까지', rows: '2,786행' },
+    en: { title: 'EVER<span class="tight">Y</span>THING you need<br>to build on<br><em>Sejong University</em>', sub: 'Student login · departments · lectures<br>calendar · cafeterias', rows: '2,786 rows' },
   };
   const query = new URLSearchParams(location.search);
   const variant = query.get('variant') || 'a', language = query.get('lang') || 'ko', layout = query.get('layout') || 'banner';

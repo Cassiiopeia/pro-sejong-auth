@@ -2,16 +2,17 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-<img src="docs/assets/banner/banner-a.en.png" alt="pro-sejongpeia: Sejong University in one library. Student login verification plus departments, lectures, academic calendar, cafeteria and campus data for Java, Python and Node.js" width="880">
+<img src="docs/assets/banner/banner-a.en.png" alt="pro-sejongpeia: everything you need to build on Sejong University. Student login, departments, lectures, academic calendar and cafeterias for Java, Python and Node.js" width="880">
 
-**Student login verification and 15 kinds of public Sejong University data, in one call from Java, Python or Node.js.**
-Fast and light · gentle on requests · never stores a password · checked against the real portal every day.
+**Everything you need to build on Sejong University, in one library.**
+From student login to departments, lectures, the academic calendar and cafeterias, one call from Java, Python or Node.js.
+Fast and light, gentle on requests, never stores a password, and checked against the real portal every day.
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 라이브러리 (Java · Python · Node)</sub>
 
 [Site](https://cassiiopeia.github.io/pro-sejongpeia/) · [Try it in the browser](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [What you get](#what-you-get) · [Try it now](#try-it-now) · [Docs](#more-integration-examples-and-api-stability) · [한국어](README.md) | English
 
-[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 [![PyPI](https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejongpeia/)
 [![npm](https://img.shields.io/npm/v/pro-sejongpeia?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejongpeia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
@@ -180,7 +181,7 @@ Error handling and Spring setup are in the [quick start](#quick-start-java--spri
 
 ## Quick start: Java / Spring Boot
 
-[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
 Published to **Maven Central** (no extra repository needed). Java 17+, Spring Boot 3.x. Spring Boot auto-configuration registers the `SuhSejongAuthEngine` and `SejongPublicData` beans.
 

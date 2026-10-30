@@ -2,10 +2,11 @@
 
 <img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
 
-<img src="docs/assets/banner/banner-a.ko.png" alt="pro-sejongpeia: 세종대학교를 라이브러리 하나로. 학번 인증과 학과·강의·학사일정·학식·캠퍼스 데이터를 Java, Python, Node.js로" width="880">
+<img src="docs/assets/banner/banner-a.ko.png" alt="pro-sejongpeia: 세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js" width="880">
 
-**세종대 학번 인증과 학교 공개 데이터 15가지를 Java · Python · Node.js 호출 한 번으로.**
-빠르고 가볍게 · 요청은 아끼고 · 비밀번호는 저장하지 않고 · 매일 실제 포털로 점검합니다.
+**세종대 개발에 필요한 모든 것을 한 번에.**
+학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js 호출 한 번으로 받습니다.
+가볍고 빠르며, 요청은 아끼고, 비밀번호는 저장하지 않으며, 매일 실제 포털로 점검합니다.
 
 <sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 · 학교 데이터 라이브러리</sub>
 
@@ -14,7 +15,7 @@
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
 ## 최신 버전 : v1.2.61 (2026-10-30)
 
-[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 [![PyPI](https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60)](https://pypi.org/project/pro-sejongpeia/)
 [![npm](https://img.shields.io/npm/v/pro-sejongpeia?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejongpeia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
@@ -61,7 +62,7 @@
 - **비밀번호를 저장하지 않습니다.** 포털 로그인 요청에만 쓰고, 오류 메시지에 담기지 않습니다 (테스트 `test_error_message_never_contains_password`).
 - **첫 실패에서 멈춥니다.** 비밀번호가 틀리면 재시도 없이 `AUTHENTICATION_FAILED`로 끝내 계정 잠금을 피하고, 잠긴 계정은 `ACCOUNT_LOCKED`로 알려 줍니다.
 - SIS 부가 필드(`extra`)에서 세션값·접속 IP·계정 상태·주민번호·계좌·주소·직원 이름을 **항상 제외**하고, 학교 서버의 내부 오류 정보는 돌려주지 않습니다.
-- 학교 서버가 실패해도 앱은 안 흔들립니다. 공개 데이터는 예외 대신 마지막 캐시 값이나 빈 목록을 줍니다.
+- 학교 서버가 실패해도 앱이 흔들리지 않습니다. 공개 데이터는 예외 대신 마지막 캐시 값이나 빈 목록을 줍니다.
 
 ### ✅ 믿을 수 있게
 
@@ -183,7 +184,7 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
 
 ## 빠른 시작: Java / Spring Boot
 
-[![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
 **Maven Central**에서 배포합니다 (저장소 추가 불필요). Java 17+, Spring Boot 3.x. Spring Boot 자동 설정이 `SuhSejongAuthEngine`과 `SejongPublicData` 빈을 등록합니다.
 

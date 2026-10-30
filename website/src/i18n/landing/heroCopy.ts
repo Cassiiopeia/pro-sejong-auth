@@ -9,10 +9,10 @@ export const HERO_COPY: Record<LandingLocale, HeroSectionsCopy> = {
   ko: {
     hero: {
       eyebrow: 'Pro Sejongpeia · 세종대 개발자들의 작은 유토피아',
-      titleLine: '세종대학교를',
-      titleEmphasis: '라이브러리 하나로',
-      lead: '학번 인증과 학교 공개 데이터 15가지(학과·강의·학사일정·기숙사·학식·캠퍼스·비교과)를 Java, Python, Node.js 호출 한 번으로. 같은 메서드, 같은 결과입니다.',
-      tagline: '빠르고 가볍게 · 요청은 아끼고 · 비밀번호는 저장하지 않고 · 매일 실제 포털로 점검',
+      titleLine: '세종대 개발에 필요한',
+      titleEmphasis: '모든 것을 한 번에',
+      lead: '학번 인증부터 학과·강의·학사일정·학식까지. 학교 공개 데이터 15가지를 Java · Python · Node.js에서 같은 메서드, 같은 결과로 받습니다.',
+      tagline: '가볍고 빠르게 · 요청은 아끼고 · 비밀번호는 저장하지 않고 · 매일 실제 포털로 점검',
       visualRowsComment: `${SCHOOL_DATA_SNAPSHOT.lectureRowCount}행`,
       tryDemo: '바로 체험하기',
       quickStart: '빠른 시작',
@@ -40,9 +40,9 @@ export const HERO_COPY: Record<LandingLocale, HeroSectionsCopy> = {
   en: {
     hero: {
       eyebrow: 'Pro Sejongpeia · A little utopia for Sejong developers',
-      titleLine: 'Sejong University',
-      titleEmphasis: 'in one library',
-      lead: 'Student verification and 15 kinds of public school data (departments, lectures, calendar, dormitory, cafeterias, campus, extracurricular) in one call from Java, Python or Node.js. The same methods, the same results.',
+      titleLine: 'Everything you need',
+      titleEmphasis: 'to build on Sejong University',
+      lead: 'From student login to departments, lectures, the academic calendar and cafeterias. 15 kinds of public school data, with the same methods and the same results in Java · Python · Node.js.',
       tagline: 'Fast and light · gentle on requests · never stores a password · checked against the real portal daily',
       visualRowsComment: `${SCHOOL_DATA_SNAPSHOT.lectureRowCount} rows`,
       tryDemo: 'Try it live',

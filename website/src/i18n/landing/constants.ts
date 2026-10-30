@@ -21,7 +21,7 @@ export const SCHOOL_DATA_SNAPSHOT = {
 export const PACKAGE_BADGES = [
   {
     name: 'Maven Central',
-    imageUrl: 'https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F',
+    imageUrl: 'https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F',
     linkUrl: 'https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia',
   },
   {
