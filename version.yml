@@ -35,8 +35,8 @@
 # - 버전은 항상 높은 버전으로 자동 동기화됩니다
 # ===================================================================
 
-version: "1.2.63"
-version_code: 73 # app build number
+version: "1.2.64"
+version_code: 74 # app build number
 project_types: ["spring", "python", "node"] # 멀티타입 배열 — 첫 항목이 primary, 직접 편집 가능
 project_type: "spring" # project_types[0] 자동 미러 — 직접 수정 금지 (spring, flutter, next, react, react-native, react-native-expo, node, python, basic)
 project_paths: # 타입별 프로젝트 폴더 (레포 루트 기준 상대경로)
@@ -44,7 +44,7 @@ project_paths: # 타입별 프로젝트 폴더 (레포 루트 기준 상대경�
   python: "python" # pyproject.toml
   node: "node" # package.json
 metadata:
-  last_updated: "2026-10-30 00:53:36"
+  last_updated: "2026-10-30 01:18:45"
   last_updated_by: "Cassiiopeia"
   default_branch: "main"
   integrated_from: "SUH-DEVOPS-TEMPLATE"
