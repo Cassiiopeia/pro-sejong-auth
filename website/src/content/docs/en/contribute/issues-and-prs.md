@@ -53,6 +53,10 @@ You can expect a first response within 7 days. Only the latest released version 
 - Make sure no password or personal data ends up in logs or exception messages.
 - For a new feature, go through the feature exposure checklist.
 
+## PRs written with an AI agent
+
+PRs written with a coding agent are welcome. The person submitting the PR must run the commands in the repository's [AGENTS.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/AGENTS.md) and confirm they pass, and the PR description should say which agent was used. Never include personal data or real school responses (synthetic values only). The review bar is the same as for human-written PRs.
+
 ## Code of conduct and license
 
 Participants follow the [Code of Conduct](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/CODE_OF_CONDUCT.en.md). Contributions are released under the [MIT License](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE).
