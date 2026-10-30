@@ -55,7 +55,7 @@ body {
 .sl-markdown-content h3 {
   margin-top: 2rem;
 }
-.sl-markdown-content > :is(p, ul, ol, dl, blockquote),
+.sl-markdown-content > :is(p, ul, ol, dl, blockquote):not(.sl-steps),
 .sl-markdown-content > .sl-link-card {
   max-width: 50rem;
 }
