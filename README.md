@@ -299,7 +299,7 @@ Java는 포털의 레거시 cipher 때문에 JVM 전체 TLS 설정을 바꿉니�
 이 라이브러리로 시간을 아꼈다면 ⭐ 하나가 다른 세종대 개발자들이 찾는 데 도움이 됩니다.
 
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
-## 최신 버전 : v1.2.69
+## 최신 버전 : v1.2.72
 
 [전체 변경 이력](CHANGELOG.md)
 
