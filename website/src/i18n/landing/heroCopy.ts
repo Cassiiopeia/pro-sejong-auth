@@ -1,5 +1,6 @@
 // 랜딩 문구: 첫 화면, 첫 호출 예시, 마무리 (ko/en)
 
+import { SCHOOL_DATA_SNAPSHOT } from './constants';
 import type { LandingCopy, LandingLocale } from './types';
 
 type HeroSectionsCopy = Pick<LandingCopy, 'hero' | 'firstCall' | 'closing'>;
@@ -8,9 +9,11 @@ export const HERO_COPY: Record<LandingLocale, HeroSectionsCopy> = {
   ko: {
     hero: {
       eyebrow: 'Pro Sejongpeia · 세종대 개발자들의 작은 유토피아',
-      titleLine: '세종대학교를 라이브러리 하나로,',
-      titleEmphasis: '로그인부터 학교 데이터까지',
-      lead: '학번과 비밀번호로 재학생을 확인하고, 로그인 없이 학과·강의·학사일정·기숙사·학식·캠퍼스 정보를 받습니다. Java, Python, Node.js에서 같은 메서드, 같은 결과입니다.',
+      titleLine: '세종대학교를',
+      titleEmphasis: '라이브러리 하나로',
+      lead: '학번 인증과 학교 공개 데이터 15가지(학과·강의·학사일정·기숙사·학식·캠퍼스·비교과)를 Java, Python, Node.js 호출 한 번으로. 같은 메서드, 같은 결과입니다.',
+      tagline: '빠르고 가볍게 · 요청은 아끼고 · 비밀번호는 저장하지 않고 · 매일 실제 포털로 점검',
+      visualRowsComment: `${SCHOOL_DATA_SNAPSHOT.lectureRowCount}행`,
       tryDemo: '바로 체험하기',
       quickStart: '빠른 시작',
       github: 'GitHub',
@@ -37,9 +40,11 @@ export const HERO_COPY: Record<LandingLocale, HeroSectionsCopy> = {
   en: {
     hero: {
       eyebrow: 'Pro Sejongpeia · A little utopia for Sejong developers',
-      titleLine: 'Sejong University in one library,',
-      titleEmphasis: 'from login to school data',
-      lead: 'Verify a student with a student ID and password, and get departments, courses, the academic calendar, dormitory, cafeteria and campus data without logging in. The same methods and the same results in Java, Python and Node.js.',
+      titleLine: 'Sejong University',
+      titleEmphasis: 'in one library',
+      lead: 'Student verification and 15 kinds of public school data (departments, lectures, calendar, dormitory, cafeterias, campus, extracurricular) in one call from Java, Python or Node.js. The same methods, the same results.',
+      tagline: 'Fast and light · gentle on requests · never stores a password · checked against the real portal daily',
+      visualRowsComment: `${SCHOOL_DATA_SNAPSHOT.lectureRowCount} rows`,
       tryDemo: 'Try it live',
       quickStart: 'Quick start',
       github: 'GitHub',

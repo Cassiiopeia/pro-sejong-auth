@@ -1,5 +1,5 @@
 ---
-// "30초 첫 호출": 언어별 설치 + 학번 인증 + 로그인 없이 학과 코드 받기
+// "30초 첫 호출": 언어별 설치 + 로그인 없이 학과 코드 받기(먼저) + 학번 인증
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
 
@@ -53,10 +53,10 @@ const snippets = [
     {
       snippets.map((snippet) => (
         <TabItem label={snippet.label}>
-          <p class="landing-code-label">{copy.authLabel}</p>
-          <Code code={snippet.auth} lang={snippet.lang} />
           <p class="landing-code-label">{copy.publicLabel}</p>
           <Code code={snippet.publicCode} lang={snippet.lang} />
+          <p class="landing-code-label">{copy.authLabel}</p>
+          <Code code={snippet.auth} lang={snippet.lang} />
         </TabItem>
       ))
     }

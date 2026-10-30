@@ -12,13 +12,31 @@ interface HardPartCard {
   body: string;
   link: string;
 }
+interface PillarCard {
+  icon: string;
+  title: string;
+  points: string[];
+  proofLabel: string;
+  // 문서 사이트 안 상대 경로 또는 https 주소
+  proofLink: string;
+}
 interface MatrixRow {
   feature: string;
   detail: string;
 }
 
 export interface LandingCopy {
-  hero: { eyebrow: string; titleLine: string; titleEmphasis: string; lead: string; tryDemo: string; quickStart: string; github: string };
+  hero: {
+    eyebrow: string;
+    titleLine: string;
+    titleEmphasis: string;
+    lead: string;
+    tagline: string;
+    tryDemo: string;
+    quickStart: string;
+    github: string;
+    visualRowsComment: string;
+  };
   firstCall: { title: string; lead: string; authLabel: string; publicLabel: string; note: string; passwordPlaceholder: string };
   demo: {
     title: string;
@@ -54,6 +72,7 @@ export interface LandingCopy {
     errorMeanings: Record<string, string>;
   };
   features: { title: string; lead: string; cards: FeatureCard[] };
+  pillars: { title: string; lead: string; cards: PillarCard[] };
   matrix: { title: string; lead: string; featureHeader: string; supported: string; note: string; rows: MatrixRow[] };
   hardParts: { title: string; lead: string; cards: HardPartCard[] };
   closing: { title: string; lead: string; docs: string; stability: string; contribute: string; agents: string; disclaimer: string };
