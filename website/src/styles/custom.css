@@ -4,6 +4,9 @@
   --sejong-crimson-strong: #a30d27;
   --sejong-navy: #324d60;
 
+  /* 문서 본문 폭: Starlight 기본(50rem)은 넓은 화면에서 표가 답답해서 넓힘 */
+  --sl-content-width: 72rem;
+
   --sl-font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR',
     'Malgun Gothic', system-ui, sans-serif;
 
