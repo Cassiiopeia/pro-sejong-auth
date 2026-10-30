@@ -65,7 +65,7 @@ cd website && npm ci && npm run build && node scripts/check-links.mjs   # docs s
 - Never log or print a password, a session cookie or a token. Log only what the existing `[sejong ...]` messages log.
 - No backward-compatibility promise (maintainer decision): do not add compatibility shims or deprecated aliases.
 - Java: Javadoc cannot see Lombok builders, so never name builder types in signatures or `{@link}`. Models use `@Getter @Builder`.
-- Comments and docstrings are short Korean one-liners (summary, `input > output`, `A > B` flow). No narrative paragraphs, no change history. Logs are English with a `[feature]` prefix.
+- 코드에는 한 줄 요약, 상세 인자·반환·실패는 spec/api-index.json: comments and docstrings are short Korean one-liners (summary, `input > output`, `A > B` flow), no `@param`/`@return`/`@throws` blocks, no multi-line docstrings, no narrative paragraphs, no change history. Parameter, return and failure details live only in `spec/api-index.json` (the site `api.json` and docs are generated from it). Logs are English with a `[feature]` prefix.
 
 ## Do not
 

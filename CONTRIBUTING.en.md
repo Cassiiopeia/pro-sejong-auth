@@ -133,6 +133,7 @@ Building a feature is not the end: it has to show up everywhere people look. Che
 - Branch from `main`.
 - Add tests when behavior changes. Parser changes need a fixture in `spec/fixtures/` and the same expected values for all languages.
 - Make sure no password or personal data ends up in logs or exception messages.
+- Keep code comments to one-line summaries. Parameter, return and failure details go in `spec/api-index.json` (the site `api.json` and docs are generated from it).
 
 ## License
 

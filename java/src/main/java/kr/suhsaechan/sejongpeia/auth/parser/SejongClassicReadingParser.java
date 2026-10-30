@@ -43,13 +43,7 @@ public class SejongClassicReadingParser {
   private static final String LABEL_CERTIFIED_SEMESTERS = "인증완료 학기";
   private static final String LABEL_CERTIFICATION_STATUS = "인증여부";
 
-  /**
-   * HTML에서 고전독서 전체 정보 파싱
-   *
-   * @param html 고전독서인증현황 페이지 HTML
-   * @return 고전독서 인증 정보
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** HTML에서 고전독서 전체 정보 파싱 */
   public SejongClassicReading parse(String html) {
     try {
       Document doc = Jsoup.parse(html);
@@ -207,13 +201,7 @@ public class SejongClassicReadingParser {
     return list;
   }
 
-  /**
-   * 리스트에서 안전하게 컬럼 값 추출
-   *
-   * @param cols 컬럼 리스트
-   * @param index 인덱스
-   * @return trim된 값 또는 빈 문자열
-   */
+  /** 리스트에서 안전하게 컬럼 값 추출 */
   private String getColumnValue(List<String> cols, int index) {
     if (cols == null || index < 0 || index >= cols.size()) {
       return "";

@@ -45,12 +45,7 @@ public class SejongSisParser {
           + "|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)";
   private static final Pattern EXTRA_EXCLUDED_KEY = Pattern.compile(EXTRA_EXCLUDED_KEY_PATTERN, Pattern.CASE_INSENSITIVE);
 
-  /**
-   * JSON에서 학교 제공 코드·구분과 extra 파싱 (코드는 데이터셋 순서로 처음 찾은 값, 없으면 빈 문자열)
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 학교 제공 코드·구분과 extra 파싱 (코드는 데이터셋 순서로 처음 찾은 값, 없으면 빈 문자열) */
   public SejongSisSchoolFields parseSchoolFields(String json) {
     JsonNode root = readRoot(json);
     return new SejongSisSchoolFields(
@@ -158,12 +153,7 @@ public class SejongSisParser {
     return extra;
   }
 
-  /**
-   * initUserInfo 오류 응답 판정: LOGOUT > AUTHENTICATION_FAILED, 그 외 오류 > DATA_FETCH_FAILED (JSON 아니면 통과)
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @throws SejongAuthException 오류 응답일 때
-   */
+  /** initUserInfo 오류 응답 판정: LOGOUT > AUTHENTICATION_FAILED, 그 외 오류 > DATA_FETCH_FAILED (JSON 아니면 통과) */
   public void ensureLoggedIn(String json) {
     JsonNode submitError;
     try {
@@ -181,13 +171,7 @@ public class SejongSisParser {
     throw new SejongAuthException(SejongAuthErrorCode.DATA_FETCH_FAILED, "SIS returned an error : " + errorType);
   }
 
-  /**
-   * JSON에서 학과명 파싱
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 학과명
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 학과명 파싱 */
   public String parseMajor(String json) {
     JsonNode root = readRoot(json);
     JsonNode dmUserInfoGam = root.path("dm_UserInfoGam");
@@ -200,13 +184,7 @@ public class SejongSisParser {
     return CommonUtil.defaultIfBlank(major, "");
   }
 
-  /**
-   * JSON에서 학번 파싱
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 학번
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 학번 파싱 */
   public String parseStudentId(String json) {
     JsonNode root = readRoot(json);
     JsonNode dmUserInfo = root.path("dm_UserInfo");
@@ -220,13 +198,7 @@ public class SejongSisParser {
     return CommonUtil.defaultIfBlank(studentId, "");
   }
 
-  /**
-   * JSON에서 이름 파싱
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 이름
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 이름 파싱 */
   public String parseName(String json) {
     JsonNode root = readRoot(json);
     JsonNode dmUserInfo = root.path("dm_UserInfo");
@@ -235,13 +207,7 @@ public class SejongSisParser {
     return CommonUtil.defaultIfBlank(name, "");
   }
 
-  /**
-   * JSON에서 이메일 파싱
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 이메일 주소
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 이메일 파싱 */
   public String parseEmail(String json) {
     JsonNode root = readRoot(json);
     JsonNode dmUserInfoGam = root.path("dm_UserInfoGam");
@@ -249,13 +215,7 @@ public class SejongSisParser {
     return CommonUtil.defaultIfBlank(email, "");
   }
 
-  /**
-   * JSON에서 전화번호 파싱
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 전화번호 (010-1234-5678 형식)
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 전화번호 파싱 */
   public String parsePhoneNumber(String json) {
     JsonNode root = readRoot(json);
     JsonNode dmUserInfoGam = root.path("dm_UserInfoGam");
@@ -263,13 +223,7 @@ public class SejongSisParser {
     return CommonUtil.defaultIfBlank(phoneNumber, "");
   }
 
-  /**
-   * JSON에서 영어 이름 파싱
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 영어 이름
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 영어 이름 파싱 */
   public String parseEnglishName(String json) {
     JsonNode root = readRoot(json);
     JsonNode dmUserInfo = root.path("dm_UserInfo");
@@ -282,13 +236,7 @@ public class SejongSisParser {
     return CommonUtil.defaultIfBlank(englishName, "");
   }
 
-  /**
-   * JSON에서 사용자 구분 파싱 (dm_UserInfoSch.USER_CLSF_CD_NM, 예: 학부생)
-   *
-   * @param json initUserInfo.do API 응답 JSON
-   * @return 사용자 구분 (없으면 빈 문자열)
-   * @throws SejongAuthException 파싱 실패 시
-   */
+  /** JSON에서 사용자 구분 파싱 (dm_UserInfoSch.USER_CLSF_CD_NM, 예: 학부생) */
   public String parseUserCategory(String json) {
     JsonNode dmUserInfoSch = readRoot(json).path("dm_UserInfoSch");
     return CommonUtil.defaultIfBlank(getTextValue(dmUserInfoSch, "USER_CLSF_CD_NM"), "");

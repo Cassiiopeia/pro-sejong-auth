@@ -16,13 +16,7 @@ public class SejongPortalMainParser {
   private static final String TOKEN_DELIMITER = " ";
   private static final int PARENT_UNIT_AND_MAJOR_TOKEN_COUNT = 2;
 
-  /**
-   * 소속 표기 > 상위 소속명 (규칙: 학과가 끝에 일치, 아니면 토큰 2개일 때만 앞 토큰, 그 외 빈 문자열, 예외 없음)
-   *
-   * @param html 포털 메인 HTML
-   * @param major 이미 알고 있는 학과명 (DHC)
-   * @return 상위 소속명 (알 수 없으면 빈 문자열)
-   */
+  /** 소속 표기 > 상위 소속명 (규칙: 학과가 끝에 일치, 아니면 토큰 2개일 때만 앞 토큰, 그 외 빈 문자열, 예외 없음) */
   public String parseParentUnitName(String html, String major) {
     try {
       String affiliation = readAffiliationText(html);

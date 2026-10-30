@@ -39,12 +39,7 @@ export interface SejongPublicDataOptions {
   _nowMilliseconds?: () => number;
 }
 
-/**
- * 공개 데이터 클라이언트(로그인 없음): 학사 코드, 강의, 학과 교육과정, 학사일정, 기숙사, 학식, 캠퍼스, 비교과 15개 메서드
- * 요청 > JSON 검증 > 모델 변환 > 메모리 캐시, 같은 인자의 동시 호출은 요청 1건 공유
- * 값 규칙: 학교 원문 문자열, 없으면 빈 문자열 (null 없음), 쓰지 않은 학교 필드는 extra
- * 실패 격리: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 값, 잘못된 입력만 INVALID_INPUT 예외 (spec/PUBLIC_DATA.md)
- */
+/** 공개 데이터 클라이언트(로그인 없음): 학사 코드, 강의, 학과 교육과정, 학사일정, 기숙사, 학식, 캠퍼스, 비교과 15개 메서드 */
 export class SejongPublicData {
   readonly timeoutSeconds: number;
   readonly cacheTtlSeconds: number;
@@ -79,167 +74,77 @@ export class SejongPublicData {
     this.extracurricular = new ExtracurricularSource(fetcher);
   }
 
-  /**
-   * 기관 구분 목록 (학부 20, 대학원 30 등)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @returns OrganizationCategory 목록
-   */
+  /** 기관 구분 목록 (학부 20, 대학원 30 등) */
   organizationCategories(): Promise<OrganizationCategory[]> {
     return this.academic.organizationCategories();
   }
 
-  /**
-   * 기관 구분의 학기 목록: 기관 구분 코드 > Term 목록
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param categoryCode 기관 구분 코드 (organizationCategories 결과의 code, 예: 20 학부)
-   * @returns Term 목록
-   */
+  /** 기관 구분의 학기 목록: 기관 구분 코드 > Term 목록 */
   terms(categoryCode: string): Promise<Term[]> {
     return this.academic.terms(categoryCode);
   }
 
-  /**
-   * 학기의 학과 목록: 기관 구분·연도·학기 코드 > Department 목록
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query DepartmentsQuery (categoryCode, year, semesterCode)
-   * @returns Department 목록
-   */
+  /** 학기의 학과 목록: 기관 구분·연도·학기 코드 > Department 목록 */
   departments(query: DepartmentsQuery): Promise<Department[]> {
     return this.academic.departments(query);
   }
 
-  /**
-   * 이수 구분 목록 (공필, 전필 등)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @returns CourseType 목록
-   */
+  /** 이수 구분 목록 (공필, 전필 등) */
   courseTypes(): Promise<CourseType[]> {
     return this.academic.courseTypes();
   }
 
-  /**
-   * 선택 교양 영역 목록
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @returns SelectiveDomain 목록
-   */
+  /** 선택 교양 영역 목록 */
   selectiveDomains(): Promise<SelectiveDomain[]> {
     return this.academic.selectiveDomains();
   }
 
-  /**
-   * 개설 강좌 검색: 학과 코드·과목명·교수명은 선택, 모두 비우면 그 학기 전체 (학부 약 2,800행·2.4MB)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query LecturesQuery (categoryCode, year, semesterCode 필수, departmentCode, courseName, instructorName 선택)
-   * @returns Lecture 목록
-   */
+  /** 개설 강좌 검색: 학과 코드·과목명·교수명은 선택, 모두 비우면 그 학기 전체 (학부 약 2,800행·2.4MB) */
   lectures(query: LecturesQuery): Promise<Lecture[]> {
     return this.academic.lectures(query);
   }
 
-  /**
-   * 학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query CurriculumCoursesQuery (departmentCode, courseNumber 모두 필수)
-   * @returns CurriculumCourse 목록 (그 학과 교육과정에 없는 과목은 빈 목록, 정상)
-   * @throws SejongAuthError INVALID_INPUT: 학과 코드나 학수번호가 빔 (요청 전에 바로 던짐)
-   */
+  /** 학과 교육과정의 과목 1건 (학년·학기·이수구분·학점·교과목 개요) */
   curriculumCourses(query: CurriculumCoursesQuery): Promise<CurriculumCourse[]> {
     return this.academic.curriculumCourses(query);
   }
 
-  /**
-   * 학부·대학원 홈페이지 학사일정: 기간·분류 > CalendarEvent 목록
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query CalendarQuery (start, end 는 yyyy-MM-dd, categoryCode 기본 0001 학부, 0002~0007 대학원 계열)
-   * @returns CalendarEvent 목록
-   */
+  /** 학부·대학원 홈페이지 학사일정: 기간·분류 > CalendarEvent 목록 */
   calendar(query: CalendarQuery): Promise<CalendarEvent[]> {
     return this.calendarSource.calendar(query);
   }
 
-  /**
-   * 대학원 사이트별 한 달 학사일정 (날짜는 MM.dd 형태)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query GraduateCalendarQuery (siteId: graduate, gsi, mba, pub, tourgrad, edu, arts 등 소문자·숫자·하이픈, year, month 1~12)
-   * @returns CalendarEvent 목록 (빈 달은 빈 목록, 정상)
-   * @throws SejongAuthError INVALID_INPUT: siteId 형태가 틀림 (요청 전에 바로 던짐)
-   */
+  /** 대학원 사이트별 한 달 학사일정 (날짜는 MM.dd 형태) */
   graduateCalendar(query: GraduateCalendarQuery): Promise<CalendarEvent[]> {
     return this.calendarSource.graduateCalendar(query);
   }
 
-  /**
-   * 기숙사 일주일 식단 (7일: 조식·중식·석식·대체)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param location 기숙사 위치 코드 (기본 SJ, 다른 값은 확인하지 않음)
-   * @returns DormitoryMenuDay 목록 (7개)
-   */
+  /** 기숙사 일주일 식단 (7일: 조식·중식·석식·대체) */
   dormitoryMenu(location = DEFAULT_DORMITORY_LOCATION): Promise<DormitoryMenuDay[]> {
     return this.dormitory.dormitoryMenu(location);
   }
 
-  /**
-   * 기숙사 공지: 고정 공지와 일반 공지, 전체 건수 (작성자 정보는 반환하지 않음)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query DormitoryNoticesQuery (page 기본 1, rows 기본 10, keyword 제목 검색어, location 기본 SJ), 모두 선택
-   * @returns DormitoryNotices (실패하면 total 0과 빈 목록, 결과 없음도 total 0)
-   */
+  /** 기숙사 공지: 고정 공지와 일반 공지, 전체 건수 (작성자 정보는 반환하지 않음) */
   dormitoryNotices(query: DormitoryNoticesQuery = {}): Promise<DormitoryNotices> {
     return this.dormitory.dormitoryNotices(query);
   }
 
-  /**
-   * 학생식당 한 곳의 메뉴
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param placeId 학교의 식당 번호 (cafeteriaPlaces 결과의 placeId), 빈 목록이 번호 오류의 증거는 아님
-   * @returns CafeteriaMenuItem 목록
-   */
+  /** 학생식당 한 곳의 메뉴 */
   cafeteriaMenu(placeId: string | number): Promise<CafeteriaMenuItem[]> {
     return this.cafeteria.cafeteriaMenu(placeId);
   }
 
-  /**
-   * 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~maxPlaceId의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: maxPlaceId 별 cacheTtlSeconds, 요청은 번호만큼 차례로 (기본 10건, 최대 50건)
-   * @param query CafeteriaPlacesQuery (maxPlaceId 조회할 번호 상한, 1~50, 기본 10)
-   * @returns CafeteriaPlace 목록 (번호 순서, 하나라도 실패하면 목록 전체를 실패로 보고 일부만 캐시하지 않음)
-   * @throws SejongAuthError INVALID_INPUT: maxPlaceId 가 1~50 밖이거나 정수가 아님 (요청 전에 바로 던짐)
-   */
+  /** 학식 식당 목록 (번호, 이름, 건물, 위치): 번호 1~maxPlaceId의 메뉴 응답에서 모음, 메뉴가 없는 식당은 빠짐 */
   cafeteriaPlaces(query: CafeteriaPlacesQuery = {}): Promise<CafeteriaPlace[]> {
     return this.cafeteria.cafeteriaPlaces(query);
   }
 
-  /**
-   * 캠퍼스 지도의 장소 (이름, 위치 위도·경도, 안내)
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param placeType 장소 종류 (학교 값 그대로), 비우면 전체
-   * @returns CampusPlace 목록
-   */
+  /** 캠퍼스 지도의 장소 (이름, 위치 위도·경도, 안내) */
   campusPlaces(placeType = ''): Promise<CampusPlace[]> {
     return this.campus.campusPlaces(placeType);
   }
 
-  /**
-   * 비교과 프로그램 일정: 기간·분류 > ExtracurricularEvent 목록
-   * 실패: 학교 쪽 문제는 예외 없이 마지막 캐시 또는 빈 목록
-   * 캐시: 인자별 cacheTtlSeconds (기본 86400), 요청 1건
-   * @param query ExtracurricularEventsQuery (start, end 는 yyyy-MM-dd, category 학교 값 그대로, 비우면 전체)
-   * @returns ExtracurricularEvent 목록
-   */
+  /** 비교과 프로그램 일정: 기간·분류 > ExtracurricularEvent 목록 */
   extracurricularEvents(query: ExtracurricularEventsQuery): Promise<ExtracurricularEvent[]> {
     return this.extracurricular.extracurricularEvents(query);
   }

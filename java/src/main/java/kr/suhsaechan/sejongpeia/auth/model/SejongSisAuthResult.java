@@ -4,11 +4,7 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
-/**
- * 학사정보시스템(SIS) 인증 결과
- * - sjpt.sejong.ac.kr에서 획득
- * - 연락처 정보 보장
- */
+/** 학사정보시스템(SIS) 인증 결과: sjpt.sejong.ac.kr 에서 획득, 연락처 정보 보장 */
 @Getter
 @Builder
 public class SejongSisAuthResult {

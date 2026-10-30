@@ -4,15 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * 세종대학교 인증 설정 프로퍼티 (접두사 sejongpeia)
- *
- * application.yml 예시:
- * sejongpeia:
- *   ssl-verification: true
- *   timeout-seconds: 10
- *   max-retry: 3
- */
+/** 세종대학교 인증 설정 프로퍼티 (접두사 sejongpeia, 기본값은 spec/RESULT_SCHEMA.md 의 Defaults) */
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "sejongpeia")

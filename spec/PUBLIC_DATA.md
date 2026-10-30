@@ -10,6 +10,8 @@ Sources the school serves without login (verified 2026-10-30, details in [REFERE
 | Node | `new SejongPublicData({ timeoutSeconds, cacheTtlSeconds, failureCacheSeconds, cacheMaxEntries, sslVerification })` (exported from the package) | `camelCase` |
 | Java | `kr.suhsaechan.sejongpeia.publicdata.SejongPublicData` (Spring bean via auto-configuration, also constructible) | `camelCase`, Lombok models |
 
+Options (same meaning in all three languages, Java via `sejongpeia.*` properties or the injecting constructors): request timeout in seconds (default 10), cache lifetime of a successful value (default 86400), certificate check (default on), how long a failure without a cached value is remembered (default 60), maximum cache entries (default 500, the oldest entry is evicted when full). Python arguments starting with an underscore (`_session_factory`, `_clock`) and Node `_sessionFactory`, `_nowMilliseconds` are test seams. Java also has `SejongPublicData()` (defaults), `SejongPublicData(SejongAuthProperties)` (what Spring uses) and `SejongPublicData(PublicDataHttpCaller, Clock, Duration cacheTimeToLive[, Duration failureMemoryDuration, int cacheMaxEntries])` to inject a caller (tests, proxies) and a clock.
+
 The expected JSON uses `snake_case` keys; the Node and Java tests convert names before comparing. Every model also has `extra` (a map of string to string) except the dormitory models and `CafeteriaMenuItem`.
 
 ## Request addresses and fixed values

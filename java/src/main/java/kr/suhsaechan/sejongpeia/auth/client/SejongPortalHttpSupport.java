@@ -81,10 +81,7 @@ final class SejongPortalHttpSupport {
     }
   }
 
-  /**
-   * 포털 로그인 (rtUrl: 로그인 후 SSO 로 넘어갈 대상 사이트) > 포털 판정값 확인
-   * 틀린 비밀번호·잠금은 재시도 없이 즉시 실패 (판정값이 없으면 이후 데이터 요청의 401 로 판별)
-   */
+  /** 포털 로그인 (rtUrl: 로그인 후 SSO 로 넘어갈 대상 사이트) > 포털 판정값 확인 */
   static void loginToPortal(OkHttpClient client, SejongAuthProperties properties,
       String studentId, String password, String returnUrl) throws IOException {
     RequestBody formBody = new FormBody.Builder()
