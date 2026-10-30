@@ -13,7 +13,7 @@
 [사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [무엇을 해 주나요](#무엇을-해-주나요) · [바로 해 보기](#바로-해-보기) · [문서](#더-보기-통합-예시와-api-안정성) · 한국어 | [English](README.en.md)
 
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
-## 최신 버전 : v1.2.63 (2026-10-30)
+## 최신 버전 : v1.2.65 (2026-10-30)
 
 [![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 [![PyPI](https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60)](https://pypi.org/project/pro-sejongpeia/)
