@@ -22,10 +22,10 @@ Sejong University has no official API, so doing it yourself means solving the po
 
 | | Doing it yourself | pro-sejongpeia |
 |---|---|---|
-| **Portal login** | Handle the legacy TLS cipher, the User-Agent the firewall blocks and SSO cookies on three domains | One line: `authenticate(studentId, password)` |
-| **Login result** | A failed login still returns HTTP 200, so you read a value inside a script in the response | Stops at the first failure and tells cases apart by error code such as `AUTHENTICATION_FAILED` |
-| **School data** | Parse a different address, HTML or JSON for every page and throttle the load yourself | Same-shaped objects, a 24-hour cache, the last value when the school fails |
-| **Three languages** | Implement it separately per language | Same features, same result fields, same error codes |
+| **Portal&nbsp;login** | Handle the legacy TLS cipher, the User-Agent the firewall blocks and SSO cookies on three domains | One line: `authenticate(studentId, password)` |
+| **Login&nbsp;result** | A failed login still returns HTTP 200, so you read a value inside a script in the response | Stops at the first failure and tells cases apart by error code such as `AUTHENTICATION_FAILED` |
+| **School&nbsp;data** | Parse a different address, HTML or JSON for every page and throttle the load yourself | Same-shaped objects, a 24-hour cache, the last value when the school fails |
+| **Three&nbsp;languages** | Implement it separately per language | Same features, same result fields, same error codes |
 
 <sub>How each row was solved is in [What this library does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/) and [Understand](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/legacy-tls/).</sub>
 
@@ -186,8 +186,8 @@ Every promise has proof you can check in the code or the tests.
 
 | Promise | Proof | Details |
 |---|---|---|
-| <img src="docs/assets/icons/fast.svg" width="20" alt="" align="top"> **Fast and light** | Zero dependencies (Python, Node). The department list and one department's lectures take about 0.1 s; the integrated login takes 0.6 to 0.8 s with one sign-in (median of 5) | [What it does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/) |
-| <img src="docs/assets/icons/efficient.svg" width="20" alt="" align="top"> **Gentle on requests** | 24-hour cache, simultaneous calls with the same arguments share one request, a failure is remembered for 60 seconds | [Cache and failure isolation](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/failure-isolation-cache/) |
+| <img src="docs/assets/icons/fast.svg" width="20" alt="" align="top"> **Fast&nbsp;and&nbsp;light** | Zero dependencies (Python, Node). The department list and one department's lectures take about 0.1 s; the integrated login takes 0.6 to 0.8 s with one sign-in (median of 5) | [What it does](https://cassiiopeia.github.io/pro-sejongpeia/en/start/introduction/) |
+| <img src="docs/assets/icons/efficient.svg" width="20" alt="" align="top"> **Gentle&nbsp;on&nbsp;requests** | 24-hour cache, simultaneous calls with the same arguments share one request, a failure is remembered for 60 seconds | [Cache and failure isolation](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/failure-isolation-cache/) |
 | <img src="docs/assets/icons/safe.svg" width="20" alt="" align="top"> **Safe** | The password is never stored or put into error messages. SIS extra fields always exclude session values, client IP, resident number, bank account and similar | [Login verdict](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/login-verdict/) |
 | <img src="docs/assets/icons/reliable.svg" width="20" alt="" align="top"> **Trustworthy** | A real portal login check every day at 09:00 KST; values shared by all three languages live in [spec/contract.json](spec/contract.json) | [Daily check](https://cassiiopeia.github.io/pro-sejongpeia/en/understand/daily-live-check/) |
 
