@@ -27,18 +27,18 @@
 
 ## 무엇을 해 주나요
 
-학번 인증 하나만 있는 라이브러리가 아닙니다. 학교가 로그인 없이 내려주는 정보 15가지도 같은 모양으로 받습니다.
+학번 인증 하나만 있는 라이브러리가 아닙니다. 학교가 로그인 없이 내려주는 정보도 같은 모양으로 받습니다. 전체 목록은 아래 [기능](#기능) 표에 있습니다.
 
 | | 기능 | 이런 걸 받아요 |
 |:-:|---|---|
-| 🔐 | **학번 인증** | 학번과 포털 비밀번호로 재학생 확인. 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 등 학교 코드 11개. 통합 · DHC · SIS 중 골라 씁니다 |
-| 🏫 | **학과·학기 코드** | 학부와 대학원 22개 분류, 학기 목록, 학과 목록 (학부 기준 **103개**) |
-| 📚 | **개설강좌** | 학기 전체 (학부 **2,786행**) 또는 학과·과목명·교수명 검색. 시간표·강의실 포함 |
+| 🔐 | **학번 인증** | 학번과 포털 비밀번호로 재학생 확인. 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 같은 학교 코드. 통합 · DHC · SIS 중 골라 씁니다 |
+| 🏫 | **학과·학기 코드** | 학부와 대학원 분류, 학기 목록, 학과 전체 목록 |
+| 📚 | **개설강좌** | 학기 전체 또는 학과·과목명·교수명 검색. 시간표·강의실 포함 |
 | 🎓 | **교육과정·교과목 개요** | 학과 교육과정의 권장 학년·학기, 학점, 교과목 개요 |
 | 📅 | **학사일정** | 학부와 대학원 일정, 그리고 로그인으로 보는 수강신청·증명서 출력 같은 업무별 허용 기간 |
 | 🛏️ | **기숙사** | 7일치 식단과 공지 |
-| 🍚 | **학식** | 식당 **5곳** 목록과 날짜별 메뉴·가격 |
-| 📍 | **캠퍼스 장소** | 건물·복지시설 **60곳**의 이름, 위치 좌표, 안내 |
+| 🍚 | **학식** | 식당 목록과 날짜별 메뉴·가격 |
+| 📍 | **캠퍼스 장소** | 건물·복지시설의 이름, 위치 좌표, 안내 |
 | 🎉 | **비교과 일정** | 비교과 프로그램 일정, 분류, 장소 |
 
 ## 왜 이 라이브러리인가
@@ -48,8 +48,8 @@
 ### ⚡ 빠르고 가볍게
 
 - **의존성 0개** (Python, Node): 표준 라이브러리만 씁니다 (`dependencies = []`, `"dependencies": {}`).
-- **실측**: 학과 목록 약 0.12초, 한 학과 강좌 0.06초, 학기 전체 강좌 2,786행(2.4MB) 0.9초. 캐시에 있으면 마이크로초입니다 (Python, 서울, 새 클라이언트 5회 중앙값. 시간 대부분은 학교 서버 응답입니다).
-- **로그인 한 번**: 통합 인증은 포털에 한 번만 로그인해 DHC와 SIS를 함께 읽습니다. Java 0.57초, Python 0.76초, Node 0.69초 (5회 중앙값).
+- **실측**: 학과 목록과 한 학과 강좌는 0.1초 안팎, 학기 전체 강좌도 1초 안팎이고 캐시에 있으면 마이크로초입니다 (Python, 서울, 새 클라이언트 5회 중앙값. 시간 대부분은 학교 서버 응답입니다).
+- **로그인 한 번**: 통합 인증은 포털에 한 번만 로그인해 DHC와 SIS를 함께 읽습니다. 세 언어 모두 0.6~0.8초 (5회 중앙값).
 
 ### 🧠 요청은 아끼고
 
@@ -68,7 +68,7 @@
 
 - **매일 실제 포털 점검**: 매일 09:00(KST)에 세 언어가 실제 포털에 로그인하고, 실패하면 이슈가 자동으로 열립니다 (위 배지).
 - **세 언어가 같은 결과**: 공통 값은 [spec/contract.json](spec/contract.json) 한 곳에 두고, 어긋나면 언어별 테스트가 실패합니다.
-- **목록 어긋남 점검**: 공개 메서드 19개가 [spec/api-index.json](spec/api-index.json)과 세 언어 소스, 문서에서 같은지 CI가 검사하고, 학교 응답 형태는 계정 없이 매일 확인합니다.
+- **목록 어긋남 점검**: 공개 메서드 목록이 [spec/api-index.json](spec/api-index.json)과 세 언어 소스, 문서에서 같은지 CI가 검사하고, 학교 응답 형태는 계정 없이 매일 확인합니다.
 
 직접 구현할 때 만나는 어려운 부분(포털이 허용하는 암호 하나, 방화벽 User-Agent, 도메인 3곳의 SSO 쿠키, 200 응답 속 판정)도 이미 풀려 있습니다. 자세히는 [문서 사이트](https://cassiiopeia.github.io/pro-sejongpeia/)를 보세요.
 
@@ -78,9 +78,9 @@
 
 | 기능 | Java | Python | Node |
 |---|:-:|:-:|:-:|
-| **학번 인증** 4종: 통합 · DHC · SIS · SIS 학사 업무 기간 | ✅ | ✅ | ✅ |
-| **코드·강좌** 7개: 분류 · 학기 · 학과 · 개설강좌 · 강좌 유형 · 선택 영역 · 교육과정 | ✅ | ✅ | ✅ |
-| **일정·생활** 8개: 학사일정(학부·대학원) · 기숙사 식단·공지 · 학식 식당·메뉴 · 캠퍼스 장소 · 비교과 일정 | ✅ | ✅ | ✅ |
+| **학번 인증**: 통합 · DHC · SIS · SIS 학사 업무 기간 | ✅ | ✅ | ✅ |
+| **코드·강좌**: 분류 · 학기 · 학과 · 개설강좌 · 강좌 유형 · 선택 영역 · 교육과정 | ✅ | ✅ | ✅ |
+| **일정·생활**: 학사일정(학부·대학원) · 기숙사 식단·공지 · 학식 식당·메뉴 · 캠퍼스 장소 · 비교과 일정 | ✅ | ✅ | ✅ |
 | 원본 응답, SIS 코드와 `extra` 옵션 | ✅ | ✅ | ✅ |
 
 메서드 이름 전체(언어별 표기, Java 원본 응답 변형 포함)는 [인증 메서드](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/)와 [학교 데이터 공통 규칙](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/)에 있습니다.
@@ -125,10 +125,10 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "")
 System.out.println(departments.size() + " " + lectures.get(0).getName());
 ```
 
-실행 결과입니다 (Python, 학교 서버 3번 호출에 0.3초).
+예시 출력입니다 (Python, 학교 서버 3번 호출에 0.3초).
 
 <p align="center">
-  <img src="docs/assets/demo/public-data-run.png" alt="SejongPublicData를 실제로 호출한 결과: 학과 103개, 소프트웨어학과 개설강좌, 학사일정" width="760">
+  <img src="docs/assets/demo/public-data-run.png" alt="SejongPublicData 예시 출력: 학과 목록, 소프트웨어학과 개설강좌, 학사일정" width="760">
 </p>
 
 ### 학번 인증도 한 줄
@@ -245,16 +245,16 @@ courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0
 - **학교 값을 그대로** 돌려줍니다. 코드표나 이름 매핑을 박아 두지 않아서 학과가 바뀌어도 코드를 고칠 필요가 없고, 쓰지 않은 학교 필드는 `extra`에 담깁니다.
 - 실패하면 마지막 캐시 값이나 빈 목록을 돌려주고 예외를 던지지 않습니다 (잘못된 입력값만 예외). 학교 서버에 부담을 주지 않도록 쓰세요.
 
-- 학과·과목명·교수명을 모두 비우면 그 학기 전체를 한 번에 받습니다 (학부 2,786행, 2.4MB이므로 가능하면 학과 단위로 조회하세요). [개설강좌](https://cassiiopeia.github.io/pro-sejongpeia/data/lectures/)
+- 학과·과목명·교수명을 모두 비우면 그 학기 전체를 한 번에 받습니다 (응답이 크니 가능하면 학과 단위로 조회하세요). [개설강좌](https://cassiiopeia.github.io/pro-sejongpeia/data/lectures/)
 - 학식 `cafeteria_places`는 학교에 식당 목록 API가 없어 메뉴 응답에서 모은 목록이라, 그날 메뉴가 빈 식당은 빠질 수 있습니다. [학식](https://cassiiopeia.github.io/pro-sejongpeia/data/cafeteria/)
 
 ## 결과 필드
 
-이름은 Java·Node 기준이고 Python은 snake_case입니다. 공통 필드(`studentId`, `name`, `major`, `grade`, `status`), 고전독서, SIS 연락처와 학교 코드 11개, 옵션 `extra`·원본을 [결과 필드 표](https://cassiiopeia.github.io/pro-sejongpeia/auth/result-fields/)와 [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md)에 정리했습니다. `extra`와 원본에는 세션값·접속 IP가 있을 수 있으니 외부 클라이언트에 그대로 내려주지 마세요.
+이름은 Java·Node 기준이고 Python은 snake_case입니다. 공통 필드(`studentId`, `name`, `major`, `grade`, `status`), 고전독서, SIS 연락처와 학교 코드, 옵션 `extra`·원본을 [결과 필드 표](https://cassiiopeia.github.io/pro-sejongpeia/auth/result-fields/)와 [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md)에 정리했습니다. `extra`와 원본에는 세션값·접속 IP가 있을 수 있으니 외부 클라이언트에 그대로 내려주지 마세요.
 
 ## 에러 코드
 
-모든 언어가 `code`를 가진 에러 하나를 던집니다. 10개 코드(`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, `ACCOUNT_UNAVAILABLE`, `INVALID_INPUT`, `CONNECTION_FAILED` 등)의 뜻은 [에러 코드](https://cassiiopeia.github.io/pro-sejongpeia/auth/error-codes/)에 있습니다.
+모든 언어가 `code`를 가진 에러 하나를 던집니다. 에러 코드(`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, `ACCOUNT_UNAVAILABLE`, `INVALID_INPUT`, `CONNECTION_FAILED` 등)의 뜻은 [에러 코드](https://cassiiopeia.github.io/pro-sejongpeia/auth/error-codes/)에 있습니다.
 
 > **계정 잠금.** 포털은 비밀번호를 여러 번 틀리면 계정을 잠그고, 라이브러리는 거부된 로그인을 재시도하지 않습니다. 잠금은 <https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp> 에서 비밀번호를 재설정해야 풀립니다. 누구나 학번을 입력할 수 있는 서비스라면 학번별 실패 횟수를 제한하세요.
 

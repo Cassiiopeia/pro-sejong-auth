@@ -24,18 +24,18 @@ Fast and light, gentle on requests, never stores a password, and checked against
 
 ## What you get
 
-Not just student verification. The public data the school serves without a login comes in the same shape, 15 kinds in all.
+Not just student verification. The public data the school serves without a login comes in the same shape. The full list is in the [Features](#features) table below.
 
 | | Feature | What you get |
 |:-:|---|---|
-| 🔐 | **Student verification** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and 11 school codes such as the department code. Pick integrated, DHC or SIS |
-| 🏫 | **Department and term codes** | 22 organization categories (undergraduate and graduate), the term list and the department list (**103** undergraduate departments) |
-| 📚 | **Lectures** | The whole term (**2,786 rows** for undergraduate) or a search by department, course name or instructor, with schedule and room |
+| 🔐 | **Student verification** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and school codes such as the department code. Pick integrated, DHC or SIS |
+| 🏫 | **Department and term codes** | Organization categories (undergraduate and graduate), the term list and the full department list |
+| 📚 | **Lectures** | The whole term or a search by department, course name or instructor, with schedule and room |
 | 🎓 | **Curriculum and course overview** | Suggested year and semester, credits and the course overview of a department's curriculum |
 | 📅 | **Academic calendar** | Undergraduate and graduate schedules, plus the per-business allowed periods (course registration, certificate printing) you see after login |
 | 🛏️ | **Dormitory** | Seven days of menus and the notices |
-| 🍚 | **Cafeterias** | The list of **5** cafeterias and daily menus with prices |
-| 📍 | **Campus places** | **60** buildings and welfare facilities with name, coordinates and info |
+| 🍚 | **Cafeterias** | The list of cafeterias and daily menus with prices |
+| 📍 | **Campus places** | Buildings and welfare facilities with name, coordinates and info |
 | 🎉 | **Extracurricular events** | Event schedule with category and location |
 
 ## Why this library
@@ -45,8 +45,8 @@ Four promises, each with proof you can check in the code or the tests.
 ### ⚡ Fast and light
 
 - **Zero dependencies** (Python, Node): standard library only (`dependencies = []`, `"dependencies": {}`).
-- **Measured**: department list about 0.12 s, one department's lectures 0.06 s, the whole term's 2,786 lectures (2.4 MB) 0.9 s. Cached answers take microseconds (Python, Seoul, median of 5 fresh clients; most of the time is the school server's own response).
-- **One login**: the integrated call signs in to the portal once and reads DHC and SIS with the same session. Java 0.57 s, Python 0.76 s, Node 0.69 s (median of 5).
+- **Measured**: the department list and one department's lectures take about 0.1 s, the whole term's lectures about 1 s. Cached answers take microseconds (Python, Seoul, median of 5 fresh clients; most of the time is the school server's own response).
+- **One login**: the integrated call signs in to the portal once and reads DHC and SIS with the same session. 0.6 to 0.8 s in all three languages (median of 5).
 
 ### 🧠 Gentle on requests
 
@@ -65,7 +65,7 @@ Four promises, each with proof you can check in the code or the tests.
 
 - **Checked against the real portal every day**: at 09:00 KST all three languages sign in to the live portal, and a failure opens an issue automatically (see the badge above).
 - **Same results in three languages**: shared values live in [spec/contract.json](spec/contract.json), and each language's tests fail when they drift.
-- **Method list drift check**: CI verifies that the 19 public methods match across [spec/api-index.json](spec/api-index.json), the three sources and the docs, and the shape of the school's responses is checked daily without an account.
+- **Method list drift check**: CI verifies that the public method list matches across [spec/api-index.json](spec/api-index.json), the three sources and the docs, and the shape of the school's responses is checked daily without an account.
 
 The hard parts of doing it yourself (the one cipher the portal accepts, firewall User-Agents, SSO cookies across three domains, verdicts hidden in 200 responses) are already solved. See the [project site](https://cassiiopeia.github.io/pro-sejongpeia/) for details.
 
@@ -75,9 +75,9 @@ The hard parts of doing it yourself (the one cipher the portal accepts, firewall
 
 | Feature | Java | Python | Node |
 |---|:-:|:-:|:-:|
-| **Student verification**, 4: integrated · DHC · SIS · SIS business periods | ✅ | ✅ | ✅ |
-| **Codes and lectures**, 7: categories · terms · departments · lectures · course types · selective domains · curriculum | ✅ | ✅ | ✅ |
-| **Schedule and campus life**, 8: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✅ | ✅ | ✅ |
+| **Student verification**: integrated · DHC · SIS · SIS business periods | ✅ | ✅ | ✅ |
+| **Codes and lectures**: categories · terms · departments · lectures · course types · selective domains · curriculum | ✅ | ✅ | ✅ |
+| **Schedule and campus life**: academic calendar (undergrad, graduate) · dormitory menu and notices · cafeteria list and menu · campus places · extracurricular events | ✅ | ✅ | ✅ |
 | Raw response, SIS codes and `extra` options | ✅ | ✅ | ✅ |
 
 All method names (per language, including the Java raw-response variants) are listed in [Authentication methods](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/) and [School data: common rules](https://cassiiopeia.github.io/pro-sejongpeia/en/data/overview/).
@@ -122,10 +122,10 @@ List<Lecture> lectures = publicData.lectures("20", "2026", "20", "3220", "", "")
 System.out.println(departments.size() + " " + lectures.get(0).getName());
 ```
 
-The output (Python, 3 calls to the school servers in 0.3 s). The school data itself is Korean.
+Example output (Python, 3 calls to the school servers in 0.3 s). The school data itself is Korean.
 
 <p align="center">
-  <img src="docs/assets/demo/public-data-run.png" alt="Real output of SejongPublicData: 103 departments, Software department lectures and the academic calendar" width="760">
+  <img src="docs/assets/demo/public-data-run.png" alt="Example output of SejongPublicData: department list, Software department lectures and the academic calendar" width="760">
 </p>
 
 ### Student verification in one line
@@ -242,16 +242,16 @@ courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0
 - **Raw school values.** No code tables or name mappings are baked in, so renamed departments need no code change, and school fields that are not mapped land in `extra`.
 - On failure you get the last cached value or an empty list, not an exception (only invalid input raises). Please be gentle with the school's servers.
 
-- With department, course name and instructor all empty, the lecture search returns the whole term in one call (2,786 undergraduate rows and 2.4 MB, so prefer one department at a time when you can). [Lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/lectures/)
+- With department, course name and instructor all empty, the lecture search returns the whole term in one call (the response is large, so prefer one department at a time when you can). [Lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/lectures/)
 - `cafeteria_places` is built from the menu answers because the school has no list endpoint, so a cafeteria with no menu that day can be missing. [Cafeterias](https://cassiiopeia.github.io/pro-sejongpeia/en/data/cafeteria/)
 
 ## Result fields
 
-Names are Java / Node; Python uses snake_case. Common fields (`studentId`, `name`, `major`, `grade`, `status`), classic reading, the SIS contact and 11 school codes, and the optional `extra` and raw response are in the [result fields table](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/result-fields/) and [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md). `extra` and the raw response can contain session values and a client IP, so never pass them to an external client as-is.
+Names are Java / Node; Python uses snake_case. Common fields (`studentId`, `name`, `major`, `grade`, `status`), classic reading, the SIS contact and school codes, and the optional `extra` and raw response are in the [result fields table](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/result-fields/) and [spec/RESULT_SCHEMA.md](spec/RESULT_SCHEMA.md). `extra` and the raw response can contain session values and a client IP, so never pass them to an external client as-is.
 
 ## Error codes
 
-Every language raises one error type with a `code`. The meaning of all 10 codes (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, `ACCOUNT_UNAVAILABLE`, `INVALID_INPUT`, `CONNECTION_FAILED` and more) is in [Error codes](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/error-codes/).
+Every language raises one error type with a `code`. The meaning of all codes (`AUTHENTICATION_FAILED`, `ACCOUNT_LOCKED`, `ACCOUNT_UNAVAILABLE`, `INVALID_INPUT`, `CONNECTION_FAILED` and more) is in [Error codes](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/error-codes/).
 
 > **Account lock.** The portal locks an account after repeated wrong passwords, and the library never retries a rejected login. Unlocking needs a password reset at <https://portal.sejong.ac.kr/jsp/inquiry/pwinquiry.jsp>. If your service lets anyone type a student ID, limit failed attempts per student ID.
 
