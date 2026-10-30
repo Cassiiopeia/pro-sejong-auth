@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-30T01:22:05Z",
-    "currentVersion": "1.2.65",
+    "lastUpdated": "2026-10-30T01:50:14Z",
+    "currentVersion": "1.2.69",
     "projectType": "spring",
-    "totalReleases": 27,
+    "totalReleases": 28,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,36 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.69",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-30",
+      "pr_number": 141,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * 문서 사이트 전면 개편: 요청 파라미터, 응답 데이터 구조, 예시 코드 순서로 통일하고 날짜·수치 같은 고정값 제거\n  * 노트북 폭에서 표가 잘리던 레이아웃 문제 수정, 본문 폭 확대\n  * 표시 제목을 대문자로 통일하고 사이트에 최신 버전 자동 표시\n  * README 문구와 배지 정리 (깨지던 배지를 고정 배지로 교체)\n\n* **문서**\n  * 문서에 날짜나 버전이 하드코딩되면 CI가 실패하는 검사 추가",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "문서 사이트 전면 개편: 요청 파라미터, 응답 데이터 구조, 예시 코드 순서로 통일하고 날짜·수치 같은 고정값 제거",
+            "노트북 폭에서 표가 잘리던 레이아웃 문제 수정, 본문 폭 확대",
+            "표시 제목을 대문자로 통일하고 사이트에 최신 버전 자동 표시",
+            "README 문구와 배지 정리 (깨지던 배지를 고정 배지로 교체)"
+          ]
+        },
+        "문서": {
+          "title": "문서",
+          "items": [
+            "문서에 날짜나 버전이 하드코딩되면 CI가 실패하는 검사 추가"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.65",
       "project_type": "spring",
