@@ -3,6 +3,12 @@ title: FAQ
 description: Answers on the Sejong login API, password storage, requirements, authentication failures and locked accounts, what an empty list means and the cache period.
 ---
 
+:::note[Read this first]
+- This is not an official Sejong University library, and it never stores passwords.
+- Call it from a server only. Calling it from a browser or app exposes the password.
+- If verification fails, check with the demo first. A locked account must be reset at the portal.
+:::
+
 ## Is there a Sejong University login API?
 
 Yes. pro-sejongpeia is a Java, Python and Node.js library that handles the Sejong University portal login (SSO) for you and also provides school data that needs no login. With a student ID and password it returns enrollment status, major, year, classic-reading certification and contact info. See the [introduction](../start/introduction/) and the [quick start](../start/quickstart/).

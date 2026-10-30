@@ -48,7 +48,7 @@ One call goes through the cache, TLS and User-Agent handling and failure isolati
 ```mermaid
 flowchart LR
   app["<b>Your app</b><br/>Java · Python<br/>Node.js"]:::neutral
-  lib["<b>PRO-SEJONGPEIA</b><br/>Cache<br/>TLS · User-Agent<br/>Failure isolation"]:::accent
+  lib["<b>PRO#8209;SEJONGPEIA</b><br/>Cache<br/>TLS handling<br/>User-Agent handling<br/>Failure isolation"]:::accent
   school["<b>School servers</b><br/>Portal login<br/>Student info<br/>Public pages"]:::neutral
   result["<b>Result</b><br/>Same fields<br/>Same error codes"]:::soft
   app -->|"one call"| lib
@@ -89,8 +89,8 @@ flowchart LR
   verify["<b>Verify students</b><br/>check enrollment"]:::neutral
   lectures["<b>Lecture search</b><br/>find open courses"]:::neutral
   calendar["<b>Calendar widget</b><br/>this month's events"]:::neutral
-  dining["<b>Dorm and cafeteria bot</b><br/>today's menu"]:::neutral
-  data["<b>School data reference</b><br/>everything else"]:::neutral
+  dining["<b>Dorm and<br/>cafeteria bot</b><br/>today's menu"]:::neutral
+  data["<b>School data</b><br/>reference"]:::neutral
   need --> verify
   need --> lectures
   need --> calendar

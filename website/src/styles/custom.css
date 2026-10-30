@@ -832,12 +832,12 @@ body {
   .main-pane { width: 100% !important; flex: 1 1 auto !important; }
 }
 
-/* 표: 칸 여백을 줄이고, 코드는 칸이 모자랄 때만 줄바꿈해 열 수가 많아도 본문 안에 들어오게 */
+/* 표: 칸 여백을 줄이고 코드는 어디서든 줄바꿈해 열 수가 많아도 본문 안에 들어오게. 칸 최소 폭을 둬서 짧은 값(false 등)이 한 글자씩 접히지 않게 */
 .sl-markdown-content table th,
-.sl-markdown-content table td { padding: 0.5rem 0.6rem; }
+.sl-markdown-content table td { padding: 0.5rem 0.6rem; min-width: 3.5rem; }
 .sl-markdown-content table th:first-child,
 .sl-markdown-content table td:first-child { min-width: 7rem; }
-.sl-markdown-content table code { font-size: 0.78rem; padding: 0.05rem 0.25rem; overflow-wrap: break-word; }
+.sl-markdown-content table code { font-size: 0.78rem; padding: 0.05rem 0.25rem; overflow-wrap: anywhere; }
 /* 첫 열의 짧은 이름(파라미터, 필드)은 중간에서 끊지 않음 */
 .sl-markdown-content table td:first-child code { white-space: nowrap; overflow-wrap: normal; }
 

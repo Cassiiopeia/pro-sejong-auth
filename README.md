@@ -48,7 +48,7 @@ npm install pro-sejongpeia      # Node 18+ (Java는 아래 바로 해 보기 참
 ```mermaid
 flowchart LR
   app["<b>내 앱</b><br/>Java · Python<br/>Node.js"]:::neutral
-  lib["<b>PRO-SEJONGPEIA</b><br/>캐시<br/>TLS · User-Agent 처리<br/>실패 격리"]:::accent
+  lib["<b>PRO#8209;SEJONGPEIA</b><br/>캐시<br/>TLS 처리<br/>User-Agent 처리<br/>실패 격리"]:::accent
   school["<b>학교 서버</b><br/>포털 로그인<br/>학생 정보<br/>공개 페이지"]:::neutral
   result["<b>결과</b><br/>같은 필드<br/>같은 에러 코드"]:::soft
   app -->|"호출 한 번"| lib
@@ -90,7 +90,7 @@ flowchart LR
   lectures["<b>학과·강의 검색</b><br/>개설강좌 찾기"]:::neutral
   calendar["<b>학사일정 위젯</b><br/>이번 달 일정"]:::neutral
   dining["<b>기숙사·학식 봇</b><br/>오늘의 식단"]:::neutral
-  data["<b>학교 데이터 레퍼런스</b><br/>그 밖의 정보"]:::neutral
+  data["<b>학교 데이터</b><br/>레퍼런스"]:::neutral
   need --> verify
   need --> lectures
   need --> calendar

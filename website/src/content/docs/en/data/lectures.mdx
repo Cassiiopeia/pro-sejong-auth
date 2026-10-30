@@ -7,6 +7,12 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 Search a term's course listings by department code, course name and instructor name. No login is needed, and all three conditions are optional, so **with all of them empty you get the whole term**. Find department and term codes on [Department and term codes](../codes/). Common rules are on [Common rules](../overview/).
 
+<Aside type="note" title="At a glance">
+- Method `lectures`, no login needed, returns a list of `Lecture`.
+- With department, course name and instructor all empty you get the whole term. The response is large, so search by department when you can.
+- When the school fails it returns the last cached value or an empty list instead of throwing.
+</Aside>
+
 ## Request parameters
 
 Python uses `snake_case`; Node.js and Java use `camelCase` (for example `department_code` is `departmentCode`). In Java, pass an empty string (`""`) for the optional arguments you do not use.
