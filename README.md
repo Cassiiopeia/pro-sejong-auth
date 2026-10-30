@@ -29,15 +29,15 @@
 
 | | 기능 | 이런 걸 받아요 |
 |:-:|---|---|
-| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **학번 인증** | 학번과 포털 비밀번호로 재학생 확인. 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 같은 학교 코드. 통합 · DHC · SIS 중 골라 씁니다 |
-| <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **학과·학기 코드** | 학부와 대학원 분류, 학기 목록, 학과 전체 목록 |
-| <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **개설강좌** | 학기 전체 또는 학과·과목명·교수명 검색. 시간표·강의실 포함 |
-| <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **교육과정·교과목 개요** | 학과 교육과정의 권장 학년·학기, 학점, 교과목 개요 |
-| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **학사일정** | 학부와 대학원 일정, 그리고 로그인으로 보는 수강신청·증명서 출력 같은 업무별 허용 기간 |
-| <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **기숙사** | 7일치 식단과 공지 |
-| <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **학식** | 식당 목록과 날짜별 메뉴·가격 |
-| <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **캠퍼스 장소** | 건물·복지시설의 이름, 위치 좌표, 안내 |
-| <img src="docs/assets/icons/events.svg" width="22" alt=""> | **비교과 일정** | 비교과 프로그램 일정, 분류, 장소 |
+| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **[학번 인증](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/)** | 학번과 포털 비밀번호로 재학생 확인. 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 같은 학교 코드. 통합 · DHC · SIS 중 골라 씁니다 |
+| <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **[학과·학기 코드](https://cassiiopeia.github.io/pro-sejongpeia/data/codes/)** | 학부와 대학원 분류, 학기 목록, 학과 전체 목록 |
+| <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **[개설강좌](https://cassiiopeia.github.io/pro-sejongpeia/data/lectures/)** | 학기 전체 또는 학과·과목명·교수명 검색. 시간표·강의실 포함 |
+| <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **[교육과정·교과목 개요](https://cassiiopeia.github.io/pro-sejongpeia/data/curriculum/)** | 학과 교육과정의 권장 학년·학기, 학점, 교과목 개요 |
+| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **[학사일정](https://cassiiopeia.github.io/pro-sejongpeia/data/calendar/)** | 학부와 대학원 일정, 그리고 로그인으로 보는 수강신청·증명서 출력 같은 업무별 허용 기간 |
+| <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **[기숙사](https://cassiiopeia.github.io/pro-sejongpeia/data/dormitory/)** | 7일치 식단과 공지 |
+| <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **[학식](https://cassiiopeia.github.io/pro-sejongpeia/data/cafeteria/)** | 식당 목록과 날짜별 메뉴·가격 |
+| <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **[캠퍼스 장소](https://cassiiopeia.github.io/pro-sejongpeia/data/campus-places/)** | 건물·복지시설의 이름, 위치 좌표, 안내 |
+| <img src="docs/assets/icons/events.svg" width="22" alt=""> | **[비교과 일정](https://cassiiopeia.github.io/pro-sejongpeia/data/extracurricular/)** | 비교과 프로그램 일정, 분류, 장소 |
 
 ## 왜 이 라이브러리인가
 

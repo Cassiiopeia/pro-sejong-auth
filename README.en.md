@@ -29,15 +29,15 @@ Not just student verification. The public data the school serves without a login
 
 | | Feature | What you get |
 |:-:|---|---|
-| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **Student verification** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and school codes such as the department code. Pick integrated, DHC or SIS |
-| <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **Department and term codes** | Organization categories (undergraduate and graduate), the term list and the full department list |
-| <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **Lectures** | The whole term or a search by department, course name or instructor, with schedule and room |
-| <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **Curriculum and course overview** | Suggested year and semester, credits and the course overview of a department's curriculum |
-| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **Academic calendar** | Undergraduate and graduate schedules, plus the per-business allowed periods (course registration, certificate printing) you see after login |
-| <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **Dormitory** | Seven days of menus and the notices |
-| <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **Cafeterias** | The list of cafeterias and daily menus with prices |
-| <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **Campus places** | Buildings and welfare facilities with name, coordinates and info |
-| <img src="docs/assets/icons/events.svg" width="22" alt=""> | **Extracurricular events** | Event schedule with category and location |
+| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **[Student verification](https://cassiiopeia.github.io/pro-sejongpeia/en/auth/methods/)** | Confirm a student with the student ID and portal password. Name, major, year, enrollment status, classic-reading certification, email and phone, and school codes such as the department code. Pick integrated, DHC or SIS |
+| <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **[Department and term codes](https://cassiiopeia.github.io/pro-sejongpeia/en/data/codes/)** | Organization categories (undergraduate and graduate), the term list and the full department list |
+| <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **[Lectures](https://cassiiopeia.github.io/pro-sejongpeia/en/data/lectures/)** | The whole term or a search by department, course name or instructor, with schedule and room |
+| <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **[Curriculum and course overview](https://cassiiopeia.github.io/pro-sejongpeia/en/data/curriculum/)** | Suggested year and semester, credits and the course overview of a department's curriculum |
+| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **[Academic calendar](https://cassiiopeia.github.io/pro-sejongpeia/en/data/calendar/)** | Undergraduate and graduate schedules, plus the per-business allowed periods (course registration, certificate printing) you see after login |
+| <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **[Dormitory](https://cassiiopeia.github.io/pro-sejongpeia/en/data/dormitory/)** | Seven days of menus and the notices |
+| <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **[Cafeterias](https://cassiiopeia.github.io/pro-sejongpeia/en/data/cafeteria/)** | The list of cafeterias and daily menus with prices |
+| <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **[Campus places](https://cassiiopeia.github.io/pro-sejongpeia/en/data/campus-places/)** | Buildings and welfare facilities with name, coordinates and info |
+| <img src="docs/assets/icons/events.svg" width="22" alt=""> | **[Extracurricular events](https://cassiiopeia.github.io/pro-sejongpeia/en/data/extracurricular/)** | Event schedule with category and location |
 
 ## Why this library
 
