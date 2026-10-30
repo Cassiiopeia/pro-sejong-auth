@@ -1,10 +1,17 @@
 // @ts-check
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { BASE_PATH, REPOSITORY_URL, SIDEBAR, SITE_DESCRIPTION_KO, SITE_TITLE, SITE_URL } from './site.config.mjs';
 
-// 공유 미리보기 이미지: public/og.png (docs/assets/og.png 사본)
+// 공유 미리보기 이미지: public/og.png (원본 docs/assets/og.png, scripts/sync-brand-assets.mjs 가 빌드 때 복사)
 const OPEN_GRAPH_IMAGE_URL = `${SITE_URL}${BASE_PATH}/og.png`;
+
+// 브라우저 테마 색 (meta theme-color): 브랜드 토큰 --sejong-crimson 을 src/styles/custom.css 에서 읽음 (색 정의는 그 파일 한 곳)
+const BRAND_COLOR_HEX = readFileSync(new URL('./src/styles/custom.css', import.meta.url), 'utf8')
+  .match(/--sejong-crimson:\s*(#[0-9a-fA-F]{6})\s*;/)?.[1]
+  .toUpperCase();
+if (!BRAND_COLOR_HEX) throw new Error('--sejong-crimson (6자리 16진 색) not found in src/styles/custom.css');
 
 export default defineConfig({
   site: SITE_URL,
@@ -26,7 +33,7 @@ export default defineConfig({
       components: { PageTitle: './src/components/PageTitle.astro' },
       customCss: ['pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css', './src/styles/custom.css'],
       head: [
-        { tag: 'meta', attrs: { name: 'theme-color', content: '#C20F2F' } },
+        { tag: 'meta', attrs: { name: 'theme-color', content: BRAND_COLOR_HEX } },
         { tag: 'meta', attrs: { property: 'og:image', content: OPEN_GRAPH_IMAGE_URL } },
         { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
         { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },

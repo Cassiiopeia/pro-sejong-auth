@@ -1,0 +1,11 @@
+# GitHub 언어 통계 보정: 문서 사이트(MDX)와 문서를 언어 통계에서 빼서 Java, Python, TypeScript 가 보이게 함
+website/** linguist-documentation
+docs/** linguist-documentation
+
+# 생성 파일: 워크플로우나 스크립트가 만들며 diff 에서 접힘
+CHANGELOG.json linguist-generated
+CHANGELOG.md linguist-generated
+version.yml linguist-generated
+spec/fixtures/public_data/** linguist-generated
+website/package-lock.json linguist-generated
+node/package-lock.json linguist-generated

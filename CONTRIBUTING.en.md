@@ -122,6 +122,12 @@ Building a feature is not the end: it has to show up everywhere people look. Che
 - A one-line summary for the release notes (the commit message)
 - Only promote what is actually supported
 
+## AI and agent contributions
+
+- PRs written with a coding agent are welcome. The person submitting the PR must have run the commands in [AGENTS.md](AGENTS.md) and confirmed they pass, and the PR description should say which agent was used (for example Claude Code or Codex).
+- Never put personal data or real school responses in code, fixtures, issues or PRs. Use synthetic values only.
+- The review bar is the same as for human-written PRs. The submitter must be able to explain the change.
+
 ## Pull requests
 
 - Branch from `main`.

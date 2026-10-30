@@ -53,6 +53,10 @@ description: 이슈를 먼저 올리는 방법, 올리면 안 되는 정보, 라
 - 로그와 예외 메시지에 비밀번호나 개인정보가 남지 않는지 확인합니다.
 - 새 기능이면 기능 노출 체크리스트를 확인합니다.
 
+## AI·에이전트로 만든 PR
+
+코딩 에이전트가 쓴 PR도 환영합니다. PR을 올리는 사람이 레포의 [AGENTS.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/AGENTS.md)에 적힌 명령을 직접 실행해 통과를 확인하고, PR 설명에 사용한 에이전트를 적어 주세요. 개인정보와 학교의 실제 응답은 넣지 않고(합성 값만), 검토 기준은 사람이 쓴 PR과 같습니다.
+
 ## 행동 강령과 라이선스
 
 참여자는 [행동 강령](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/CODE_OF_CONDUCT.md)을 따릅니다. 기여한 코드는 [MIT 라이선스](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE)로 배포됩니다.
