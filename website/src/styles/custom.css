@@ -6,6 +6,8 @@
 
   /* 문서 본문 폭: Starlight 기본(50rem)은 넓은 화면에서 표가 답답해서 넓힘 */
   --sl-content-width: 72rem;
+  /* 좌우 사이드바 폭: 기본(18.75rem)이면 노트북 폭에서 본문이 600px대로 줄어 표가 잘림 */
+  --sl-sidebar-width: 15rem;
 
   --sl-font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR',
     'Malgun Gothic', system-ui, sans-serif;
@@ -763,3 +765,17 @@ body {
   border-radius: 50%;
   background: #fff;
 }
+
+/* 노트북 폭(72rem~100rem): 오른쪽 목차를 숨겨 본문 폭 확보 (표가 잘리지 않게) */
+@media (min-width: 72rem) and (max-width: 100rem) {
+  .right-sidebar-container { display: none !important; }
+  /* 목차 자리까지 본문이 차지하도록 */
+  .main-pane { width: 100% !important; flex: 1 1 auto !important; }
+}
+
+/* 표: 칸 여백을 줄이고 코드는 어디서든 줄바꿈해 열 수가 많아도 본문 안에 들어오게 */
+.sl-markdown-content table th,
+.sl-markdown-content table td { padding: 0.5rem 0.6rem; }
+.sl-markdown-content table th:first-child,
+.sl-markdown-content table td:first-child { min-width: 7rem; }
+.sl-markdown-content table code { font-size: 0.78rem; padding: 0.05rem 0.25rem; overflow-wrap: anywhere; }
