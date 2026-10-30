@@ -11,7 +11,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
 
    <Tabs syncKey="language">
      <TabItem label="Java">
-       [![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+       [![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
        Maven Central에서 배포하므로 저장소를 따로 추가하지 않습니다. Java 17 이상, Spring Boot 3.x.
 
@@ -29,7 +29,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
        </dependency>
        ```
 
-       `<version>`에는 최신 버전을 넣으세요. 위 배지 또는 [Maven Central 아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인하고, 전체 버전 목록은 [저장소 목록](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/)에 있습니다.
+       `<version>`에는 최신 버전을 넣으세요. [Maven Central 아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인하고, 전체 버전 목록은 [저장소 목록](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/)에 있습니다.
      </TabItem>
      <TabItem label="Python">
        Python 3.9 이상, 표준 라이브러리 외 의존성이 없습니다.
@@ -102,7 +102,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
 
    분기는 에러 메시지가 아니라 **코드**로 합니다. 코드 목록은 [에러 코드](../../auth/error-codes/)입니다.
 
-3. **로그인 없이 쓰는 학교 데이터를 호출합니다.** 학과 목록을 받고, 첫 학과의 개설강좌를 조회합니다 (학부, 2026년 2학기). `"20"`(학부)과 학기 값은 학교 값입니다.
+3. **로그인 없이 쓰는 학교 데이터를 호출합니다.** 학과 목록을 받고, 첫 학과의 개설강좌를 조회합니다 (학부). `"20"`(학부)과 학기 값은 학교 값입니다.
 
    <Tabs syncKey="language">
      <TabItem label="Java">
@@ -117,7 +117,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
        from sejongpeia import SejongPublicData
 
        public_data = SejongPublicData()
-       departments = public_data.departments("20", "2026", "20")          # 학부, 2026년 2학기
+       departments = public_data.departments("20", "2026", "20")          # 학부, 학기 값은 학교 값
        lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
        # 강의의 과목 번호로 그 학과 교육과정의 학년·학기·교과목 개요 (없으면 빈 목록)
        courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)

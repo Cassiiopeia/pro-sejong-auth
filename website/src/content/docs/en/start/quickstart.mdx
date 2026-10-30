@@ -11,7 +11,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
 
    <Tabs syncKey="language">
      <TabItem label="Java">
-       [![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+       [![Maven Central](https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 
        Published to Maven Central, so no extra repository is needed. Java 17+, Spring Boot 3.x.
 
@@ -29,7 +29,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
        </dependency>
        ```
 
-       Put the latest version in `<version>`. Check it on the badge above or the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
+       Put the latest version in `<version>`. Check it on the [Maven Central artifact page](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia); all versions are listed in the [repository index](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/).
      </TabItem>
      <TabItem label="Python">
        Python 3.9+, no dependencies beyond the standard library.
@@ -102,7 +102,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
 
    Branch on the error **code**, never on the message. The code list is in [Error codes](../../auth/error-codes/).
 
-3. **Call school data that needs no login.** Get the department list, then the course listings of the first department (undergraduate, 2026 fall semester). `"20"` (undergraduate) and the semester value are the school's own values.
+3. **Call school data that needs no login.** Get the department list, then the course listings of the first department (undergraduate). `"20"` (undergraduate) and the semester value are the school's own values.
 
    <Tabs syncKey="language">
      <TabItem label="Java">
@@ -117,7 +117,7 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
        from sejongpeia import SejongPublicData
 
        public_data = SejongPublicData()
-       departments = public_data.departments("20", "2026", "20")          # undergraduate, 2026 fall
+       departments = public_data.departments("20", "2026", "20")          # undergraduate
        lectures = public_data.lectures("20", "2026", "20", department_code=departments[0].code)
        # Course number of a lecture > grade, semester and overview in that department's curriculum (empty list if none)
        courses = public_data.curriculum_courses(lectures[0].department_code, lectures[0].course_number)

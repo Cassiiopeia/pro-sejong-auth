@@ -9,7 +9,7 @@ export const FEATURES_COPY: Record<LandingLocale, FeatureSectionsCopy> = {
   ko: {
     features: {
       title: '무엇을 해 주나요',
-      lead: `학번 인증 하나와, 로그인 없이 받는 학교 데이터 15가지(일곱 묶음)입니다. 수치는 ${SCHOOL_DATA_SNAPSHOT.measuredOn}에 실제 학교 서버를 호출해 확인한 값입니다 (학부 2026학년도 2학기). 카드를 누르면 메서드와 결과 필드가 나옵니다.`,
+      lead: `학번 인증 하나와, 로그인 없이 받는 학교 데이터 15가지(일곱 묶음)입니다. 카드를 누르면 메서드와 결과 필드가 나옵니다.`,
       cards: [
         {
           title: '학생 인증',
@@ -124,7 +124,7 @@ export const FEATURES_COPY: Record<LandingLocale, FeatureSectionsCopy> = {
   en: {
     features: {
       title: 'What you get',
-      lead: `One student verification and 15 kinds of school data you get without logging in (seven groups). Numbers were checked by calling the real school servers on ${SCHOOL_DATA_SNAPSHOT.measuredOn} (undergraduate, 2026 second semester). Open a card for the methods and result fields.`,
+      lead: `One student verification and 15 kinds of school data you get without logging in (seven groups). Open a card for the methods and result fields.`,
       cards: [
         {
           title: 'Student verification',

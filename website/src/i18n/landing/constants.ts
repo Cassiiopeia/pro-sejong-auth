@@ -6,10 +6,8 @@ export const DEMO_AUTH_API_URL = 'https://lab.suhsaechan.kr/api/sejong-auth/auth
 export const DEMO_SERVER_HOME_URL = 'https://lab.suhsaechan.kr/';
 export const DEMO_REQUEST_TIMEOUT_MILLISECONDS = 30000;
 
-// 학교 데이터 실측 수치 (학부 2026학년도 2학기, 실제 학교 서버 호출 결과): README 와 배너(scripts/banner/banner.html)도 같은 값
-// 값을 바꿀 때는 측정 날짜와 함께 세 곳을 같이 고친다
+// 학교 데이터 수치 (학부 기준): README 와 배너(scripts/banner/banner.html)도 같은 값, 바꿀 때 세 곳을 같이 고친다
 export const SCHOOL_DATA_SNAPSHOT = {
-  measuredOn: '2026-10-30',
   departmentCount: '103',
   lectureRowCount: '2,786',
   cafeteriaCount: '5',
@@ -17,21 +15,21 @@ export const SCHOOL_DATA_SNAPSHOT = {
   organizationCategoryCount: '22',
 };
 
-// 배지: 패키지 레지스트리가 알려 주는 최신 버전
+// 배지: 레지스트리 세 곳 모두 고정 배지 (외부 조회형은 느리거나 오래된 버전을 보여 줌), 버전은 README 맨 위 최신 버전 줄이 안내
 export const PACKAGE_BADGES = [
   {
     name: 'Maven Central',
-    imageUrl: 'https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fkr%2Fsuhsaechan%2Fsejongpeia%2Fmaven-metadata.xml&label=Maven%20Central&color=C20F2F',
+    imageUrl: 'https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F',
     linkUrl: 'https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia',
   },
   {
     name: 'PyPI',
-    imageUrl: 'https://img.shields.io/pypi/v/pro-sejongpeia?label=PyPI&color=324D60',
+    imageUrl: 'https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60',
     linkUrl: 'https://pypi.org/project/pro-sejongpeia/',
   },
   {
     name: 'npm',
-    imageUrl: 'https://img.shields.io/npm/v/pro-sejongpeia?label=npm&color=324D60',
+    imageUrl: 'https://img.shields.io/badge/npm-pro--sejongpeia-324D60',
     linkUrl: 'https://www.npmjs.com/package/pro-sejongpeia',
   },
   {

@@ -19,8 +19,8 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           title: '빠르고 가볍게',
           points: [
             'Python, Node는 런타임 의존성 0개 (표준 라이브러리만 사용)',
-            '학과 목록 약 0.12초, 학기 전체 강좌 2,786행 0.9초, 캐시된 답은 마이크로초 (Python, 2026-10-30, 서울, 5회 중앙값)',
-            '통합 인증은 포털 로그인 1번: Java 0.57초, Python 0.76초, Node 0.69초 (2026-10-24)',
+            '학과 목록 약 0.12초, 학기 전체 강좌 2,786행 0.9초, 캐시된 답은 마이크로초 (Python, 서울, 5회 중앙값)',
+            '통합 인증은 포털 로그인 1번: Java 0.57초, Python 0.76초, Node 0.69초',
           ],
           proofLabel: '측정 조건 보기',
           proofLink: PUBLIC_DATA_SPEC_URL,
@@ -71,8 +71,8 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           title: 'Fast and light',
           points: [
             'Zero runtime dependencies in Python and Node (standard library only)',
-            'Department list about 0.12 s, the whole term\'s 2,786 lectures 0.9 s, cached answers in microseconds (Python, 2026-10-30, Seoul, median of 5)',
-            'Integrated verification is one portal login: Java 0.57 s, Python 0.76 s, Node 0.69 s (2026-10-24)',
+            'Department list about 0.12 s, the whole term\'s 2,786 lectures 0.9 s, cached answers in microseconds (Python, Seoul, median of 5)',
+            'Integrated verification is one portal login: Java 0.57 s, Python 0.76 s, Node 0.69 s',
           ],
           proofLabel: 'See the conditions',
           proofLink: PUBLIC_DATA_SPEC_URL,

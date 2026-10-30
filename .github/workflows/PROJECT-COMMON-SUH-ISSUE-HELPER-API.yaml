@@ -21,16 +21,20 @@ on:
   # issues:
   #   types: [opened, reopened]
 
+# 기본 권한 최소화: 댓글 작성(issues)만 add-comment 잡에서 추가
+permissions:
+  contents: read
+
 jobs:
   add-comment:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
-
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Get Issue information
         id: issue-info
         run: |
@@ -86,7 +90,7 @@ jobs:
           fi
 
       - name: Add comment to Issue
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

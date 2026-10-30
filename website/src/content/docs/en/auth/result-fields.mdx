@@ -65,6 +65,17 @@ Three portal text values from the DHC "사용자 정보" table and five sub-list
 
 Python names are `snake_case` (`completed_semesters`, `required_count`, `book_title`, ...). A list is empty when the table has no rows.
 
+Reading the certification status per area in Java:
+
+```java
+SejongDhcAuthResult result = sejongAuthEngine.authenticateWithDHC(studentId, password);
+
+for (ClassicCertification certification : result.getClassicReading().getCertifications()) {
+    System.out.println(certification.getArea() + " "
+        + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
+}
+```
+
 ## SIS school codes
 
 The school's strings as they are. The library carries no code tables or name mapping, and a missing value is an empty string. The SIS datasets are searched in the order `dm_UserInfoSch`, `dm_UserInfoGam`, `dm_UserInfo` and the first non-blank value wins. They are returned by default in the SIS and integrated results.

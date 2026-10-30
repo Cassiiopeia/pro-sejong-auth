@@ -61,11 +61,10 @@ jobs:
         working-directory: website
     steps:
       - name: 저장소 체크아웃
-        uses: actions/checkout@v7
-
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Astro 는 Node 22.12 이상을 요구
       - name: Node.js 설정
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -83,7 +82,7 @@ jobs:
 
       - name: Pages 아티팩트 업로드
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: website/dist
 
@@ -102,4 +101,4 @@ jobs:
     steps:
       - name: Pages 배포
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -65,6 +65,17 @@ DHC의 「사용자 정보」 표에서 가져오는 포털 원문 문자열 3�
 
 Python 이름은 `snake_case`입니다 (`completed_semesters`, `required_count`, `book_title` 등). 해당 표에 행이 없으면 빈 목록입니다.
 
+영역별 인증 현황을 읽는 Java 예시입니다.
+
+```java
+SejongDhcAuthResult result = sejongAuthEngine.authenticateWithDHC(studentId, password);
+
+for (ClassicCertification certification : result.getClassicReading().getCertifications()) {
+    System.out.println(certification.getArea() + " "
+        + certification.getCertifiedCount() + "/" + certification.getRequiredCount());
+}
+```
+
 ## SIS 학교 코드
 
 학교가 준 문자열 그대로입니다. 코드표나 이름 매핑은 라이브러리에 없고, 값이 없으면 빈 문자열입니다. SIS 데이터셋을 `dm_UserInfoSch`, `dm_UserInfoGam`, `dm_UserInfo` 순서로 찾아 처음 나온 비어 있지 않은 값을 씁니다. 기본으로 SIS 결과와 통합 결과에 들어갑니다.

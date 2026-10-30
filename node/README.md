@@ -6,7 +6,7 @@
 
 [사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [전체 기능표](https://github.com/Cassiiopeia/pro-sejongpeia#기능) · [GitHub](https://github.com/Cassiiopeia/pro-sejongpeia) · 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
-[![npm](https://img.shields.io/npm/v/pro-sejongpeia?label=npm&color=324D60)](https://www.npmjs.com/package/pro-sejongpeia) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+[![npm](https://img.shields.io/badge/npm-pro--sejongpeia-324D60)](https://www.npmjs.com/package/pro-sejongpeia) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ```bash
 npm install pro-sejongpeia
@@ -14,24 +14,24 @@ npm install pro-sejongpeia
 
 ## 무엇을 해 주나요
 
-학번 인증 하나만 있는 패키지가 아닙니다. 학교가 로그인 없이 내려주는 정보 15가지도 같은 모양으로 받습니다 (수치는 2026-10-30 실제 호출, 학부 2026학년도 2학기).
+학번 인증 하나만 있는 패키지가 아닙니다. 학교가 로그인 없이 내려주는 정보도 같은 모양으로 받습니다.
 
-- 🔐 **학번 인증**: 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 등 학교 코드 11개. 통합 · DHC · SIS 중 선택
-- 🏫 **학과·학기 코드**: 학부·대학원 22개 분류, 학기, 학과 (학부 2026-2 **103개**)
-- 📚 **개설강좌**: 학기 전체 (학부 2026-2 **2,786행**) 또는 학과·과목명·교수명 검색
+- 🔐 **학번 인증**: 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 같은 학교 코드. 통합 · DHC · SIS 중 선택
+- 🏫 **학과·학기 코드**: 학부·대학원 분류, 학기, 학과 전체
+- 📚 **개설강좌**: 학기 전체 또는 학과·과목명·교수명 검색
 - 🎓 **교육과정·교과목 개요**, 📅 **학사일정** (학부·대학원, 로그인으로 보는 업무별 허용 기간)
-- 🛏️ **기숙사** 7일 식단·공지, 🍚 **학식** 식당 **5곳**과 메뉴·가격, 📍 **캠퍼스 장소** **60곳**, 🎉 **비교과 일정**
+- 🛏️ **기숙사** 7일 식단·공지, 🍚 **학식** 식당 목록과 메뉴·가격, 📍 **캠퍼스 장소**, 🎉 **비교과 일정**
 
 ## 왜 이 라이브러리인가
 
-- ⚡ **빠르고 가볍게**: 런타임 의존성 0개. 학과 목록 약 0.12초, 학기 전체 강좌 2,786행 0.9초 (Python 실측, 2026-10-30, 서울, 5회 중앙값). 로그인은 호출 한 번에 포털 로그인 한 번 (약 0.7초)
+- ⚡ **빠르고 가볍게**: 런타임 의존성 0개. 학과 목록은 0.1초 안팎, 학기 전체 강좌도 1초 안팎 (Python 실측, 서울, 5회 중앙값). 로그인은 호출 한 번에 포털 로그인 한 번 (약 0.7초)
 - 🧠 **요청은 아끼고**: 24시간 메모리 캐시, 같은 인자의 동시 호출은 요청 1번, 실패는 60초 기억, 캐시 최대 500개 ([근거](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md))
 - 🔒 **안전하게**: 비밀번호를 저장하지 않고, 틀리면 첫 실패에서 멈춰 계정 잠금을 피하며, SIS 부가 필드에서 민감 키를 항상 제외
 - ✅ **믿을 수 있게**: 매일 실제 포털에 세 언어로 로그인 점검, 세 언어 결과를 [spec/contract.json](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/contract.json) 한 곳으로 맞추고 어긋나면 테스트 실패
 
 ## 바로 해 보기
 
-학번도 비밀번호도 필요 없습니다. 2026학년도 2학기 학과 목록과 소프트웨어학과(3220) 개설강좌입니다.
+학번도 비밀번호도 필요 없습니다. 학과 목록과 소프트웨어학과(3220) 개설강좌입니다.
 
 ```js
 import { SejongPublicData } from 'pro-sejongpeia';
@@ -43,9 +43,9 @@ const lectures = await publicData.lectures({ ...term, departmentCode: '3220' });
 console.log(departments.length, lectures[0].name);
 ```
 
-실제로 돌린 결과입니다 (Python, 2026-10-30, 학교 서버 3번 호출에 0.3초).
+예시 출력입니다 (Python, 학교 서버 3번 호출에 0.3초).
 
-![SejongPublicData를 실제로 호출한 결과: 학과 103개, 소프트웨어학과 개설강좌, 학사일정](https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/demo/public-data-run.png)
+![SejongPublicData 예시 출력: 학과 목록, 소프트웨어학과 개설강좌, 학사일정](https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/demo/public-data-run.png)
 
 ## 학번 인증
 
@@ -68,9 +68,9 @@ try {
 
 | 함수 | 반환 |
 |---|---|
-| `authenticate(id, pw, { includeRaw, includeExtra })` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`, `includeRaw` 면 `rawHtml`·`rawJson` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지, `includeExtra` 면 나머지 SIS 필드 `extra`. 학과 코드 `departmentCode` 등 SIS 코드 11개는 항상 포함) |
+| `authenticate(id, pw, { includeRaw, includeExtra })` | 학생 정보 + 고전독서 + 연락처 (연락처 조회가 실패하면 연락처만 `null`, `includeRaw` 면 `rawHtml`·`rawJson` 원문 포함: 세션값·접속 IP가 있어 외부에 그대로 전달 금지, `includeExtra` 면 나머지 SIS 필드 `extra`. 학과 코드 `departmentCode` 등 SIS 코드는 항상 포함) |
 | `authenticateDhc(id, pw, { includeRaw })` | 학생 정보 + 고전독서 |
-| `authenticateSis(id, pw, { includeRaw, includeExtra })` | 학생 정보 + 이메일, 전화번호, 영문 이름 + 학교 제공 코드 11개 (`departmentCode` 등) |
+| `authenticateSis(id, pw, { includeRaw, includeExtra })` | 학생 정보 + 이메일, 전화번호, 영문 이름 + 학교 제공 코드 (`departmentCode` 등) |
 | `fetchSisBusinessPeriods(id, pw, { year, month })` | SIS 학사 업무 기간 목록 (로그인 필요, 학교 공개 학사일정과 다른 자료, month 비우면 연간 전체) |
 
 로그인 결과에는 고전독서 학기 3개(`completedSemesters`, `certifiedSemesters`, `certificationStatus`), 사용자 구분(`userCategory`), 학과의 상위 소속 이름(`parentUnitName`)도 포함됩니다.

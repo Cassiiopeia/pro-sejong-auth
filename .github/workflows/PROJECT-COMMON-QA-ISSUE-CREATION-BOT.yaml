@@ -41,6 +41,10 @@ on:
   issue_comment:
     types: [created]
 
+# 기본 권한 최소화: 쓰기 권한은 create-qa 잡에서만 부여
+permissions:
+  contents: read
+
 # ===================================================================
 # 설정 변수
 # ===================================================================
@@ -65,7 +69,7 @@ jobs:
 
     steps:
       - name: 댓글에 👀 리액션 추가
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -81,7 +85,7 @@ jobs:
             console.log('👀 댓글에 확인 리액션 추가 완료');
 
       - name: QA 이슈 생성
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           DEFAULT_QA_ASSIGNEE: ${{ env.DEFAULT_QA_ASSIGNEE }}
         with:
