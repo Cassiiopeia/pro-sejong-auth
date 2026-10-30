@@ -5,9 +5,9 @@ export const SITE_URL = 'https://cassiiopeia.github.io';
 export const BASE_PATH = '/pro-sejongpeia';
 export const SITE_TITLE = 'pro-sejongpeia';
 export const SITE_DESCRIPTION_KO =
-  '세종대학교 통합 라이브러리: 포털 로그인(학번 인증)과 로그인 없이 쓰는 학교 데이터를 Java, Python, Node.js로 한 번에.';
+  '세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js 라이브러리.';
 export const SITE_DESCRIPTION_EN =
-  'Sejong University library: portal login (student verification) and login-free school data for Java, Python and Node.js.';
+  'Everything you need to build on Sejong University. Student login, departments, lectures, calendar and cafeterias for Java, Python and Node.js.';
 
 // 사이드바 그룹: label 은 한국어, translations.en 은 영어. items 는 docs 폴더 기준 문서 경로 (영어는 en/ 아래 같은 경로)
 export const SIDEBAR = [

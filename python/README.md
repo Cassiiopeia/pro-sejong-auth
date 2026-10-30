@@ -1,8 +1,8 @@
 # pro-sejongpeia (Python)
 
-![pro-sejongpeia: 세종대학교를 라이브러리 하나로. 학번 인증과 학과·강의·학사일정·학식·캠퍼스 데이터](https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/banner/banner-a.ko.png)
+![pro-sejongpeia: 세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지](https://raw.githubusercontent.com/Cassiiopeia/pro-sejongpeia/main/docs/assets/banner/banner-a.ko.png)
 
-**세종대 학번 인증과 학교 공개 데이터 15가지를 Python 호출 한 번으로.** 요청은 아끼고, 비밀번호는 저장하지 않고, 매일 실제 포털로 점검합니다.
+**세종대 개발에 필요한 모든 것을 한 번에.** 학번 인증부터 학과·강의·학사일정·학식까지, Python 호출 한 번으로 받습니다. 요청은 아끼고, 비밀번호는 저장하지 않으며, 매일 실제 포털로 점검합니다.
 
 [사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [전체 기능표](https://github.com/Cassiiopeia/pro-sejongpeia#기능) · [GitHub](https://github.com/Cassiiopeia/pro-sejongpeia) · 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 

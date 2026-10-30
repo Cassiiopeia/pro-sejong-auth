@@ -120,6 +120,11 @@ body {
   margin: 1.1rem 0 1rem !important;
   color: #fff;
 }
+:root[lang='en'] .landing-hero__title {
+  font-size: clamp(1.7rem, 4.8vw, 2.7rem);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
 .landing-hero__title em {
   font-style: normal;
   color: #fff;
