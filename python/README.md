@@ -6,7 +6,7 @@
 
 [사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [전체 기능표](https://github.com/Cassiiopeia/pro-sejongpeia#기능) · [GitHub](https://github.com/Cassiiopeia/pro-sejongpeia) · 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
-[![PyPI](https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60)](https://pypi.org/project/pro-sejongpeia/) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+[![PyPI](https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60?logo=pypi&logoColor=white)](https://pypi.org/project/pro-sejongpeia/) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ```bash
 pip install pro-sejongpeia

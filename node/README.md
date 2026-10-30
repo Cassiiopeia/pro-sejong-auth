@@ -6,7 +6,7 @@
 
 [사이트](https://cassiiopeia.github.io/pro-sejongpeia/) · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [전체 기능표](https://github.com/Cassiiopeia/pro-sejongpeia#기능) · [GitHub](https://github.com/Cassiiopeia/pro-sejongpeia) · 한국어 | [English](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/README.en.md)
 
-[![npm](https://img.shields.io/badge/npm-pro--sejongpeia-324D60)](https://www.npmjs.com/package/pro-sejongpeia) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+[![npm](https://img.shields.io/badge/npm-pro--sejongpeia-324D60?logo=npm&logoColor=white)](https://www.npmjs.com/package/pro-sejongpeia) [![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/LICENSE) [![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
 
 ```bash
 npm install pro-sejongpeia
