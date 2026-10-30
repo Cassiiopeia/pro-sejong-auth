@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  BASE_PATH, REPOSITORY_URL, SIDEBAR, SITE_DESCRIPTION_EN, SITE_DESCRIPTION_KO, SITE_TITLE, SITE_URL,
+  BASE_PATH, PACKAGE_NAME, REPOSITORY_URL, SIDEBAR, SITE_DESCRIPTION_EN, SITE_DESCRIPTION_KO, SITE_TITLE, SITE_URL,
 } from '../site.config.mjs';
 
 const WEBSITE_DIRECTORY = fileURLToPath(new URL('..', import.meta.url));
@@ -253,7 +253,7 @@ function buildApiJson() {
   });
   return {
     $comment: 'Generated at website build time by website/scripts/generate-llms.mjs from spec/api-index.json and the Python models. Do not edit.',
-    name: SITE_TITLE,
+    name: PACKAGE_NAME,
     libraryVersion: readLibraryVersion(),
     site: SITE_ROOT_URL,
     repository: REPOSITORY_URL,

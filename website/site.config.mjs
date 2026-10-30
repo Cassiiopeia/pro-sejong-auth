@@ -3,7 +3,9 @@ export const REPOSITORY_URL = 'https://github.com/Cassiiopeia/pro-sejongpeia';
 export const SITE_URL = 'https://cassiiopeia.github.io';
 // 프로젝트 Pages는 /<레포명>/ 아래에서 서빙되므로 base를 맞춰야 에셋 경로가 깨지지 않는다.
 export const BASE_PATH = '/pro-sejongpeia';
-export const SITE_TITLE = 'pro-sejongpeia';
+// 패키지 이름은 설치·코드용(소문자), 화면에 보이는 제목은 대문자
+export const PACKAGE_NAME = 'pro-sejongpeia';
+export const SITE_TITLE = PACKAGE_NAME.toUpperCase();
 export const SITE_DESCRIPTION_KO =
   '세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js 라이브러리.';
 export const SITE_DESCRIPTION_EN =
