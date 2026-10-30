@@ -237,7 +237,7 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
 이 라이브러리로 시간을 아꼈다면 GitHub Star 하나가 다른 세종대 개발자들이 찾는 데 도움이 됩니다.
 
 <!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
-## 최신 버전 : v1.2.72
+## 최신 버전 : v1.2.79
 
 [전체 변경 이력](CHANGELOG.md)
 
