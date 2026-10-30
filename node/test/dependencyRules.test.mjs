@@ -45,3 +45,25 @@ test('layers import only allowed layers', () => {
     }
   }
 });
+
+// 공개 데이터 안쪽 규칙: 출처 파일(*Source.ts)끼리와 진입점(client.ts)은 임포트하지 않고 공유 파일만 쓴다
+const publicDataSharedModules = ['models', 'queries', 'fetcher', 'rowReader'];
+const publicDataDirectory = join(sourceDirectory, 'publicData');
+const publicDataSourceFiles = () => readdirSync(publicDataDirectory).filter((name) => name.endsWith('Source.ts'));
+
+// 같은 폴더 임포트 `./x.js` > 모듈 이름 x
+function publicDataSiblingModules(fileName) {
+  const text = readFileSync(join(publicDataDirectory, fileName), 'utf8');
+  return [...text.matchAll(/(?:from|import)\s+'\.\/([^']+?)\.js'/g)].map((match) => match[1]);
+}
+
+test('public data has source files', () => {
+  assert.ok(publicDataSourceFiles().length > 0, 'rule test would pass without checking anything');
+});
+
+test('public data sources import only shared helpers', () => {
+  for (const fileName of publicDataSourceFiles()) {
+    const forbidden = publicDataSiblingModules(fileName).filter((name) => !publicDataSharedModules.includes(name));
+    assert.deepEqual(forbidden, [], `publicData/${fileName} imports ${forbidden}: sources import only ${publicDataSharedModules} and common`);
+  }
+});

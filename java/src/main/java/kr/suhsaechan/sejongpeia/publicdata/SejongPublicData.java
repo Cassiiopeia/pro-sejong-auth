@@ -1,17 +1,9 @@
 package kr.suhsaechan.sejongpeia.publicdata;
 
-import static kr.suhsaechan.sejongpeia.publicdata.PublicDataMapper.listOf;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
 import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
-import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.publicdata.model.*;
 
@@ -23,59 +15,18 @@ import kr.suhsaechan.sejongpeia.publicdata.model.*;
  */
 public class SejongPublicData {
 
-  // 학교 주소·요청 키·고정 값의 원본은 spec/contract.json 의 publicData (ContractConstantsTest 가 일치 검사)
-  static final String SIS_OPEN_TIME_URL = "https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/";
-  static final String SIS_CONTENT_TYPE = "application/json; charset=\"UTF-8\"";
-  static final String SIS_SEARCH_KEY = "dm_search";
-  static final String SIS_ONLOAD_ENDPOINT = "doOnload.do";
-  static final String SIS_TERM_LIST_ENDPOINT = "doYearsmtlist.do";
-  static final String SIS_DEPARTMENT_LIST_ENDPOINT = "doLesndeptgroup.do";
-  static final String SIS_LECTURE_LIST_ENDPOINT = "doList.do";
-  // 강좌 조회는 나머지 필터 키가 모두 빈 값으로 있어야 학교가 받아들임 (하나라도 빠지면 _SUBMIT_ERROR_)
-  static final List<String> LECTURE_EMPTY_FILTER_KEYS = List.of(
-      "SMT_NM", "CURI_TYPE_CD", "SLT_DOMAIN_CD", "CURI_NO", "CLASS", "SLT_DEPT_CD", "PLAN_REG_YN", "CORS_SCHE_GRP_CD");
-  static final String FORM_CONTENT_TYPE = OkHttpPublicDataHttpCaller.FORM_CONTENT_TYPE;
-  // 학과 교육과정 과목 1건: deptNo 는 SIS 학과 코드(DEPT_CD)와 같은 값
-  static final String CURRICULUM_COURSE_URL = "https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do";
-  static final List<String> CURRICULUM_QUERY_KEYS = List.of("curiNo", "deptNo");
-  static final String ACADEMIC_CALENDAR_URL = "https://www.sejong.ac.kr/kor/academics/academic-calendar.do";
-  static final List<String> CALENDAR_QUERY_KEYS = List.of("mode", "start", "end", "collDiv");
-  static final String CALENDAR_MODE = "getCalendarData";
-  static final String DEFAULT_CALENDAR_CATEGORY_CODE = "0001"; // 학부 일정
-  // 대학원 사이트별 학사일정: {siteId} 는 graduate, gsi, mba 같은 사이트 식별자 (코드표 없이 호출자가 전달)
-  static final String GRADUATE_CALENDAR_URL = "https://{siteId}.sejong.ac.kr/_custom/sejong/_app/calendar-graduate/proc/getCalendarData.jsp";
-  static final List<String> GRADUATE_CALENDAR_QUERY_KEYS = List.of("year", "month", "siteId");
-  // 사이트 식별자 허용 형태 (호스트 이름에 들어가므로 소문자·숫자·하이픈만)
-  static final java.util.regex.Pattern GRADUATE_SITE_ID_PATTERN = java.util.regex.Pattern.compile("[a-z0-9][a-z0-9-]{0,30}");
-  static final String DORMITORY_MENU_URL = "https://happydorm.sejong.ac.kr/food/indexFoodList.do";
-  static final List<String> DORMITORY_MENU_FORM_KEYS = List.of("locgbn");
-  static final String DORMITORY_NOTICE_URL = "https://happydorm.sejong.ac.kr/bbs/getBbsList.do";
-  static final List<String> DORMITORY_NOTICE_FORM_KEYS = List.of("cPage", "rows", "bbs_locgbn", "bbs_id", "sType", "sWord");
-  static final String DORMITORY_NOTICE_BOARD_ID = "notice";
-  static final String DORMITORY_NOTICE_SEARCH_TYPE = "subject"; // 제목 검색
-  static final String DEFAULT_DORMITORY_LOCATION = "SJ";
-  static final String CAFETERIA_URL = "https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do";
-  static final List<String> CAFETERIA_QUERY_KEYS = List.of("mode", "placeId");
-  static final String CAFETERIA_MENU_MODE = "getMenuList";
-  // 학교에 식당 목록 API가 없어 번호 1부터 차례로 조회해 식당을 모음 (학교 화면도 번호를 스크립트에 고정해 씀, spec/PUBLIC_DATA.md)
-  // 식당 번호는 1부터 호출자가 정한 상한까지 조회 (기본 10, 최대 50: 한 번 갱신의 요청 수를 제한)
-  static final int CAFETERIA_DEFAULT_MAX_PLACE_ID = 10;
-  static final int CAFETERIA_LIMIT_MAX_PLACE_ID = 50;
-  static final String CAMPUS_MAP_URL = "https://www.sejong.ac.kr/kor/intro/campus-map.do";
-  static final List<String> CAMPUS_MAP_QUERY_KEYS = List.of("mode", "placeType");
-  static final String CAMPUS_PLACE_LIST_MODE = "getPlaceUserList";
-  static final String EXTRACURRICULAR_EVENTS_URL = "https://do.sejong.ac.kr/ko/process/schedule/getEvents";
-  static final List<String> EXTRACURRICULAR_FORM_KEYS = List.of("cid", "category", "start", "end", "start_year", "end_year");
-  static final String EXTRACURRICULAR_CID = "eco";
-
   // 실패 기억 기본 60초, 캐시 기본 최대 500항목 (SejongAuthProperties 기본값과 동일)
   private static final long DEFAULT_FAILURE_CACHE_SECONDS = 60;
   private static final int DEFAULT_CACHE_MAX_ENTRIES = 500;
   private static final int DEFAULT_NOTICE_PAGE = 1;
   private static final int DEFAULT_NOTICE_ROWS = 10;
-  private static final int YEAR_TEXT_LENGTH = 4;
 
-  private final PublicDataFetcher fetcher;
+  private final AcademicSource academic;
+  private final CalendarSource calendarSource;
+  private final DormitorySource dormitory;
+  private final CafeteriaSource cafeteria;
+  private final CampusSource campus;
+  private final ExtracurricularSource extracurricular;
 
   /**
    * 기본 설정 (타임아웃 10초, 캐시 86400초, 인증서 검증)
@@ -117,7 +68,13 @@ public class SejongPublicData {
    */
   public SejongPublicData(PublicDataHttpCaller httpCaller, Clock clock, Duration cacheTimeToLive,
       Duration failureMemoryDuration, int cacheMaxEntries) {
-    this.fetcher = new PublicDataFetcher(httpCaller, clock, cacheTimeToLive, failureMemoryDuration, cacheMaxEntries);
+    PublicDataFetcher fetcher = new PublicDataFetcher(httpCaller, clock, cacheTimeToLive, failureMemoryDuration, cacheMaxEntries);
+    this.academic = new AcademicSource(fetcher);
+    this.calendarSource = new CalendarSource(fetcher);
+    this.dormitory = new DormitorySource(fetcher);
+    this.cafeteria = new CafeteriaSource(fetcher);
+    this.campus = new CampusSource(fetcher);
+    this.extracurricular = new ExtracurricularSource(fetcher);
   }
 
   /**
@@ -128,7 +85,7 @@ public class SejongPublicData {
    * @return OrganizationCategory 목록
    */
   public List<OrganizationCategory> organizationCategories() {
-    return sisDataset(SIS_ONLOAD_ENDPOINT, new LinkedHashMap<>(), "dl_code_orgn", PublicDataMapper::toOrganizationCategory);
+    return academic.organizationCategories();
   }
 
   /**
@@ -140,9 +97,7 @@ public class SejongPublicData {
    * @return Term 목록
    */
   public List<Term> terms(String categoryCode) {
-    Map<String, String> search = new LinkedHashMap<>();
-    search.put("ORGN_CLSF_CD", nullToEmpty(categoryCode));
-    return sisDataset(SIS_TERM_LIST_ENDPOINT, search, "dl_code_yearSmt", PublicDataMapper::toTerm);
+    return academic.terms(categoryCode);
   }
 
   /**
@@ -156,8 +111,7 @@ public class SejongPublicData {
    * @return Department 목록
    */
   public List<Department> departments(String categoryCode, String year, String semesterCode) {
-    Map<String, String> search = termSearch(categoryCode, year, semesterCode);
-    return sisDataset(SIS_DEPARTMENT_LIST_ENDPOINT, search, "dl_code_dept", PublicDataMapper::toDepartment);
+    return academic.departments(categoryCode, year, semesterCode);
   }
 
   /**
@@ -168,7 +122,7 @@ public class SejongPublicData {
    * @return CourseType 목록
    */
   public List<CourseType> courseTypes() {
-    return sisDataset(SIS_ONLOAD_ENDPOINT, new LinkedHashMap<>(), "dl_code_curiType", PublicDataMapper::toCourseType);
+    return academic.courseTypes();
   }
 
   /**
@@ -179,7 +133,7 @@ public class SejongPublicData {
    * @return SelectiveDomain 목록
    */
   public List<SelectiveDomain> selectiveDomains() {
-    return sisDataset(SIS_ONLOAD_ENDPOINT, new LinkedHashMap<>(), "dl_code_sltDomain", PublicDataMapper::toSelectiveDomain);
+    return academic.selectiveDomains();
   }
 
   /**
@@ -197,14 +151,7 @@ public class SejongPublicData {
    */
   public List<Lecture> lectures(String categoryCode, String year, String semesterCode,
       String departmentCode, String courseName, String instructorName) {
-    Map<String, String> search = termSearch(categoryCode, year, semesterCode);
-    LECTURE_EMPTY_FILTER_KEYS.forEach(key -> search.put(key, ""));
-    // 공백만 있는 값도 학교는 검색어로 받아 결과가 줄어들므로 빈 값으로 정리
-    search.put("DEPT_CD", nullToEmpty(departmentCode).trim());
-    search.put("CURI_NM", nullToEmpty(courseName).trim());
-    search.put("EMP_NM", nullToEmpty(instructorName).trim());
-    search.put("LANG_CHK", "KOR");
-    return sisDataset(SIS_LECTURE_LIST_ENDPOINT, search, "dl_main", PublicDataMapper::toLecture);
+    return academic.lectures(categoryCode, year, semesterCode, departmentCode, courseName, instructorName);
   }
 
   /**
@@ -218,13 +165,7 @@ public class SejongPublicData {
    * @throws SejongAuthException INVALID_INPUT: 학과 코드나 학수번호가 비면 (요청 없음)
    */
   public List<CurriculumCourse> curriculumCourses(String departmentCode, String courseNumber) {
-    if (isBlank(departmentCode) || isBlank(courseNumber)) {
-      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT, "Department code and course number are required");
-    }
-    String query = pairsOf(CURRICULUM_QUERY_KEYS, courseNumber, departmentCode);
-    return fetcher.fetch(cacheKeyOf("curriculumCourses", departmentCode, courseNumber),
-        new PublicDataRequest("GET", CURRICULUM_COURSE_URL + "?" + query, null, null),
-        listOf("items", PublicDataMapper::toCurriculumCourse), List.of());
+    return academic.curriculumCourses(departmentCode, courseNumber);
   }
 
   /**
@@ -233,7 +174,7 @@ public class SejongPublicData {
    * @return CalendarEvent 목록
    */
   public List<CalendarEvent> calendar(String startDate, String endDate) {
-    return calendar(startDate, endDate, DEFAULT_CALENDAR_CATEGORY_CODE);
+    return calendar(startDate, endDate, CalendarSource.DEFAULT_CALENDAR_CATEGORY_CODE);
   }
 
   /**
@@ -247,10 +188,7 @@ public class SejongPublicData {
    * @return CalendarEvent 목록
    */
   public List<CalendarEvent> calendar(String startDate, String endDate, String categoryCode) {
-    String query = pairsOf(CALENDAR_QUERY_KEYS, CALENDAR_MODE, startDate, endDate, categoryCode);
-    return fetcher.fetch(cacheKeyOf("calendar", categoryCode, startDate, endDate),
-        new PublicDataRequest("GET", ACADEMIC_CALENDAR_URL + "?" + query, null, null),
-        listOf("data", PublicDataMapper::toCalendarEvent), List.of());
+    return calendarSource.calendar(startDate, endDate, categoryCode);
   }
 
   /**
@@ -265,14 +203,7 @@ public class SejongPublicData {
    * @throws SejongAuthException INVALID_INPUT: siteId 형태가 틀리면 (요청 없음)
    */
   public List<CalendarEvent> graduateCalendar(String siteId, int year, int month) {
-    if (siteId == null || !GRADUATE_SITE_ID_PATTERN.matcher(siteId).matches()) {
-      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT,
-          "Graduate site id must be lowercase letters, digits and hyphens");
-    }
-    String query = pairsOf(GRADUATE_CALENDAR_QUERY_KEYS, String.valueOf(year), String.valueOf(month), siteId);
-    return fetcher.fetch(cacheKeyOf("graduateCalendar", siteId, String.valueOf(year), String.valueOf(month)),
-        new PublicDataRequest("GET", GRADUATE_CALENDAR_URL.replace("{siteId}", siteId) + "?" + query, null, null),
-        PublicDataMapper::toGraduateCalendarEvents, List.of());
+    return calendarSource.graduateCalendar(siteId, year, month);
   }
 
   /**
@@ -281,7 +212,7 @@ public class SejongPublicData {
    * @return DormitoryMenuDay 목록 (7개)
    */
   public List<DormitoryMenuDay> dormitoryMenu() {
-    return dormitoryMenu(DEFAULT_DORMITORY_LOCATION);
+    return dormitoryMenu(DormitorySource.DEFAULT_DORMITORY_LOCATION);
   }
 
   /**
@@ -293,9 +224,7 @@ public class SejongPublicData {
    * @return DormitoryMenuDay 목록 (7개)
    */
   public List<DormitoryMenuDay> dormitoryMenu(String location) {
-    return fetcher.fetch(cacheKeyOf("dormitoryMenu", location),
-        new PublicDataRequest("POST", DORMITORY_MENU_URL, pairsOf(DORMITORY_MENU_FORM_KEYS, location), FORM_CONTENT_TYPE),
-        PublicDataMapper::toDormitoryMenu, List.of());
+    return dormitory.dormitoryMenu(location);
   }
 
   /**
@@ -304,7 +233,7 @@ public class SejongPublicData {
    * @return DormitoryNotices
    */
   public DormitoryNotices dormitoryNotices() {
-    return dormitoryNotices(DEFAULT_NOTICE_PAGE, DEFAULT_NOTICE_ROWS, "", DEFAULT_DORMITORY_LOCATION);
+    return dormitoryNotices(DEFAULT_NOTICE_PAGE, DEFAULT_NOTICE_ROWS, "", DormitorySource.DEFAULT_DORMITORY_LOCATION);
   }
 
   /**
@@ -319,12 +248,7 @@ public class SejongPublicData {
    * @return DormitoryNotices (실패하면 total 0과 빈 목록, 결과 없음도 total 0)
    */
   public DormitoryNotices dormitoryNotices(int page, int rows, String keyword, String location) {
-    String form = pairsOf(DORMITORY_NOTICE_FORM_KEYS, String.valueOf(page), String.valueOf(rows), location,
-        DORMITORY_NOTICE_BOARD_ID, DORMITORY_NOTICE_SEARCH_TYPE, keyword);
-    DormitoryNotices emptyNotices = DormitoryNotices.builder().total(0).pinned(List.of()).items(List.of()).build();
-    return fetcher.fetch(cacheKeyOf("dormitoryNotices", String.valueOf(page), String.valueOf(rows), keyword, location),
-        new PublicDataRequest("POST", DORMITORY_NOTICE_URL, form, FORM_CONTENT_TYPE),
-        PublicDataMapper::toDormitoryNotices, emptyNotices);
+    return dormitory.dormitoryNotices(page, rows, keyword, location);
   }
 
   /**
@@ -336,10 +260,7 @@ public class SejongPublicData {
    * @return CafeteriaMenuItem 목록
    */
   public List<CafeteriaMenuItem> cafeteriaMenu(String placeId) {
-    String query = pairsOf(CAFETERIA_QUERY_KEYS, CAFETERIA_MENU_MODE, placeId);
-    return fetcher.fetch(cacheKeyOf("cafeteriaMenu", placeId),
-        new PublicDataRequest("GET", CAFETERIA_URL + "?" + query, null, null),
-        listOf("items", PublicDataMapper::toCafeteriaMenuItem), List.of());
+    return cafeteria.cafeteriaMenu(placeId);
   }
 
   /**
@@ -348,7 +269,7 @@ public class SejongPublicData {
    * @return CafeteriaPlace 목록
    */
   public List<CafeteriaPlace> cafeteriaPlaces() {
-    return cafeteriaPlaces(CAFETERIA_DEFAULT_MAX_PLACE_ID);
+    return cafeteriaPlaces(CafeteriaSource.CAFETERIA_DEFAULT_MAX_PLACE_ID);
   }
 
   /**
@@ -361,16 +282,7 @@ public class SejongPublicData {
    * @throws SejongAuthException INVALID_INPUT: maxPlaceId 가 1~50 밖이면 (요청 없음)
    */
   public List<CafeteriaPlace> cafeteriaPlaces(int maxPlaceId) {
-    if (maxPlaceId < 1 || maxPlaceId > CAFETERIA_LIMIT_MAX_PLACE_ID) {
-      throw new SejongAuthException(SejongAuthErrorCode.INVALID_INPUT,
-          "Max place id must be an integer from 1 to " + CAFETERIA_LIMIT_MAX_PLACE_ID);
-    }
-    List<String> probePlaceIds = java.util.stream.IntStream.rangeClosed(1, maxPlaceId).mapToObj(String::valueOf).toList();
-    List<PublicDataRequest> requests = probePlaceIds.stream()
-        .map(placeId -> new PublicDataRequest("GET", CAFETERIA_URL + "?" + pairsOf(CAFETERIA_QUERY_KEYS, CAFETERIA_MENU_MODE, placeId), null, null))
-        .toList();
-    return fetcher.fetchInSequence(cacheKeyOf("cafeteriaPlaces", String.valueOf(maxPlaceId)), requests,
-        responses -> PublicDataMapper.toCafeteriaPlaces(probePlaceIds, responses), List.of());
+    return cafeteria.cafeteriaPlaces(maxPlaceId);
   }
 
   /**
@@ -391,10 +303,7 @@ public class SejongPublicData {
    * @return CampusPlace 목록
    */
   public List<CampusPlace> campusPlaces(String placeType) {
-    String query = pairsOf(CAMPUS_MAP_QUERY_KEYS, CAMPUS_PLACE_LIST_MODE, placeType);
-    return fetcher.fetch(cacheKeyOf("campusPlaces", placeType),
-        new PublicDataRequest("GET", CAMPUS_MAP_URL + "?" + query, null, null),
-        listOf("items", PublicDataMapper::toCampusPlace), List.of());
+    return campus.campusPlaces(placeType);
   }
 
   /**
@@ -417,65 +326,6 @@ public class SejongPublicData {
    * @return ExtracurricularEvent 목록
    */
   public List<ExtracurricularEvent> extracurricularEvents(String startDate, String endDate, String category) {
-    String form = pairsOf(EXTRACURRICULAR_FORM_KEYS, EXTRACURRICULAR_CID, category, startDate, endDate,
-        yearOf(startDate), yearOf(endDate));
-    return fetcher.fetch(cacheKeyOf("extracurricularEvents", startDate, endDate, category),
-        new PublicDataRequest("POST", EXTRACURRICULAR_EVENTS_URL, form, FORM_CONTENT_TYPE),
-        listOf("events", PublicDataMapper::toExtracurricularEvent), List.of());
-  }
-
-  // ---- 요청 조립
-
-  /** SIS 조회 1건: {"dm_search": ...} JSON 본문 > 데이터셋 배열 > 모델 목록 */
-  private <T> List<T> sisDataset(String endpoint, Map<String, String> search, String datasetName,
-      java.util.function.Function<com.fasterxml.jackson.databind.JsonNode, T> rowMapper) {
-    return fetcher.fetch(cacheKeyOf("sis", endpoint, datasetName, search.toString()),
-        new PublicDataRequest("POST", SIS_OPEN_TIME_URL + endpoint, sisBodyOf(search), SIS_CONTENT_TYPE),
-        listOf(datasetName, rowMapper), List.of());
-  }
-
-  private static Map<String, String> termSearch(String categoryCode, String year, String semesterCode) {
-    Map<String, String> search = new LinkedHashMap<>();
-    search.put("ORGN_CLSF_CD", nullToEmpty(categoryCode));
-    search.put("YEAR", nullToEmpty(year));
-    search.put("SMT_CD", nullToEmpty(semesterCode));
-    search.put("YEAR_SMT", nullToEmpty(year) + "/" + nullToEmpty(semesterCode));
-    return search;
-  }
-
-  private static String sisBodyOf(Map<String, String> search) {
-    try {
-      return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of(SIS_SEARCH_KEY, search));
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-      throw new IllegalStateException("cannot build SIS body", e);
-    }
-  }
-
-  /** 요청 키 목록 + 값 > key=value&... (보낼 순서 그대로, UTF-8 퍼센트 인코딩) */
-  private static String pairsOf(List<String> keys, String... values) {
-    StringJoiner joiner = new StringJoiner("&");
-    for (int index = 0; index < keys.size(); index++) {
-      joiner.add(URLEncoder.encode(keys.get(index), StandardCharsets.UTF_8) + "="
-          + URLEncoder.encode(nullToEmpty(values[index]), StandardCharsets.UTF_8));
-    }
-    return joiner.toString();
-  }
-
-  /** 캐시 키: 메서드명|인자... (첫 구분자 앞이 로그용 메서드명) */
-  private static String cacheKeyOf(String methodName, String... arguments) {
-    return methodName + "|" + String.join("\u0001", java.util.Arrays.stream(arguments).map(SejongPublicData::nullToEmpty).toList());
-  }
-
-  private static String yearOf(String date) {
-    String text = nullToEmpty(date);
-    return text.length() >= YEAR_TEXT_LENGTH ? text.substring(0, YEAR_TEXT_LENGTH) : text;
-  }
-
-  private static boolean isBlank(String value) {
-    return value == null || value.trim().isEmpty();
-  }
-
-  private static String nullToEmpty(String value) {
-    return value == null ? "" : value;
+    return extracurricular.extracurricularEvents(startDate, endDate, category);
   }
 }

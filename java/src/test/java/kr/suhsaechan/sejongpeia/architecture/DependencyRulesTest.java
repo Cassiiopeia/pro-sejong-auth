@@ -30,6 +30,10 @@ class DependencyRulesTest {
       "auth", Set.of("common"),
       "publicdata", Set.of("common"));
 
+  // 공개 데이터 안쪽 규칙: 출처 파일(*Source.java)은 다른 출처와 진입점(SejongPublicData)을 참조하지 않고 공유 클래스만 쓴다
+  // 같은 패키지라 import 문이 없어도 참조할 수 있으므로 클래스 이름 사용 자체를 검사
+  private static final Pattern PUBLIC_DATA_ENTRY_OR_SOURCE_REFERENCE = Pattern.compile("\\b(\\w+Source|SejongPublicData)\\b");
+
   @Test
   void everyLayerHasFiles() throws IOException {
     for (String layer : ALLOWED_LAYERS_BY_LAYER.keySet()) {
@@ -50,6 +54,37 @@ class DependencyRulesTest {
             .isEmpty();
       }
     }
+  }
+
+  @Test
+  void publicDataSourcesReferenceOnlySharedHelpers() throws IOException {
+    List<Path> sourceFiles = publicDataSourceFiles();
+    assertThat(sourceFiles).as("rule test would pass without checking anything").isNotEmpty();
+    for (Path file : sourceFiles) {
+      String ownClassName = file.getFileName().toString().replace(".java", "");
+      List<String> forbiddenClasses = referencedEntryOrSourceClasses(Files.readString(file)).stream()
+          .filter(referencedClass -> !referencedClass.equals(ownClassName))
+          .distinct()
+          .collect(Collectors.toList());
+      assertThat(forbiddenClasses)
+          .as("publicdata/%s references %s: sources use only the shared helpers and common", file.getFileName(), forbiddenClasses)
+          .isEmpty();
+    }
+  }
+
+  private static List<Path> publicDataSourceFiles() throws IOException {
+    try (Stream<Path> files = Files.list(MAIN_SOURCE.resolve("publicdata"))) {
+      return files.filter(path -> path.getFileName().toString().endsWith("Source.java")).collect(Collectors.toList());
+    }
+  }
+
+  private static List<String> referencedEntryOrSourceClasses(String text) {
+    Matcher matcher = PUBLIC_DATA_ENTRY_OR_SOURCE_REFERENCE.matcher(text);
+    List<String> referencedClasses = new ArrayList<>();
+    while (matcher.find()) {
+      referencedClasses.add(matcher.group(1));
+    }
+    return referencedClasses;
   }
 
   private static List<Path> javaFilesUnder(String layer) throws IOException {

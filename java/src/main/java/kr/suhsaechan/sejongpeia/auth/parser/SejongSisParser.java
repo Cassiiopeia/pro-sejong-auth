@@ -13,6 +13,7 @@ import kr.suhsaechan.sejongpeia.auth.model.SisRunValues;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.common.util.CommonUtil;
+import kr.suhsaechan.sejongpeia.common.util.JsonMapperSupport;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -22,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SejongSisParser {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapperSupport.PLAIN_JSON_MAPPER;
 
   // SIS 오류 응답: 200 + {"_SUBMIT_ERROR_": {"ERRTYPE": ...}}, 로그인 세션 없음(틀린 비밀번호) = LOGOUT
   static final String SUBMIT_ERROR_KEY = "_SUBMIT_ERROR_";

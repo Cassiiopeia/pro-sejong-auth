@@ -52,3 +52,37 @@ def test_layers_import_only_allowed_layers():
             assert not forbidden, (
                 f"{layer}/{file.name} imports {sorted(forbidden)}: sources share only common, common knows no source"
             )
+
+
+# 공개 데이터 안쪽 규칙: 출처 파일(*_source.py)끼리와 진입점(client)은 임포트하지 않고 공유 파일만 쓴다
+PUBLIC_DATA_SHARED_MODULES = {"models", "fetcher", "row_reader"}
+
+
+def _public_data_sibling_modules(file: Path):
+    """파일이 임포트하는 public_data 폴더 안 모듈 이름 집합 (`.x`, `. import x`, `sejongpeia.public_data.x`)"""
+    modules = set()
+    for node in ast.walk(ast.parse(file.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.ImportFrom):
+            if node.level == 1:
+                modules.update([node.module.split(".")[0]] if node.module else [alias.name for alias in node.names])
+            elif node.level == 0 and node.module and node.module.startswith(f"{PACKAGE_NAME}.public_data"):
+                parts = node.module.split(".")
+                modules.update([parts[2]] if len(parts) > 2 else [alias.name for alias in node.names])
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                parts = alias.name.split(".")
+                if parts[:2] == [PACKAGE_NAME, "public_data"] and len(parts) > 2:
+                    modules.add(parts[2])
+    return modules
+
+
+def test_public_data_has_source_files():
+    assert sorted((SOURCE_DIR / "public_data").glob("*_source.py")), "rule test would pass without checking anything"
+
+
+def test_public_data_sources_import_only_shared_helpers():
+    for file in sorted((SOURCE_DIR / "public_data").glob("*_source.py")):
+        forbidden = _public_data_sibling_modules(file) - PUBLIC_DATA_SHARED_MODULES
+        assert not forbidden, (
+            f"public_data/{file.name} imports {sorted(forbidden)}: sources import only {sorted(PUBLIC_DATA_SHARED_MODULES)} and common"
+        )

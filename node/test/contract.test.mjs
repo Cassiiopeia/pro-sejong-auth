@@ -6,7 +6,13 @@ import * as client from '../dist/esm/auth/client.js';
 import * as parsers from '../dist/esm/auth/parsers.js';
 import * as transport from '../dist/esm/common/transport.js';
 import { DEFAULT_MESSAGE_BY_CODE } from '../dist/esm/common/errors.js';
-import * as publicData from '../dist/esm/publicData/client.js';
+import * as academicSource from '../dist/esm/publicData/academicSource.js';
+import * as cafeteriaSource from '../dist/esm/publicData/cafeteriaSource.js';
+import * as calendarSource from '../dist/esm/publicData/calendarSource.js';
+import * as campusSource from '../dist/esm/publicData/campusSource.js';
+import * as dormitorySource from '../dist/esm/publicData/dormitorySource.js';
+import * as extracurricularSource from '../dist/esm/publicData/extracurricularSource.js';
+import * as publicDataFetcher from '../dist/esm/publicData/fetcher.js';
 
 const contract = JSON.parse(readFileSync(new URL('../../spec/contract.json', import.meta.url), 'utf8'));
 
@@ -51,52 +57,52 @@ test('tlsAndErrorMessagesMatchContract', () => {
 test('publicDataRequestBasicsMatchContract', () => {
   const contractValues = contract.publicData;
   assert.deepEqual(
-    [publicData.JSON_ACCEPT, publicData.FORM_CONTENT_TYPE, publicData.FORM_REQUESTED_WITH, publicData.SIS_SUBMIT_ERROR_KEY],
+    [publicDataFetcher.JSON_ACCEPT, publicDataFetcher.FORM_CONTENT_TYPE, publicDataFetcher.FORM_REQUESTED_WITH, publicDataFetcher.SUBMIT_ERROR_KEY],
     [contractValues.jsonAccept, contractValues.formContentType, contractValues.formRequestedWith, contract.sis.submitErrorKey]);
 });
 
 test('publicDataSisTimetableValuesMatchContract', () => {
   const { sisTimetable, curriculum } = contract.publicData;
   assert.deepEqual(
-    [publicData.SIS_BASE_URL, publicData.SIS_CONTENT_TYPE, publicData.SIS_SEARCH_KEY],
+    [academicSource.SIS_BASE_URL, academicSource.SIS_CONTENT_TYPE, academicSource.SIS_SEARCH_KEY],
     [sisTimetable.baseUrl, sisTimetable.contentType, sisTimetable.searchKey]);
   assert.deepEqual(
-    [publicData.SIS_ONLOAD_ENDPOINT, publicData.SIS_TERM_LIST_ENDPOINT, publicData.SIS_DEPARTMENT_LIST_ENDPOINT, publicData.SIS_LECTURE_LIST_ENDPOINT],
+    [academicSource.SIS_ONLOAD_ENDPOINT, academicSource.SIS_TERM_LIST_ENDPOINT, academicSource.SIS_DEPARTMENT_LIST_ENDPOINT, academicSource.SIS_LECTURE_LIST_ENDPOINT],
     [sisTimetable.onloadEndpoint, sisTimetable.termListEndpoint, sisTimetable.departmentListEndpoint, sisTimetable.lectureListEndpoint]);
-  assert.deepEqual(publicData.LECTURE_EMPTY_FILTER_KEYS, sisTimetable.lectureEmptyFilterKeys);
-  assert.equal(publicData.CURRICULUM_COURSE_URL, curriculum.url);
-  assert.deepEqual(publicData.CURRICULUM_QUERY_KEYS, curriculum.queryKeys);
+  assert.deepEqual(academicSource.LECTURE_EMPTY_FILTER_KEYS, sisTimetable.lectureEmptyFilterKeys);
+  assert.equal(academicSource.CURRICULUM_COURSE_URL, curriculum.url);
+  assert.deepEqual(academicSource.CURRICULUM_QUERY_KEYS, curriculum.queryKeys);
 });
 
 test('publicDataCalendarValuesMatchContract', () => {
   const { calendar, graduateCalendar } = contract.publicData;
   assert.deepEqual(
-    [publicData.ACADEMIC_CALENDAR_URL, publicData.CALENDAR_MODE, publicData.DEFAULT_CALENDAR_CATEGORY_CODE],
+    [calendarSource.ACADEMIC_CALENDAR_URL, calendarSource.CALENDAR_MODE, calendarSource.DEFAULT_CALENDAR_CATEGORY_CODE],
     [calendar.url, calendar.mode, calendar.defaultCategoryCode]);
-  assert.deepEqual(publicData.CALENDAR_QUERY_KEYS, calendar.queryKeys);
-  assert.equal(publicData.GRADUATE_CALENDAR_URL, graduateCalendar.urlTemplate);
-  assert.deepEqual(publicData.GRADUATE_CALENDAR_QUERY_KEYS, graduateCalendar.queryKeys);
-  assert.equal(publicData.GRADUATE_SITE_ID_PATTERN_SOURCE, graduateCalendar.siteIdPattern);
+  assert.deepEqual(calendarSource.CALENDAR_QUERY_KEYS, calendar.queryKeys);
+  assert.equal(calendarSource.GRADUATE_CALENDAR_URL, graduateCalendar.urlTemplate);
+  assert.deepEqual(calendarSource.GRADUATE_CALENDAR_QUERY_KEYS, graduateCalendar.queryKeys);
+  assert.equal(calendarSource.GRADUATE_SITE_ID_PATTERN_SOURCE, graduateCalendar.siteIdPattern);
 });
 
 test('publicDataDormitoryValuesMatchContract', () => {
   const { dormitory } = contract.publicData;
   assert.deepEqual(
-    [publicData.DORMITORY_MENU_URL, publicData.DORMITORY_NOTICE_URL, publicData.DEFAULT_DORMITORY_LOCATION,
-      publicData.DORMITORY_NOTICE_BOARD_ID, publicData.DORMITORY_NOTICE_SEARCH_TYPE],
+    [dormitorySource.DORMITORY_MENU_URL, dormitorySource.DORMITORY_NOTICE_URL, dormitorySource.DEFAULT_DORMITORY_LOCATION,
+      dormitorySource.DORMITORY_NOTICE_BOARD_ID, dormitorySource.DORMITORY_NOTICE_SEARCH_TYPE],
     [dormitory.menuUrl, dormitory.noticeUrl, dormitory.defaultLocation, dormitory.noticeBoardId, dormitory.noticeSearchType]);
-  assert.deepEqual(publicData.DORMITORY_MENU_FORM_KEYS, dormitory.menuFormKeys);
-  assert.deepEqual(publicData.DORMITORY_NOTICE_FORM_KEYS, dormitory.noticeFormKeys);
+  assert.deepEqual(dormitorySource.DORMITORY_MENU_FORM_KEYS, dormitory.menuFormKeys);
+  assert.deepEqual(dormitorySource.DORMITORY_NOTICE_FORM_KEYS, dormitory.noticeFormKeys);
 });
 
 test('publicDataCafeteriaCampusExtracurricularValuesMatchContract', () => {
   const { cafeteria, campusMap, extracurricular } = contract.publicData;
   assert.deepEqual(
-    [publicData.CAFETERIA_URL, publicData.CAFETERIA_MENU_MODE, publicData.CAFETERIA_DEFAULT_MAX_PLACE_ID, publicData.CAFETERIA_LIMIT_MAX_PLACE_ID],
+    [cafeteriaSource.CAFETERIA_URL, cafeteriaSource.CAFETERIA_MENU_MODE, cafeteriaSource.CAFETERIA_DEFAULT_MAX_PLACE_ID, cafeteriaSource.CAFETERIA_LIMIT_MAX_PLACE_ID],
     [cafeteria.url, cafeteria.menuMode, cafeteria.defaultMaxPlaceId, cafeteria.limitMaxPlaceId]);
-  assert.deepEqual(publicData.CAFETERIA_QUERY_KEYS, cafeteria.queryKeys);
-  assert.deepEqual([publicData.CAMPUS_MAP_URL, publicData.CAMPUS_PLACE_LIST_MODE], [campusMap.url, campusMap.mode]);
-  assert.deepEqual(publicData.CAMPUS_MAP_QUERY_KEYS, campusMap.queryKeys);
-  assert.deepEqual([publicData.EXTRACURRICULAR_URL, publicData.EXTRACURRICULAR_CID], [extracurricular.url, extracurricular.cid]);
-  assert.deepEqual(publicData.EXTRACURRICULAR_FORM_KEYS, extracurricular.formKeys);
+  assert.deepEqual(cafeteriaSource.CAFETERIA_QUERY_KEYS, cafeteria.queryKeys);
+  assert.deepEqual([campusSource.CAMPUS_MAP_URL, campusSource.CAMPUS_PLACE_LIST_MODE], [campusMap.url, campusMap.mode]);
+  assert.deepEqual(campusSource.CAMPUS_MAP_QUERY_KEYS, campusMap.queryKeys);
+  assert.deepEqual([extracurricularSource.EXTRACURRICULAR_URL, extracurricularSource.EXTRACURRICULAR_CID], [extracurricular.url, extracurricular.cid]);
+  assert.deepEqual(extracurricularSource.EXTRACURRICULAR_FORM_KEYS, extracurricular.formKeys);
 });

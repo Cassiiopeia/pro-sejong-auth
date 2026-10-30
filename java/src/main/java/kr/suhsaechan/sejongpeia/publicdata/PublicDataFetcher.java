@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import kr.suhsaechan.sejongpeia.common.util.JsonMapperSupport;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,7 +31,7 @@ final class PublicDataFetcher {
   private final Duration cacheTimeToLive;
   private final Duration failureMemoryDuration;
   private final int cacheMaxEntries;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapperSupport.PLAIN_JSON_MAPPER;
   // 삽입 순서 유지: 맨 앞이 가장 오래된 항목 (접근은 모두 cacheByKey 모니터 안에서)
   private final LinkedHashMap<String, CachedValue> cacheByKey = new LinkedHashMap<>();
   private final ConcurrentHashMap<String, CompletableFuture<Object>> inFlightByKey = new ConcurrentHashMap<>();

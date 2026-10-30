@@ -9,8 +9,8 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 
 1. **이슈로 제안**합니다. 이슈 템플릿 `새 정보 출처 제안`을 쓰세요. 출처 위치, 로그인 필요 여부, 요청 형태(JSON 또는 HTML), 필드, 개인정보 포함 여부를 적어 주세요. JSON이 아니고 HTML만 있는 정보는 기본 원본으로 삼지 않습니다.
 2. **계약을 먼저** 씁니다. 주소, 요청 키, 고정 값은 `spec/contract.json`의 `publicData`에 넣고 (언어별 상수는 각자 두며 계약 테스트가 일치를 검사합니다), `spec/PUBLIC_DATA.md`에 메서드, 요청, 필드 대응을 한 줄씩 추가합니다. 확인한 날짜와 확인한 계정 종류도 적습니다. 에이전트용 메서드 목록 `spec/api-index.json`에도 같은 메서드를 추가합니다 (인자, 반환 모델, Java 시그니처). 세 언어 구현과 어긋나면 `python3 scripts/check-api-index.py`가 실패합니다.
-3. **합성 fixture와 기대 결과**를 만듭니다. `scripts/generate-public-data-fixtures.py`의 `FIXTURES`와 `map_all()`에 추가하고 실행합니다. 실제 응답을 복사하지 않고, 교직원 이름 같은 개인 식별 값은 넣지 않습니다.
-4. **Java, Python, Node를 한 PR에서** 구현합니다. 요청, 캐시, 실패 격리는 `SejongPublicData`의 공통 헬퍼를 그대로 씁니다. 값 규칙(없으면 빈 문자열, `extra`)은 계약을 따릅니다.
+3. **합성 fixture와 기대 결과**를 만듭니다. `scripts/generate-public-data-fixtures.py`의 `FIXTURES`와 출처별 `map_*()` 함수에 추가하고(`map_all()`이 합칩니다) 실행합니다. 실제 응답을 복사하지 않고, 교직원 이름 같은 개인 식별 값은 넣지 않습니다.
+4. **Java, Python, Node를 한 PR에서** 구현합니다. 출처마다 파일 하나(`<출처>_source.py`, `<출처>Source.ts`, `<출처>Source.java`)에 요청 조립과 변환을 두고 `SejongPublicData`에는 공개 메서드 한 줄만 더합니다. 캐시와 실패 격리는 공유 파일(`fetcher`)을 그대로 씁니다. 값 규칙(없으면 빈 문자열, `extra`)은 계약을 따릅니다.
 5. **테스트는 필요한 만큼만** 씁니다. fixture 결과가 기대 결과와 같은지 하나면 충분합니다. 학교 서버를 부르는 테스트는 넣지 않습니다.
 6. **형태 점검**에 항목을 추가합니다. `scripts/probe-public-data.py`의 `SOURCES` 표에 한 줄을 더합니다. 계정 없이 도는 점검입니다.
 7. [기능 노출 체크리스트](../structure/)의 항목을 확인합니다.
@@ -21,9 +21,9 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 
 | 언어 | 메서드와 요청 | 결과 모델 | 테스트 |
 |---|---|---|---|
-| Python | `python/src/sejongpeia/public_data/client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
-| Node | `node/src/publicData/client.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
-| Java | `publicdata/SejongPublicData.java`, 변환은 `PublicDataMapper.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
+| Python | `python/src/sejongpeia/public_data/<출처>_source.py` (요청, 변환), 공개 메서드 한 줄은 `client.py` | `public_data/models.py` | `python/tests/test_public_data.py` |
+| Node | `node/src/publicData/<출처>Source.ts` (요청, 변환), 공개 메서드 한 줄은 `client.ts`, 인자 객체는 `queries.ts` | `publicData/models.ts` | `node/test/publicData.test.mjs` |
+| Java | `publicdata/<출처>Source.java` (요청, 변환), 공개 메서드는 `SejongPublicData.java` | `publicdata/model/` | `SejongPublicDataTest.java` |
 
 - 메서드 이름은 Python `snake_case`, Node와 Java `camelCase`입니다. 쓰지 않은 학교 필드는 `extra`에 담습니다.
 - 로그인이 필요한 소스는 이 절차의 대상이 아닙니다. 소스끼리는 서로 임포트할 수 없어서 로그인 세션을 어떻게 나눌지 설계가 필요하니, 이슈에서 먼저 방향을 맞춰 주세요.
@@ -39,7 +39,7 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 | Node | `node/test/dependencyRules.test.mjs` |
 | Java | `DependencyRulesTest` |
 
-규칙에 걸리면 공유가 필요한 부분을 `common`으로 옮기세요.
+공개 데이터 안에서도 출처 파일(`*_source`)끼리와 진입점(`client`)은 서로 임포트하지 않고 공유 파일(`fetcher`, `row_reader`, `models`)만 씁니다. 규칙에 걸리면 공유가 필요한 부분을 `common`으로 옮기세요.
 
 **폴더 구조** (세 언어 같은 모양)
 
@@ -47,7 +47,7 @@ description: 학교가 공개로 주는 새 정보를 세 언어에 추가하는
 |---|---|---|---|
 | 공통 | `common/` (`errors`, `transport`, `version`) | `common/` (`errors`, `transport`, `version`) | `common/` (`exception`, `util`, `http`, `config`) |
 | 인증 | `auth/` (`client`, `parsers`, `portal_main_parser`, `models`) | `auth/` (`client`, `parsers`, `portalMainParser`, `models`) | `auth/` (`client`, `parser`, `model`, `service`) |
-| 공개 데이터 | `public_data/` (`client`, `models`) | `publicData/` (`client`, `models`) | `publicdata/` (`model`) |
+| 공개 데이터 | `public_data/` (`client`, `fetcher`, `row_reader`, `models`, `*_source`) | `publicData/` (`client`, `fetcher`, `rowReader`, `queries`, `models`, `*Source`) | `publicdata/` (`SejongPublicData`, `*Source`, `PublicDataFetcher`, `model`) |
 | 조립 | `__init__.py` | `index.ts` | `config/` (Spring 자동 설정, TLS 초기화) |
 
 ## spec/에 무엇을 두는가

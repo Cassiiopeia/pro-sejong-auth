@@ -14,6 +14,7 @@ import kr.suhsaechan.sejongpeia.common.config.SejongAuthProperties;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthErrorCode;
 import kr.suhsaechan.sejongpeia.common.exception.SejongAuthException;
 import kr.suhsaechan.sejongpeia.common.http.SejongHttpSupport;
+import kr.suhsaechan.sejongpeia.common.util.JsonMapperSupport;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -46,7 +47,7 @@ public class SejongSisClient {
   private final SejongAuthProperties properties;
   private final OkHttpClient baseClient;
   private final SejongSisParser sisParser = new SejongSisParser();
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapperSupport.PLAIN_JSON_MAPPER;
 
   public SejongSisClient(SejongAuthProperties properties) {
     this(properties, SejongHttpSupport.buildBaseClient(properties));
