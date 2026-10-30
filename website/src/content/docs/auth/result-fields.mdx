@@ -5,9 +5,44 @@ description: 통합, DHC, SIS 인증 결과의 필드와 타입, 고전독서 �
 
 import { Aside } from '@astrojs/starlight/components';
 
-이름은 Java와 Node.js 기준(`camelCase`)입니다. Python은 `snake_case`(`student_id`, `phone_number`)를 씁니다. 원본 스키마는 [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md)입니다.
+통합, DHC, SIS 인증이 돌려주는 결과의 필드와 타입을 정리합니다. 요청 쪽은 [인증 메서드](../methods/)에 있고, 원본 스키마는 [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md)입니다.
 
-## 통합 결과
+## 응답 데이터 구조
+
+통합 인증 결과의 예시입니다. 예시는 Python의 `snake_case` 이름이고, Java와 Node.js는 `camelCase`(`studentId`, `phoneNumber`)입니다.
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "grade": "3",
+  "status": "재학",
+  "classic_reading": {
+    "completed_semesters": "4 학기",
+    "certified_semesters": "4 학기",
+    "certification_status": "인증",
+    "certifications": [{ "area": "서양의 역사와 사상", "required_count": "1", "certified_count": "1" }],
+    "exam_records": [],
+    "subject_substitutions": [],
+    "contest_records": [],
+    "curriculum_records": []
+  },
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000",
+  "english_name": "Gildong Hong",
+  "user_category": "학부생",
+  "parent_unit_name": "",
+  "authenticated_at": "yyyy-MM-ddTHH:mm:ss",
+  "department_code": "0000",
+  "extra": null,
+  "raw_html": null,
+  "raw_json": null
+}
+```
+
+### 통합 결과 필드
 
 | 필드 | 타입 | 출처 | 규칙 |
 |---|---|---|---|
@@ -19,7 +54,7 @@ import { Aside } from '@astrojs/starlight/components';
 | `status` | string | DHC | 학적 상태 (재학, 휴학, 졸업 등 포털 원문) |
 | `classicReading` | object | DHC | 아래 「고전독서」 |
 | `email` | string 또는 null | SIS | SIS 조회가 실패하면 null |
-| `phoneNumber` | string 또는 null | SIS | 같음. `010-1234-5678` 형식 |
+| `phoneNumber` | string 또는 null | SIS | 같음. `010-0000-0000` 형식 |
 | `englishName` | string 또는 null | SIS | 같음 |
 | `userCategory` | string 또는 null | SIS | 사용자 구분, 예: `학부생` |
 | `parentUnitName` | string 또는 null | 포털 메인 | 포털 메인 호출이 실패하면 null, 쓸 만한 값이 없으면 빈 문자열 |
@@ -28,6 +63,12 @@ import { Aside } from '@astrojs/starlight/components';
 | `extra` | 맵 또는 null | SIS | extra 옵션을 켰을 때만. 아니면 null |
 | `rawHtml` | string 또는 null | DHC | 원문 옵션을 켰을 때만 |
 | `rawJson` | string 또는 null | SIS | 원문 옵션을 켰을 때만. SIS가 실패했으면 null |
+
+### 실패했을 때
+
+- DHC 단계가 실패하면 결과 없이 예외입니다 (`AUTHENTICATION_FAILED`, `DATA_FETCH_FAILED`, `SESSION_ERROR` 등. [에러 코드](../error-codes/)).
+- SIS 단계가 실패하면 호출은 성공하고 SIS 출처 필드(연락처, 영문 이름, 사용자 구분, 학교 코드)만 `null`입니다.
+- 포털 메인 단계가 실패하면 호출은 성공하고 `parentUnitName`만 `null`입니다.
 
 <Aside type="caution" title="parentUnitName으로 판정하지 마세요">
 학과 위의 소속 이름(단과대학 또는 학부)을 포털 화면 글자에서 뽑은 보조 정보입니다. 학생 유형에 따라 빈 문자열일 수 있고, 학년도마다 표기가 바뀌는 포털 원문이므로 값 목록으로 분기하거나 인증 판정에 쓰지 마세요.
@@ -82,9 +123,9 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 
 | 필드 (Python) | SIS 키 | 비고 |
 |---|---|---|
-| `departmentCode` (`department_code`) | `DEPT_CD`, 없으면 `DEPT_NO` | 두 값이 같을 것으로 보지만 모든 학적 상태에서 확인하지는 않았습니다 |
+| `departmentCode` (`department_code`) | `DEPT_CD`, 없으면 `DEPT_NO` | 두 값은 같은 학과 코드이며 `DEPT_CD`를 먼저 씁니다 |
 | `organizationClassificationCode` | `ORGN_CLSF_CD` | |
-| `enrollmentStatusCode` | `STATUS_DIV_CD` | 원문 코드뿐이며 모든 상태의 뜻을 확인하지는 않았습니다 |
+| `enrollmentStatusCode` | `STATUS_DIV_CD` | 학교 원문 코드이며 뜻 매핑은 없음 |
 | `userClassificationCode` | `USER_CLSF_CD` | |
 | `userClassificationLargeCode` | `USER_CLSF_L_CD` | |
 | `userClassificationMiddleCode` | `USER_CLSF_M_CD` | |
@@ -92,7 +133,7 @@ for (ClassicCertification certification : result.getClassicReading().getCertific
 | `menuSystemId` / `menuSystemName` | `MENU_SYS_ID` / `MENU_SYS_NM` | |
 | `locale` | `INTG_LOCALE` | |
 
-`departmentCode`는 [학과·학기 코드](../../data/codes/)의 학과 코드와 같은 체계입니다. 한 학부생 계정으로만 같은 값임을 확인했고, 대학원생, 복수전공 등은 확인하지 못했습니다.
+`departmentCode`는 [학과·학기 코드](../../data/codes/)의 학과 코드와 같은 체계입니다.
 
 ## null과 빈 문자열
 

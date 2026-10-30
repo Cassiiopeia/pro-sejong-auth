@@ -1,6 +1,6 @@
 ---
 title: Common rules
-description: The client, result value rules, cache, failure isolation and request handling shared by all 15 school data methods.
+description: The client, result value rules, cache, failure isolation and request handling shared by the school data methods.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
@@ -66,7 +66,7 @@ All optional.
 
 Java reads the `sejongpeia` prefix of `application.yml` (`SejongAuthProperties`). Without Spring, build the same properties object and pass it to `new SejongPublicData(properties)`. Settings shared with authentication are on [Configuration](../../auth/configuration/).
 
-## The 15 methods
+## Methods
 
 | Data | Java | Python | Node.js | Page |
 |---|---|---|---|---|
@@ -112,7 +112,7 @@ Identical in the three languages. Field mapping is defined by [`scripts/generate
 - After a failure with no cached value, the same call returns the empty value without a request for `failure_cache_seconds` (default 60). A stale cached value is still returned on failure.
 - The cache holds at most `cache_max_entries` (default 500) entries and evicts the oldest when full. The per-key locks go with their entries, so passing user-typed search text as an argument does not grow memory without bound.
 - **Concurrent calls with the same arguments share one request.**
-- One call makes one request. The exception is `cafeteria_places`, which makes up to 10, one after the other ([Cafeterias](../cafeteria/)).
+- One call makes one request. The exception is `cafeteria_places`, which sends one per cafeteria number, one after the other ([Cafeterias](../cafeteria/)).
 - Be gentle with the school servers. A bot or widget only needs to refresh a few times a day.
 
 ## How requests are sent
@@ -121,11 +121,11 @@ Identical in the three languages. Field mapping is defined by [`scripts/generate
 - SIS (`sjpt.sejong.ac.kr`) requests: JSON body (`{"dm_search": ...}`), headers `Content-Type: application/json; charset="UTF-8"` and `Accept: application/json`.
 - Form requests (dormitory, extracurricular): `application/x-www-form-urlencoded; charset=UTF-8` and `X-Requested-With: XMLHttpRequest`.
 - The dormitory (`happydorm`) responses are JSON with a `text/html` content type. The body is always parsed as JSON.
-- No login is used. The SIS code tables and the dormitory source were confirmed to return the same data without any cookie (2026-10-30). For the other sources there is no record of checking cookie dependence.
+- Requests are sent without login or cookies.
 
 ## Further reading
 
-- Contract sources: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md), and the record of where the school serves what, [spec/REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)
+- Contract sources: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md), [spec/REFERENCE_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA.md), and the overview of school data sources, [spec/REFERENCE_DATA_SURVEY.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)
 - Usage examples: [Department and lecture search](../../guides/department-lecture-search/), [Academic calendar widget](../../guides/academic-calendar/), [Dormitory and cafeteria bot](../../guides/dormitory-cafeteria-bot/)
 - Why failure and cache work this way: [Failure isolation and cache](../../understand/failure-isolation-cache/)
 - Adding a new source: [Add a new data source](../../contribute/add-data-source/)

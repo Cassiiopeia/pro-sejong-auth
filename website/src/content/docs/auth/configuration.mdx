@@ -7,40 +7,13 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 모두 선택 항목입니다. 기본값으로 충분하면 아무것도 설정하지 않아도 됩니다.
 
-| 설정 | 기본값 | Java (`application.yml`) | Python | Node.js |
-|---|---|---|---|---|
-| 요청 제한 시간 (초, 연결과 읽기) | 10 | `sejongpeia.timeout-seconds` | `timeout_seconds` | `timeoutSeconds` |
-| 포털 로그인 재시도 횟수 | 3 | `sejongpeia.max-retry` | `max_retry` | `maxRetry` |
-| 인증서 검증 | 켬 (true) | `sejongpeia.ssl-verification` | `ssl_verification` | `sslVerification` |
+## 설정 항목
 
-<Tabs syncKey="language">
-  <TabItem label="Java">
-    ```yaml
-    sejongpeia:
-      timeout-seconds: 10     # 요청 제한 시간 (기본 10)
-      max-retry: 3            # 포털 로그인 재시도 횟수 (기본 3)
-      ssl-verification: true  # 포털 인증서 검증 (기본 true)
-    ```
-  </TabItem>
-  <TabItem label="Python">
-    ```python
-    from sejongpeia import SejongAuthClient
-
-    # 기본값과 다른 설정이 필요할 때만 직접 만들기
-    client = SejongAuthClient(timeout_seconds=10, max_retry=3, ssl_verification=True)
-    result = client.authenticate(student_id, password)
-    ```
-  </TabItem>
-  <TabItem label="Node.js">
-    ```javascript
-    import { SejongAuthClient } from 'pro-sejongpeia';
-
-    // 기본값과 다른 설정이 필요할 때만 직접 만들기
-    const client = new SejongAuthClient({ timeoutSeconds: 10, maxRetry: 3, sslVerification: true });
-    const result = await client.authenticate(studentId, password);
-    ```
-  </TabItem>
-</Tabs>
+| 설정 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| 요청 제한 시간 | 숫자 (초) | 10 | 연결과 읽기 제한 시간. Java `sejongpeia.timeout-seconds`, Python `timeout_seconds`, Node.js `timeoutSeconds` |
+| 포털 로그인 재시도 횟수 | 숫자 | 3 | Java `sejongpeia.max-retry`, Python `max_retry`, Node.js `maxRetry` |
+| 인증서 검증 | boolean | `true` | Java `sejongpeia.ssl-verification`, Python `ssl_verification`, Node.js `sslVerification` |
 
 ## 재시도의 범위
 
@@ -88,3 +61,34 @@ SejongAuthResult result = engine.authenticate(studentId, password);
 ## 공개 데이터 클라이언트
 
 학교 공개 데이터(`SejongPublicData`)의 캐시 시간, 실패 기억 시간, 캐시 최대 개수 같은 설정은 [공통 규칙](../../data/overview/)에 있습니다.
+
+## 예시 코드
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```yaml
+    sejongpeia:
+      timeout-seconds: 10     # 요청 제한 시간 (기본 10)
+      max-retry: 3            # 포털 로그인 재시도 횟수 (기본 3)
+      ssl-verification: true  # 포털 인증서 검증 (기본 true)
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import SejongAuthClient
+
+    # 기본값과 다른 설정이 필요할 때만 직접 만들기
+    client = SejongAuthClient(timeout_seconds=10, max_retry=3, ssl_verification=True)
+    result = client.authenticate(student_id, password)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { SejongAuthClient } from 'pro-sejongpeia';
+
+    // 기본값과 다른 설정이 필요할 때만 직접 만들기
+    const client = new SejongAuthClient({ timeoutSeconds: 10, maxRetry: 3, sslVerification: true });
+    const result = await client.authenticate(studentId, password);
+    ```
+  </TabItem>
+</Tabs>

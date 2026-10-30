@@ -40,6 +40,16 @@ body {
   display: block;
   overflow-x: auto;
 }
+/* 파라미터·필드 표는 열이 많아 셀 좌우 여백을 줄여 설명 열에 폭을 남김 */
+.sl-markdown-content table:not(:where(.not-content *)) :is(th, td) {
+  padding-inline: 0.6rem;
+}
+/* 좁은 화면에서는 설명 열이 한 글자씩 접히지 않도록 최소 폭을 주고 표를 가로로 스크롤 */
+@media (max-width: 50rem) {
+  .sl-markdown-content table:not(:where(.not-content *)) td:last-child {
+    min-width: 12rem;
+  }
+}
 
 /* ===== 랜딩 페이지 (.landing 아래에서만 적용) ===== */
 .landing {

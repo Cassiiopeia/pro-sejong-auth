@@ -5,42 +5,68 @@ description: 기간별 비교과 프로그램 일정을 분류, 장소와 함께
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-학교의 비교과 프로그램 포털(`do.sejong.ac.kr`)이 공개로 주는 일정을 기간으로 조회합니다. 분류, 시작·종료 시각, 장소, 설명, 상세 주소가 들어 있습니다. 결과는 캐시하고, 학교 쪽 실패는 격리합니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
+학교의 비교과 프로그램 포털(`do.sejong.ac.kr`)이 공개로 주는 일정을 기간으로 조회합니다. 로그인이 필요 없습니다. 분류, 시작·종료 시각, 장소, 설명, 상세 주소가 들어 있습니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
 
-## 메서드
+## 요청 파라미터
 
-| 언어 | 시그니처 |
-|---|---|
-| Java | `extracurricularEvents(String startDate, String endDate)`, `extracurricularEvents(String startDate, String endDate, String category)` |
-| Python | `extracurricular_events(start, end, category="")` |
-| Node.js | `extracurricularEvents({ start, end, category = '' })` |
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `start` | 문자열 `yyyy-MM-dd` | 필수 | 없음 | 조회 시작일 |
+| `end` | 문자열 `yyyy-MM-dd` | 필수 | 없음 | 조회 종료일 |
+| `category` | 문자열 | 선택 | `""` | 학교의 분류 값. 비우면 전체. 분류 이름은 결과의 `category_title`로 확인 |
 
-- `start`, `end`는 `yyyy-MM-dd` 문자열입니다.
-- `category`는 학교의 분류 값이고 기본값은 빈 문자열입니다. 가능한 값 목록은 이 문서가 정리하지 않았습니다. 결과의 `category_title`로 분류 이름을 확인하세요.
-- 반환: `ExtracurricularEvent` 목록.
-
-## 요청 메모
-
-- `POST https://do.sejong.ac.kr/ko/process/schedule/getEvents`, 폼 `cid=eco`, `category`, `start`, `end`, `start_year`, `end_year`. 연도 필드는 각 날짜의 앞 네 글자입니다. 응답 배열 `events`. 로그인 불필요.
+- 이름 표기: Python은 `snake_case`, Node.js와 Java는 `camelCase`입니다. Node.js는 `extracurricularEvents({ start, end, category = '' })`, Java는 `extracurricularEvents(startDate, endDate)`와 `extracurricularEvents(startDate, endDate, category)`입니다 (선택 인자를 비우려면 `""`).
+- 학교 요청: `POST https://do.sejong.ac.kr/ko/process/schedule/getEvents`, 폼 `cid=eco`, `category`, `start`, `end`, `start_year`, `end_year` (연도 필드는 각 날짜의 앞 네 글자), 응답 배열 `events`.
 - 폼 요청 헤더는 `application/x-www-form-urlencoded; charset=UTF-8`와 `X-Requested-With: XMLHttpRequest`입니다.
 
-## 결과 필드
+## 응답 데이터 구조
 
-필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 모두 문자열이고 없으면 빈 문자열입니다. 이 모델에는 `extra`가 없습니다.
+`ExtracurricularEvent`의 목록입니다 (필드 이름은 Python 기준, Node.js와 Java는 `camelCase`). 학교 데이터는 바뀌므로 값은 예시입니다.
+
+```json
+[
+  {
+    "id": "event-id",
+    "title": "프로그램 제목",
+    "start": "2026-03-10T14:00:00+09:00",
+    "end": "2026-03-10T16:00:00+09:00",
+    "category_title": "분류 이름",
+    "url": "https://do.sejong.ac.kr/ko/program/all/view/0000",
+    "description": "프로그램 설명",
+    "location": "장소"
+  }
+]
+```
+
+모두 문자열이고 없으면 빈 문자열입니다. 이 모델에는 `extra`가 없습니다.
 
 | 필드 | 학교 키 | 설명 |
 |---|---|---|
 | `id` | `id` | 프로그램 번호 |
 | `title` | `title` | 제목 |
-| `start`, `end` | `start`, `end` | 시작, 종료 (예: `2099-10-20T14:00:00` 형태의 날짜·시각 문자열) |
+| `start`, `end` | `start`, `end` | 시작, 종료 (날짜·시각 문자열, 학교 원문) |
 | `category_title` | `category_title` | 분류 이름 |
 | `url` | `data.url` | 상세 주소 |
 | `description` | `data.description` | 설명 |
 | `location` | `data.location` | 장소 |
 
-`url`, `description`, `location`은 학교 응답의 `data` 객체 안에서 읽습니다. 날짜·시각 형식은 학교 원문이므로 파싱 전에 실제 값을 확인하세요.
+`url`, `description`, `location`은 학교 응답의 `data` 객체 안에서 읽습니다.
 
-## 예시
+### 실패 동작
+
+- 기간과 분류 조합마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
+- 학교 실패(연결, 시간 초과, 비정상 응답, `events` 없음)는 마지막 캐시 값 또는 빈 목록이고, 캐시가 없으면 60초(기본) 동안 요청 없이 빈 목록입니다.
+- 이 메서드는 예외를 던지지 않습니다.
+- 빈 목록은 「그 기간에 프로그램이 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
+
+## 알려진 한계
+
+- `category`에 쓸 수 있는 값의 목록은 제공하지 않습니다. 결과의 `category_title`로 분류 이름을 확인하세요.
+- `start`, `end`는 학교 원문 형식이므로 파싱 전에 실제 값을 확인하세요.
+- 한 번에 받을 수 있는 기간의 상한이 명시되어 있지 않으니 기간을 길게 잡기 전에 직접 호출해 보세요.
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## 예시 코드
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -67,17 +93,3 @@ const events = await publicData.extracurricularEvents({ start: '2026-10-01', end
 
 </TabItem>
 </Tabs>
-
-## 캐시와 실패 동작
-
-- 기간과 분류 조합마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
-- 학교 실패(연결, 시간 초과, 비정상 응답, `events` 없음)는 마지막 캐시 값 또는 빈 목록입니다. 캐시가 없으면 60초(기본) 동안 요청 없이 빈 목록입니다.
-- 이 메서드는 예외를 던지지 않습니다.
-- 빈 목록은 「그 기간에 프로그램이 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
-
-## 알려진 한계와 확인하지 못한 것
-
-- `category` 값 목록, 한 번에 받을 수 있는 기간의 상한, 응답 시간은 이 문서가 측정하지 않았습니다. 기간을 길게 잡기 전에 직접 확인하세요.
-- 시작·종료 문자열은 학교 원문입니다. 시간대 표기 여부를 확인하지 않았습니다.
-- 예시의 날짜는 호출 형태를 보여 주는 것이고, 그 기간에 실제 프로그램이 있는지는 보장하지 않습니다.
-- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

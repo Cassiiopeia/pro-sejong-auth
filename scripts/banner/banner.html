@@ -3,7 +3,7 @@
   README·공유 이미지 배너 원본 (단일 원본). PNG 는 scripts/generate-banner.py 가 이 파일을 헤드리스 Chrome 으로 렌더링해 만든다.
   주소 인자: ?variant=a|b|c  &lang=ko|en  &layout=banner|og
   규칙: 크림슨이 주인공, 요소는 적게 (워드마크, 제목, 한 줄 소개, 언어 이름, 코드 창), 영문은 모두 대문자, 교표는 넣지 않음 (README 맨 위에 따로 있음)
-  문구는 아래 COPY 한 곳에서만 고친다 (코드 창의 2,786 은 2026-10-30 학부 2026학년도 2학기 실측값)
+  문구는 아래 COPY 한 곳에서만 고친다 (코드 창 주석은 숫자·날짜 없이 쓴다)
 -->
 <html lang="ko">
 <head>
@@ -91,14 +91,14 @@
 <pre><span class="k">from</span> sejongpeia <span class="k">import</span> SejongPublicData
 data = SejongPublicData()
 data.lectures(<span class="s">"20"</span>, <span class="s">"2026"</span>, <span class="s">"20"</span>)
-<span class="c"># </span><span class="n" id="rows"></span></pre>
+<span class="c"># </span><span class="n" id="resultComment"></span></pre>
   </div>
 </div>
 <script>
   // 문구 단일 원본 (영문은 CSS 로 대문자 처리)
   const COPY = {
-    ko: { title: '세종대 개발에 필요한<br><em>모든 것을 한 번에</em>', sub: '학번 인증부터 학과·강의·학사일정·학식까지', rows: '2,786행' },
-    en: { title: 'EVER<span class="tight">Y</span>THING you need<br>to build on<br><em>Sejong University</em>', sub: 'Student login · departments · lectures<br>calendar · cafeterias', rows: '2,786 rows' },
+    ko: { title: '세종대 개발에 필요한<br><em>모든 것을 한 번에</em>', sub: '학번 인증부터 학과·강의·학사일정·학식까지', resultComment: '학기 전체 개설강좌' },
+    en: { title: 'EVER<span class="tight">Y</span>THING you need<br>to build on<br><em>Sejong University</em>', sub: 'Student login · departments · lectures<br>calendar · cafeterias', resultComment: 'every course of the term' },
   };
   const query = new URLSearchParams(location.search);
   const variant = query.get('variant') || 'a', language = query.get('lang') || 'ko', layout = query.get('layout') || 'banner';
@@ -106,7 +106,7 @@ data.lectures(<span class="s">"20"</span>, <span class="s">"2026"</span>, <span 
   const copy = COPY[language];
   document.getElementById('title').innerHTML = copy.title;
   document.getElementById('sub').innerHTML = copy.sub;
-  document.getElementById('rows').textContent = copy.rows;
+  document.getElementById('resultComment').textContent = copy.resultComment;
 </script>
 </body>
 </html>

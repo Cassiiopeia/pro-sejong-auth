@@ -1,44 +1,52 @@
 ---
 title: 학식
-description: 학식 식당별 메뉴와 가격을 받는 cafeteria_menu, 식당 목록을 모아 주는 cafeteria_places 메서드와 그 한계를 설명합니다.
+description: 학식 식당별 메뉴와 가격을 받는 cafeteria_menu, 식당 목록을 모아 주는 cafeteria_places 메서드를 설명합니다.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-학교 식당 번호로 그 식당의 메뉴와 가격을 받고(`cafeteria_menu`), 식당 번호, 이름, 건물, 위치 목록을 받습니다(`cafeteria_places`). **학교에 식당 목록 API가 없어서** 목록은 라이브러리가 번호 1부터 `max_place_id`(기본 10)까지의 메뉴 응답을 차례로 조회해 모은 것입니다. 이 점이 아래 한계의 원인이므로 꼭 읽어 보세요. 공통 규칙은 [공통 규칙](../overview/)입니다.
+학교 식당 번호로 그 식당의 메뉴와 가격을 받고(`cafeteria_menu`), 식당 번호, 이름, 건물, 위치 목록을 받습니다(`cafeteria_places`). 로그인이 필요 없습니다. 학교에 식당 목록 API가 없어서 목록은 라이브러리가 번호 1부터 `max_place_id`까지의 메뉴 응답을 차례로 조회해 모은 것입니다. 공통 규칙은 [공통 규칙](../overview/)입니다.
 
-## 메서드
+## 요청 파라미터
 
-| 정보 | Java | Python | Node.js |
-|---|---|---|---|
-| 식당 메뉴 | `cafeteriaMenu(String placeId)` | `cafeteria_menu(place_id)` | `cafeteriaMenu(placeId)` (문자열 또는 숫자) |
-| 식당 목록 | `cafeteriaPlaces()` | `cafeteria_places()` | `cafeteriaPlaces()` |
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `place_id` (`cafeteria_menu`) | 문자열 | 필수 | 없음 | 학교의 식당 번호. 라이브러리에 번호표가 없으므로 `cafeteria_places()`로 확인 |
+| `max_place_id` (`cafeteria_places`) | 정수 | 선택 | `10` | 식당 목록을 만들 때 조회할 번호 범위 `1`~`max_place_id`. 식당이 늘어나면 올림 (최대 `50`, 벗어나면 요청 없이 `INVALID_INPUT`) |
 
-반환: `CafeteriaMenuItem` 목록, `CafeteriaPlace` 목록.
+- 이름 표기: Python은 `snake_case`, Node.js와 Java는 `camelCase`입니다 (`maxPlaceId`). Node.js는 `cafeteriaMenu(placeId)`, `cafeteriaPlaces({ maxPlaceId })`이고, Java는 `cafeteriaMenu(String placeId)`, `cafeteriaPlaces()`, `cafeteriaPlaces(int maxPlaceId)`입니다.
+- 학교 요청: `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<번호>`, 응답 배열 `items`.
+- `cafeteria_places`는 같은 주소를 번호 1부터 `max_place_id`까지 한 건씩 차례로 호출합니다 (병렬 요청 없음). 호출 한 번에 요청이 여러 번 나가는 유일한 메서드입니다.
+- 번호마다 응답의 첫 행에서 식당 한 곳을 만들고, 메뉴 행이 없는 번호는 목록에 더하지 않습니다. 같은 `place_id`는 한 번만 나오며 결과는 번호 순입니다.
 
-## 요청 메모
+## 응답 데이터 구조
 
-### `cafeteria_menu`
+식당 메뉴 `cafeteria_menu` 예시입니다 (필드 이름은 Python 기준, Node.js와 Java는 `camelCase`). 학교 데이터는 바뀌므로 값은 예시입니다.
 
-- `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<번호>`, 응답 배열 `items`. 로그인 불필요.
-- `place_id`는 학교의 식당 번호입니다. 라이브러리에 번호표가 없습니다.
+```json
+[
+  {
+    "place_id": "1", "place_name": "식당 이름", "building_name": "건물 이름", "location": "6층",
+    "date": "2026-03-02", "day": "월", "meal_type_id": "1", "meal_name": "중식",
+    "menu_name": "국 · 주반찬 · 김치", "price": "7000"
+  },
+  {
+    "place_id": "3", "place_name": "다른 식당", "building_name": "건물 이름", "location": "B1층",
+    "date": "", "day": "", "meal_type_id": "", "meal_name": "",
+    "menu_name": "라면", "price": "3300"
+  }
+]
+```
 
-### `cafeteria_places`
+식당 목록 `cafeteria_places` 예시입니다.
 
-- 같은 주소를 `placeId` 1부터 `max_place_id`(기본 10, 최대 50)까지 **차례로 한 건씩** 호출합니다 (병렬 요청 없음). 호출 한 번에 요청이 여러 번 나가는 유일한 메서드이고, 범위를 벗어난 값은 요청 없이 `INVALID_INPUT`입니다.
-- 번호마다 응답의 첫 행에서 식당 한 곳을 만듭니다: `placeId`, `placeName`, `buildingName`, `location`. `extra`에는 메뉴 필드(`menuDate`, `day`, `mealTypeId`, `mealName`, `menuName`, `price`)를 뺀 나머지 필드가 들어갑니다. 메뉴 행이 없는 번호는 목록에 더하지 않고, 같은 `placeId`는 한 번만 나오며, 결과는 번호 순입니다.
-- **요청 하나라도 실패하면 목록 전체가 실패**입니다 (마지막 캐시 값 또는 빈 목록). 일부만 하루 동안 캐시되는 일이 없게 하려는 규칙입니다.
+```json
+[
+  { "place_id": "1", "place_name": "식당 이름", "building_name": "건물 이름", "location": "6층", "extra": {} }
+]
+```
 
-### 왜 이렇게 만들었나 (2026-10-30 확인)
-
-- 식당 페이지(`cafeteria-info.do`)는 `mode=getMenuList&placeId=<n>`만 부릅니다. 카드와 번호의 대응은 페이지 스크립트의 고정 표에 있고(카드 「계절밥상」은 1번, 「진관키친」은 3번, 「산들푸드」 카드는 4, 5, 6번 매장을 함께 보여 줌), 카드 목록 자체는 페이지 HTML이라 라이브러리가 파싱하지 않습니다.
-- `mode=getPlaceList`와 `mode=getCafeteriaList`는 404였습니다.
-- 캠퍼스 지도 목록([캠퍼스 장소](../campus-places/))에도 식당 분류가 있지만 id 체계가 다르고, 둘을 잇는 값이 없습니다.
-- 번호 0~12를 한 번씩 호출한 결과: 1, 3, 4, 5, 6번이 메뉴를 돌려줬습니다 (`place_name`, `building_name`, `location`으로 식당을 알 수 있음: 1번 군자관 6층, 3번 진관홀 B1층, 4~6번 학생회관 B1층). 나머지는 빈 목록이었습니다.
-
-## 결과 필드
-
-필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 모두 문자열이고 없으면 빈 문자열입니다.
+모든 필드는 문자열이고 없으면 빈 문자열입니다. 식당에 따라 날짜가 있는 주간 메뉴이거나 날짜 없는 상시 메뉴입니다. 상시 메뉴 식당의 행은 `date`, `day`, `meal_type_id`, `meal_name`이 빈 문자열입니다.
 
 ### 메뉴 (`CafeteriaMenuItem`, `extra` 없음)
 
@@ -48,23 +56,14 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | `place_name` | `placeName` | 식당 이름 |
 | `building_name` | `buildingName` | 건물 |
 | `location` | `location` | 위치 (예: `6층`) |
-| `date` | `menuDate` | 메뉴 날짜 (고정 메뉴 식당은 빈 문자열) |
-| `day` | `day` | 요일 (고정 메뉴 식당은 빈 문자열) |
-| `meal_type_id` | `mealTypeId` | 식사 구분 번호 (아래 표) |
+| `date` | `menuDate` | 메뉴 날짜 (상시 메뉴 식당은 빈 문자열) |
+| `day` | `day` | 요일 (상시 메뉴 식당은 빈 문자열) |
+| `meal_type_id` | `mealTypeId` | 식사 구분 번호 (`1` 중식, `2` 석식) |
 | `meal_name` | `mealName` | 식사 이름 (학교 원문) |
 | `menu_name` | `menuName` | 메뉴 이름 |
 | `price` | `price` | 가격 (문자열, 예: `5500`) |
 
-### 식사 구분 (`meal_type_id`)
-
-주간 메뉴 식당(1번)만 날짜와 식사 구분이 있습니다 (2026-10-30 확인).
-
-| `meal_type_id` | `meal_name` |
-|---|---|
-| `1` | 중식 |
-| `2` | 석식 |
-
-학교 페이지는 1을 중식, 2를 석식으로 그리고 다른 값은 무시합니다. 라이브러리는 번호를 번역하지 않으니 학교가 주는 `meal_name`을 쓰세요. 고정 메뉴 매장(3~6번)의 행에는 날짜, 요일, 식사 구분이 없어서 이 필드들이 빈 문자열입니다.
+라이브러리는 식사 구분 번호를 번역하지 않으니 학교가 주는 `meal_name`을 쓰세요.
 
 ### 식당 (`CafeteriaPlace`)
 
@@ -72,9 +71,24 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 |---|---|
 | `place_id`, `place_name` | 식당 번호, 이름 |
 | `building_name`, `location` | 건물, 위치 |
-| `extra` | 메뉴 필드를 뺀 나머지 학교 필드 |
+| `extra` | 메뉴 필드(날짜, 요일, 식사, 메뉴 이름, 가격)를 뺀 나머지 학교 필드 |
 
-## 예시
+### 실패 동작
+
+- 번호마다 하루(기본 86400초) 캐시합니다. 학교 실패는 마지막 캐시 값, 없으면 빈 목록이고 캐시가 없는 실패는 60초(기본) 동안 요청 없이 빈 목록입니다.
+- `cafeteria_places`는 요청 하나라도 실패하면 목록 전체가 실패입니다. 일부만 하루 동안 캐시되는 일이 없도록 부분 목록은 캐시하지 않습니다.
+- 두 메서드 모두 학교 쪽 문제로 예외를 던지지 않습니다. `max_place_id`가 범위를 벗어난 경우만 `INVALID_INPUT`입니다.
+- 빈 `cafeteria_menu`는 번호가 틀린 것을 증명하지 않습니다. 없는 번호와 메뉴가 아직 올라오지 않은 날(휴일 포함) 모두 빈 목록입니다.
+
+## 알려진 한계
+
+- 학교에 식당 목록 API가 없어 **`max_place_id`를 넘는 번호의 식당은 찾지 못합니다.** 식당이 늘어나면 `max_place_id`를 올리세요.
+- 메뉴가 비어 있는 식당(주간 메뉴 미등록, 휴일)은 다음 갱신(기본 하루)까지 목록에서 빠집니다.
+- 메뉴 번호가 없는 식당은 이 목록에 나올 수 없습니다.
+- 식당 번호는 바뀔 수 있으니 번호를 코드에 적어 두기보다 `cafeteria_places()`로 확인하세요. 라이브러리는 번호로 이름을 짐작하지 않습니다.
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## 예시 코드
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -102,21 +116,3 @@ const menu = await publicData.cafeteriaMenu('1');  // 1번 식당 메뉴
 
 </TabItem>
 </Tabs>
-
-식당 번호는 바뀔 수 있으니 번호를 코드에 적어 두기보다 `cafeteria_places()`로 확인하세요. 2026-10-30에 학교 스크립트가 쓰던 번호는 1(주간 메뉴, 중식·석식), 3, 4, 5, 6(고정 메뉴)입니다.
-
-## 캐시와 실패 동작
-
-- `cafeteria_menu`: 번호마다 하루(기본 86400초) 캐시, 요청 한 번. 실패는 마지막 캐시 값 또는 빈 목록입니다.
-- `cafeteria_places`: 하루 캐시, 한 번 갱신에 요청이 번호 수만큼(기본 10번, 최대 50번). 하나라도 실패하면 마지막 캐시 값 또는 빈 목록이고, 부분 목록은 캐시하지 않습니다. 캐시가 없는 실패는 60초(기본) 동안 요청 없이 빈 목록입니다.
-- 두 메서드 모두 예외를 던지지 않습니다.
-- **빈 `cafeteria_menu`는 번호가 틀린 것을 증명하지 않습니다.** 번호가 없을 때와 그날 메뉴가 없을 때(주간 메뉴를 아직 올리지 않았거나 휴일) 모두 빈 목록입니다.
-
-## 알려진 한계와 확인하지 못한 것
-
-- 그날 메뉴가 비어 있는 식당(주간 메뉴 미등록, 휴일)은 다음 갱신(캐시 유효 시간, 기본 하루)까지 목록에서 빠집니다. 고정 메뉴 매장(3~6번)은 항상 행이 있고 주간 메뉴 식당(1번)은 항상 있지는 않습니다.
-- **`max_place_id`를 넘는 번호의 식당은 찾지 못합니다.** 식당이 늘어나면 `max_place_id`를 올리세요 (최대 50).
-- 학교 페이지의 카드 중 「빅베어레스토랑」은 메뉴 번호가 없어서 이 목록에 나올 수 없습니다.
-- 라이브러리는 번호로 이름을 짐작하지 않습니다.
-- 위 번호별 결과는 2026-10-30 한 번의 측정입니다. 이후 학교가 번호를 바꿨는지는 이 문서가 확인하지 않았습니다. 번호는 바뀔 수 있습니다.
-- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

@@ -34,6 +34,7 @@ cd node && npm ci && npm run build && npm test                 # Node (18+); tes
 ./gradlew :sejongpeia:test :sejongpeia:javadoc --offline       # Java (17+), Javadoc must build too
 python3 scripts/check-docs.py                                  # broken relative links, language-switch links in *.md
 python3 scripts/check-api-index.py                             # spec/api-index.json vs all three implementations
+python3 scripts/check-fixed-values.py                          # no fixed dates or project versions in README and site docs outside code blocks
 python3 scripts/probe-public-data.py --offline                 # shape probe on fixtures (no network)
 cd website && npm ci && npm run build && node scripts/check-links.mjs   # docs site + link check
 ```

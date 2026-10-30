@@ -5,42 +5,59 @@ description: The lectures method searches a term's courses by department, course
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-Search a term's course listings by department code, course name and instructor name. All three are optional, and **with all of them empty you get the whole term** in one call. The library handles the request the school only accepts with every filter key present. Find department and term codes on [Department and term codes](../codes/). Common rules are on [Common rules](../overview/).
+Search a term's course listings by department code, course name and instructor name. No login is needed, and all three conditions are optional, so **with all of them empty you get the whole term**. Find department and term codes on [Department and term codes](../codes/). Common rules are on [Common rules](../overview/).
 
-## Methods
+## Request parameters
 
-| Language | Signature |
-|---|---|
-| Java | `lectures(String categoryCode, String year, String semesterCode, String departmentCode, String courseName, String instructorName)` |
-| Python | `lectures(category_code, year, semester_code, department_code="", course_name="", instructor_name="")` |
-| Node.js | `lectures({ categoryCode, year, semesterCode, departmentCode?, courseName?, instructorName? })` |
+Python uses `snake_case`; Node.js and Java use `camelCase` (for example `department_code` is `departmentCode`). In Java, pass an empty string (`""`) for the optional arguments you do not use.
 
-- `category_code`: organization category (undergraduate `20`, general graduate school `30`, ...). `year`: year as a string. `semester_code`: term code (`10`, `11`, `20`, `21`).
-- In Java, pass an empty string (`""`) for the optional arguments you do not use.
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `category_code` | string | required | - | Organization category code (undergraduate `20`, general graduate school `30`, ...). Get the values from the [code tables](../codes/) and pass them in |
+| `year` | string | required | - | Year |
+| `semester_code` | string | required | - | Term code (`10`, `11`, `20`, `21`) |
+| `department_code` | string | optional | `""` | Department code. Empty means no department limit |
+| `course_name` | string | optional | `""` | Course name search text (partial match). Empty means no limit |
+| `instructor_name` | string | optional | `""` | Instructor name search text. Empty means no limit |
+
+- The three conditions are independent: combine only the ones you need. **With all three empty you get the whole term.**
 - Returns a list of `Lecture`.
 
-## Request notes
+**School request**
 
-- `POST https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/doList.do`, body `{"dm_search": {...}}`, response dataset `dl_main`. No login.
-- `dm_search` carries `ORGN_CLSF_CD`, `YEAR`, `SMT_CD`, `YEAR_SMT` (`<year>/<semester code>`), `DEPT_CD`, `CURI_NM`, `EMP_NM` and `LANG_CHK="KOR"`.
-- **Every other filter key must be present, with an empty value.** If any of `SMT_NM`, `CURI_TYPE_CD`, `SLT_DOMAIN_CD`, `CURI_NO`, `CLASS`, `SLT_DEPT_CD`, `PLAN_REG_YN` or `CORS_SCHE_GRP_CD` is missing, the school answers `_SUBMIT_ERROR_` (checked on 2026-10-30 by leaving out one key at a time). The library always sends the full key set.
-- **Values are trimmed before sending.** The school treats a single space as a search text: a space in the course name returned 179 of the 2,786 rows (2026-10-30).
-- The school's own screen demands one of department, course name or instructor, but the server does not.
+- `POST https://sjpt.sejong.ac.kr/sch/sch/ext/SueOpenTimeQ/doList.do`, body `{"dm_search": {...}}`, response dataset `dl_main`.
+- The school answers `_SUBMIT_ERROR_` if any filter key is missing, so the library sends every key you do not use as an empty value.
+- The school treats a single space as a search text, so values are trimmed before sending.
 
-### With all conditions empty
+## Response data structure
 
-Measured on 2026-10-30, term 2026/2, one call each.
+Example JSON. Field names are Python `snake_case`; Node.js and Java use `camelCase`. School data changes, so the values are examples.
 
-| Organization category | Rows | Size | Time |
-|---|---|---|---|
-| Undergraduate `20` | 2,786 | 2.4 MB | 0.8 s |
-| Graduate `30` | 1,132 | 0.9 MB | (not recorded) |
+```json
+[
+  {
+    "course_number": "011839",
+    "section": "001",
+    "name": "전공탐색",
+    "course_type_code": "1E",
+    "course_type_name": "공필",
+    "credits": "1.0",
+    "hours": "1.0 / 0 / 1",
+    "total_hours": "1",
+    "schedule": "목19:00-20:00",
+    "room": "센B104",
+    "instructor": "홍길동",
+    "grade_level": "1",
+    "department_code": "3517",
+    "department_name": "AI로봇학과",
+    "year": "2026",
+    "semester_code": "20",
+    "extra": { "PLAN_REG_YN": "Y", "YEAR_SMT_NM": "2026/2학기" }
+  }
+]
+```
 
-The undergraduate answer had 102 departments and no repeated course-section-department row. If you do not need everything, query **one department at a time**. A whole undergraduate term is a few MB per cache entry and stays in memory for `cache_ttl_seconds`.
-
-## Result fields
-
-Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing. The model also has `extra` (the 33 fields the school gives per course, minus the ones used below).
+All fields are strings, empty when missing. `extra` is a string map of the school fields not listed in the table below.
 
 | Field | School key | Meaning |
 |---|---|---|
@@ -61,18 +78,32 @@ Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are s
 | `managing_department` | `MANAGE_DEPT_NM` | Managing department |
 | `remark` | `REMARK` | Remark |
 | `year`, `semester_code` | `YEAR`, `SMT_CD` | Year and term code |
+| `extra` | other fields | Original school fields |
 
 <Aside type="caution" title="Instructor names are included">
-`instructor` is the instructor name as the school publishes it in the timetable. If your service republishes the library's results, decide which fields to expose. The example in [Department and lecture search](../../guides/department-lecture-search/) also picks only the fields it needs.
+`instructor` is the instructor name as the school publishes it in the timetable. If your service republishes the results as they are, choose the fields to expose yourself. The example in [Department and lecture search](../../guides/department-lecture-search/) also passes on only the fields it needs.
 </Aside>
 
-## Examples
+- Cached for one day (86400 seconds by default) per combination of conditions, with one school request per call.
+- School-side failures (connection, timeout, bad response, `_SUBMIT_ERROR_`) return the last cached value or an empty list. With no cache, the same call returns an empty list without a request for `failure_cache_seconds` (default 60).
+- `lectures` never raises because of its filter values.
+- An empty list cannot tell "no course matches" from "a problem on the school side".
+
+## Known limits
+
+- Unofficial endpoint. Behavior such as the filter-key requirement changes if the school changes it.
+- The language filter is fixed to `LANG_CHK="KOR"`.
+- An answer with all conditions empty is several MB, and one cache entry stays in memory for `cache_ttl_seconds`. If you do not need everything, query one department at a time.
+- The instructor syllabus is not provided. Its form carries the instructor's name and contact lines, so it is left out of the default scope. The course overview is available as `overview` in [Curriculum](../curriculum/).
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## Example code
 
 <Tabs syncKey="language">
 <TabItem label="Java">
 
 ```java
-// Lectures of one department, 2026 2nd semester (course name and instructor left empty)
+// Lectures of one department (term code 20 = 2nd semester, course name and instructor left empty)
 List<Department> departments = publicData.departments("20", "2026", "20");
 List<Lecture> lectures = publicData.lectures("20", "2026", "20", departments.get(0).getCode(), "", "");
 
@@ -106,18 +137,3 @@ const byName = await publicData.lectures({ categoryCode: '20', year: '2026', sem
 </Tabs>
 
 With a lecture's `course_number` and `department_code` you can look up the suggested year, term and course overview from that department's curriculum ([Curriculum](../curriculum/)).
-
-## Cache and failure behavior
-
-- Cached for one day (86400 seconds by default) per combination of category, year, term, department code, course name and instructor name. One request per call.
-- School failures (connection, timeout, bad response, `_SUBMIT_ERROR_`) return the last cached value or an empty list. With no cache, the same call returns an empty list without a request for `failure_cache_seconds` (default 60).
-- `lectures` never raises because of its filters.
-- An empty list can mean "no course matches" or "a problem on the school side". On 2026-10-30 the course name `자료구조` returned 0 rows, `알고리즘` 18 and `프로그래밍` 73 (partial matching).
-
-## Known limits and what was not verified
-
-- Unofficial endpoint. Behavior such as the filter-key requirement changes if the school changes it.
-- The language filter is fixed to `LANG_CHK="KOR"`. Other values were not tried.
-- Only the whole-term answers for undergraduate and graduate (`30`) were measured. The size for other organization categories was not measured.
-- The instructor syllabus is not provided. Its report form carries the instructor's name and contact lines, so it was left out of the default scope ([survey notes](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)). The course overview is available as `overview` in [Curriculum](../curriculum/).
-- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

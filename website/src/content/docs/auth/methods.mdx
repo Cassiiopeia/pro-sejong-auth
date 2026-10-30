@@ -3,9 +3,22 @@ title: 인증 메서드
 description: 통합·DHC·SIS 인증과 학사 업무 기간 조회의 메서드 이름을 Java, Python, Node.js 별로 정리하고 각각이 보장하는 것을 설명합니다.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 학번과 비밀번호로 포털에 로그인하는 작업의 목록입니다. 세 언어가 같은 기능과 같은 결과를 가지고, 이름 표기만 다릅니다.
+
+## 요청 파라미터
+
+이름은 Python 기준이고 Java와 Node.js는 `camelCase`입니다 (`includeRaw`, `includeExtra`). Node.js는 옵션을 마지막 인자의 객체로 받습니다 (`{ includeRaw: true }`).
+
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `student_id` | string | 예 | | 학번. 비어 있으면 네트워크 호출 전에 `INVALID_INPUT` |
+| `password` | string | 예 | | 포털 비밀번호. 비어 있으면 `INVALID_INPUT` |
+| `year` | 4자리 숫자 또는 문자열 | 업무 기간 조회만 | | 조회 연도 |
+| `month` | 1~12 또는 빈 값 | 아니오 | 빈 값 (연간 전체) | 조회 월. 업무 기간 조회만 |
+| `include_raw` | boolean | 아니오 | `false` | `true`면 학교 원문(`raw_html`, `raw_json`)을 결과에 담음. 확장: [원문·extra 옵션](../raw-and-extra/) |
+| `include_extra` | boolean | 아니오 | `false` | `true`면 이름 붙지 않은 나머지 SIS 필드를 `extra`에 담음. 확장: [원문·extra 옵션](../raw-and-extra/) |
 
 ## 메서드 대응표
 
@@ -21,9 +34,21 @@ import { Aside } from '@astrojs/starlight/components';
 - Java는 Spring Boot 자동 설정이 등록하는 `SuhSejongAuthEngine` 빈의 메서드입니다. Spring 없이 쓰는 방법은 [설정](../configuration/)을 보세요.
 - Python은 모듈 함수(`from sejongpeia import authenticate`)가 기본 설정의 클라이언트를 쓰고, 설정을 바꾸려면 `SejongAuthClient`를 직접 만듭니다.
 - Node.js는 모든 메서드가 `Promise`를 돌려줍니다. Python과 Java는 동기 호출입니다.
-- 원문 옵션과 extra 옵션은 [원문·extra 옵션](../raw-and-extra/)에, 결과 필드는 [결과 필드](../result-fields/)에 있습니다.
 
-## 무엇을 보장하나
+## 응답 데이터 구조
+
+통합 인증 결과의 일부입니다. 예시는 Python의 `snake_case` 이름이고 Java와 Node.js는 `camelCase`(`studentId`, `phoneNumber`)입니다. 전체 필드는 [결과 필드](../result-fields/)에 있습니다.
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000"
+}
+```
 
 | 메서드 | 반드시 채워지는 것 | 실패하면 |
 |---|---|---|
@@ -34,17 +59,41 @@ import { Aside } from '@astrojs/starlight/components';
 | SIS | 학생 정보, 연락처, 학교 코드 (`grade`, `status`는 항상 빈 문자열) | 실패하면 예외 |
 | 학사 업무 기간 | 업무별 허용 기간 목록 | 실패하면 재시도 없이 예외 |
 
+- 빈 학번이나 빈 비밀번호는 `INVALID_INPUT`, 틀린 비밀번호는 `AUTHENTICATION_FAILED`입니다. 전체 코드는 [에러 코드](../error-codes/)에 있습니다.
 - 통합 인증은 포털에 **한 번만** 로그인하고 같은 세션으로 DHC, SIS, 포털 메인을 조회합니다. 학생 정보와 연락처를 따로 부르면 로그인이 두 번 일어나므로 통합 호출 하나를 쓰세요.
-- 빈 학번이나 빈 비밀번호는 네트워크 호출 전에 `INVALID_INPUT`으로 거절합니다.
 - 틀린 비밀번호는 재시도하지 않고 첫 실패에서 멈춥니다. 이유는 [로그인 판정과 계정 잠금 방지](../../understand/login-verdict/)에 있습니다.
-
-## 실측 시간
-
-통합 인증 한 번(2026-10-24, 서울, 5회 중앙값): Java 0.57초, Python 0.76초, Node.js 0.69초. 대부분 포털 자체의 응답 시간입니다. 학교 서버 상태에 따라 달라집니다.
+- 소요 시간의 대부분은 포털 자체의 응답 시간이며 학교 서버 상태에 따라 달라집니다.
 
 <Aside type="caution">
 서버에서만 호출하세요. 브라우저나 앱에서 직접 부르면 비밀번호가 제3자 코드에 노출됩니다. 비밀번호는 저장하거나 로그에 남기지 마세요.
 </Aside>
+
+## 예시 코드
+
+<Tabs syncKey="language">
+  <TabItem label="Java">
+    ```java
+    SejongAuthResult result = sejongAuthEngine.authenticate(studentId, password);
+    System.out.println(result.getName() + " " + result.getMajor());
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from sejongpeia import authenticate
+
+    result = authenticate(student_id, password)
+    print(result.name, result.major)
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```javascript
+    import { authenticate } from 'pro-sejongpeia';
+
+    const result = await authenticate(studentId, password);
+    console.log(result.name, result.major);
+    ```
+  </TabItem>
+</Tabs>
 
 ## 이어서 보기
 

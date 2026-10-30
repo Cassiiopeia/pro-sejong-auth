@@ -5,15 +5,71 @@ description: How to use the raw option that returns the school's raw response an
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-A default result has named fields only. The two options below are for when you need more. Both are off by default and turning them on changes no other field.
+A default result has named fields only. Turn the two options on only when you need more; turning them on changes no other field.
 
-## Raw option
+## Request parameters
+
+Names follow Python; Java and Node.js use `camelCase`. Node.js takes them as an object in the last argument (`{ includeRaw: true }`).
+
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `include_raw` | boolean | no | `false` | Keeps the school's raw response in the result (`raw_html`, `raw_json`). In Java: `authenticateWithRaw`, `authenticateWithDHCRaw`, `authenticateWithSISRaw` |
+| `include_extra` | boolean | no | `false` | Puts the remaining unnamed SIS fields in the `extra` map. Integrated and SIS authentication only. In Java: the last argument of `authenticate(id, pw, false, true)` |
+
+## Response data structure
+
+With an option on, the fields below are filled. The example uses Python `snake_case` names; Java and Node.js use `camelCase` (`rawHtml`, `rawJson`).
+
+```json
+{
+  "student_id": "20000000",
+  "name": "홍길동",
+  "extra": { "dm_UserInfoSch.FIELD_NAME": "value" },
+  "raw_html": "<html>...</html>",
+  "raw_json": "{...}"
+}
+```
+
+| Field | Type | Filled when |
+|---|---|---|
+| `raw_html` | string or null | The DHC page, with the raw option. DHC and integrated results |
+| `raw_json` | string or null | The SIS `initUserInfo` response, with the raw option. SIS and integrated results. null if SIS failed |
+| `extra` | map or null | With the extra option, otherwise null. Not in a DHC result |
+
+### Raw option
 
 Keeps the response the school sent, as is, in the result. For debugging and parser checks.
 
-- Integrated result: the DHC page goes into `rawHtml`, the SIS `initUserInfo` response into `rawJson`. If SIS failed, `rawJson` is null.
-- A DHC result fills `rawHtml` only, a SIS result fills `rawJson` only.
+- An integrated result fills both `raw_html` and `raw_json`, a DHC result `raw_html` only, a SIS result `raw_json` only.
 - **No extra request is made.** It only keeps responses already received.
+
+<Aside type="danger" title="Never pass the raw response outward">
+The SIS raw text contains values that look like a session identifier, the client IP and the login time. Do not hand it to an external client as is.
+</Aside>
+
+### Extra option
+
+Returns the remaining SIS fields the school provides, other than the named ones, as a `{"dataset.FIELD": "value"}` map. It is a way to reach a field the school adds without waiting for a release.
+
+- The source is the scalar fields of the datasets `dm_UserInfoSch`, `dm_UserInfoGam` and `dm_UserInfo`.
+
+### Always-excluded keys
+
+Keys matching `extraExcludedKeyPattern` in `spec/contract.json` (case-insensitive) never enter extra.
+
+```text
+(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)
+```
+
+That covers session values, client IP, password and account state flags, resident number, bank account, address, staff-name fields (`ALIAS`), phone, mail and birth date. It is still a **best-effort name pattern filter**. Do not forward extra to an external client as is; pick the keys you need.
+
+## Outside the compatibility guarantee
+
+The keys and structure of the raw responses and the keys and values of extra change whenever the school changes them. Do not hang core app logic on them. For stable access use the named fields in [Result fields](../result-fields/). The policy is in [API stability](../../api-stability/).
+
+## Example code
+
+### Raw option
 
 <Tabs syncKey="language">
   <TabItem label="Java">
@@ -46,17 +102,7 @@ Keeps the response the school sent, as is, in the result. For debugging and pars
   </TabItem>
 </Tabs>
 
-<Aside type="danger" title="Never pass the raw response outward">
-The SIS raw text contains values that look like a session identifier, the client IP and the login time. Do not hand it to an external client as is.
-</Aside>
-
-## Extra option
-
-Returns the remaining SIS fields the school provides, other than the named ones, as a `{"dataset.FIELD": "value"}` map. It is a way to reach a field the school adds without waiting for a release.
-
-- The source is the scalar fields of the datasets `dm_UserInfoSch`, `dm_UserInfoGam` and `dm_UserInfo`.
-- Available in the integrated and SIS authentication only. A DHC result has no extra.
-- `extra` is null unless the option is on.
+### Extra option
 
 <Tabs syncKey="language">
   <TabItem label="Java">
@@ -79,17 +125,3 @@ Returns the remaining SIS fields the school provides, other than the named ones,
     ```
   </TabItem>
 </Tabs>
-
-### Always-excluded keys
-
-Keys matching `extraExcludedKeyPattern` in `spec/contract.json` (case-insensitive) never enter extra.
-
-```text
-(PWD|PASS|JUMIN|RRN|RESI|SSN|BANK|ACNT|ACCT|ACCOUNT|ADDR|ZIP|POST|ALIAS|SESS|TOKEN|SECRET|BIRTH|BRTH|VALID|PHONE|TEL|MOBILE|MAIL|LOGIN|RUNNING|(^|_)IP($|_)|_YN$)
-```
-
-That covers session values, client IP, password and account state flags, resident number, bank account, address, staff-name fields (`ALIAS`), phone, mail and birth date. It is still a **best-effort name pattern filter**. Do not forward extra to an external client as is; pick the keys you need.
-
-## Outside the compatibility guarantee
-
-The keys and structure of the raw responses and the keys and values of extra change whenever the school changes them. Do not hang core app logic on them. For stable access use the named fields in [Result fields](../result-fields/). The policy is in [API stability](../../api-stability/).

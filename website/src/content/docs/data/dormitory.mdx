@@ -5,36 +5,59 @@ description: 기숙사 일주일 식단(조식·중식·석식)과 공지 목록
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-기숙사(`happydorm.sejong.ac.kr`)가 공개로 주는 일주일 식단과 공지 목록입니다. 공통 규칙은 [공통 규칙](../overview/)입니다. 식단을 메시지로 만드는 예시는 [기숙사·학식 봇](../../guides/dormitory-cafeteria-bot/)을 보세요.
+기숙사(`happydorm.sejong.ac.kr`)가 공개로 주는 일주일 식단과 공지 목록을 받습니다. 로그인이 필요 없습니다. 식단을 메시지로 만드는 예시는 [기숙사·학식 봇](../../guides/dormitory-cafeteria-bot/), 공통 규칙은 [공통 규칙](../overview/)입니다.
 
-## 메서드
+## 요청 파라미터
 
-| 정보 | Java | Python | Node.js |
-|---|---|---|---|
-| 식단 | `dormitoryMenu()`, `dormitoryMenu(String location)` | `dormitory_menu(location="SJ")` | `dormitoryMenu(location = 'SJ')` |
-| 공지 | `dormitoryNotices()`, `dormitoryNotices(int page, int rows, String keyword, String location)` | `dormitory_notices(page=1, rows=10, keyword="", location="SJ")` | `dormitoryNotices({ page = 1, rows = 10, keyword = '', location = 'SJ' } = {})` |
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `location` (`dormitory_menu`, `dormitory_notices`) | 문자열 | 선택 | `SJ` | 기숙사 위치 구분 값 |
+| `page` (`dormitory_notices`) | 정수 | 선택 | `1` | 공지 쪽 번호 |
+| `rows` (`dormitory_notices`) | 정수 | 선택 | `10` | 한 쪽에 받을 공지 건수 |
+| `keyword` (`dormitory_notices`) | 문자열 | 선택 | `""` | 제목 검색어. 비우면 전체 |
 
-- `location` 기본값은 `SJ`입니다. 다른 값이 가능한지는 확인하지 않았습니다.
-- 반환: 식단은 `DormitoryMenuDay` 7개의 목록, 공지는 `DormitoryNotices` 객체 하나.
-- Java의 `dormitoryNotices()`는 1쪽, 10건, 검색어 없음, `SJ`입니다.
+- 이름 표기: Python은 `snake_case`, Node.js와 Java는 `camelCase`입니다. Node.js는 `dormitoryMenu(location = 'SJ')`, `dormitoryNotices({ page, rows, keyword, location })`로 받습니다. Java는 선택 인자를 생략한 `dormitoryMenu()`, `dormitoryNotices()`와 전부 받는 `dormitoryMenu(String location)`, `dormitoryNotices(int page, int rows, String keyword, String location)`가 있고, 검색어 없이 부를 때는 `""`를 넘깁니다.
+- 학교 요청(식단): `POST https://happydorm.sejong.ac.kr/food/indexFoodList.do`, 폼 `locgbn=<location>`.
+- 학교 요청(공지): `POST https://happydorm.sejong.ac.kr/bbs/getBbsList.do`, 폼 `cPage`, `rows`, `bbs_locgbn`, `bbs_id=notice`, `sType=subject`, `sWord`.
+- 응답은 JSON인데 콘텐츠 타입이 `text/html`이라 라이브러리는 본문을 항상 JSON으로 읽습니다.
 
-## 요청 메모
+## 응답 데이터 구조
 
-- 식단: `POST https://happydorm.sejong.ac.kr/food/indexFoodList.do`, 폼 `locgbn=<location>`. 응답 `root[0]`에 `fo_*1`~`fo_*7`(7일치)가 들어 있습니다.
-- 공지: `POST https://happydorm.sejong.ac.kr/bbs/getBbsList.do`, 폼 `cPage`(쪽), `rows`(건수), `bbs_locgbn`(위치), `bbs_id=notice`, `sType=subject`, `sWord`(제목 검색어).
-- 폼 요청 헤더는 `application/x-www-form-urlencoded; charset=UTF-8`와 `X-Requested-With: XMLHttpRequest`입니다.
-- **응답은 JSON인데 콘텐츠 타입이 `text/html`입니다.** 라이브러리는 본문을 항상 JSON으로 읽습니다.
-- 쿠키 없이 같은 응답을 주는 것을 확인했습니다 (조사 기간 2026-10-29~30).
+`dormitory_menu`는 `DormitoryMenuDay`의 목록(7일치)입니다 (필드 이름은 Python 기준, Node.js와 Java는 `camelCase`). 학교 데이터는 바뀌므로 값은 예시입니다.
 
-## 결과 필드
+```json
+[
+  {
+    "date": "2026-03-02",
+    "breakfast": "밥 국 반찬",
+    "lunch": "밥 국 주반찬 김치",
+    "dinner": "밥 국 주반찬 김치",
+    "alternative": "간편식 교환"
+  }
+]
+```
 
-필드 이름은 Python `snake_case`, Node.js와 Java는 `camelCase`입니다. 기숙사 모델에는 `extra`가 없습니다. 값이 없으면 빈 문자열이고 `views`와 `total`은 `0`입니다.
+`dormitory_notices`는 `DormitoryNotices` 객체 하나입니다.
+
+```json
+{
+  "total": 120,
+  "pinned": [
+    { "id": "1001", "title": "고정 공지 제목", "date": "2026-03-01", "views": 300, "file_name": "안내.png" }
+  ],
+  "items": [
+    { "id": "1000", "title": "일반 공지 제목", "date": "2026-02-28", "views": 80, "file_name": "" }
+  ]
+}
+```
+
+기숙사 모델에는 `extra`가 없습니다. 값이 없으면 빈 문자열이고 `views`와 `total`은 `0`입니다.
 
 ### 식단 (`DormitoryMenuDay`)
 
 | 필드 | 학교 키 | 설명 |
 |---|---|---|
-| `date` | `fo_date1`~`7` | 날짜 (예: `2026-10-30`) |
+| `date` | `fo_date1`~`7` | 날짜 |
 | `breakfast` | `fo_menu_mor1`~`7` | 조식 |
 | `lunch` | `fo_menu_lun1`~`7` | 중식 |
 | `dinner` | `fo_menu_eve1`~`7` | 석식 |
@@ -60,9 +83,24 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | `views` | `visitcnt` | 조회수 (정수) |
 | `file_name` | `file_name1` | 첨부 파일 이름 (없으면 빈 문자열) |
 
-**작성자 필드(`regname`, `regid`)는 읽지 않고 결과에도 없습니다.**
+작성자 필드(`regname`, `regid`)는 읽지 않고 결과에도 없습니다.
 
-## 예시
+### 실패 동작
+
+- 메서드와 인자(위치, 쪽, 건수, 검색어)마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
+- 학교 실패는 마지막 캐시 값, 없으면 식단은 빈 목록, 공지는 `total` 0과 빈 목록인 객체입니다. 입력 오류로 예외를 던지지 않습니다.
+- 응답에서 `root` 배열이 없거나 비어 있으면 식단과 공지 모두 실패입니다.
+- 공지만의 예외: `topList`, `list`, `totalCount`가 없으면 장애가 아니라 「결과 없음」으로 보고 빈 목록과 `total` 0을 돌려줍니다. 검색어에 맞는 공지가 없는 경우를 장애로 취급하지 않기 위해서입니다.
+
+## 알려진 한계
+
+- `location`은 기본값 `SJ`만 쓰는 것을 전제로 합니다. 다른 값은 직접 호출해 보고 쓰세요.
+- 학교가 식단을 올리기 전 주말 등에는 오늘 날짜가 목록에 없을 수 있습니다. 호출하는 쪽에서 처리하세요 ([기숙사·학식 봇](../../guides/dormitory-cafeteria-bot/)은 첫날을 대신 보여 줍니다).
+- 빈 목록은 「공지·식단이 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
+- 공지 본문은 제공하지 않습니다. 제목, 날짜, 조회수, 첨부 파일 이름만 받습니다.
+- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## 예시 코드
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -92,19 +130,3 @@ const notices = await publicData.dormitoryNotices({ rows: 3 }); // 최신 3건
 
 </TabItem>
 </Tabs>
-
-## 캐시와 실패 동작
-
-- 메서드와 인자(위치, 쪽, 건수, 검색어)마다 하루(기본 86400초) 캐시합니다. 호출당 요청은 한 번입니다.
-- 학교 실패는 마지막 캐시 값, 없으면 식단은 빈 목록, 공지는 `total` 0과 빈 목록인 객체입니다.
-- 응답에서 `root` 배열이 없거나 비어 있으면 **식단과 공지 모두 실패**입니다. 학교는 항상 첫 행을 주기 때문입니다.
-- **공지만의 예외**: `topList`, `list`, `totalCount`가 없으면 장애가 아니라 「결과 없음」으로 보고 빈 목록과 `total` 0을 돌려줍니다. 검색어에 맞는 공지가 없는 경우를 장애로 취급하지 않기 위해서입니다.
-- 이 두 메서드는 입력 오류로 예외를 던지지 않습니다.
-
-## 알려진 한계와 확인하지 못한 것
-
-- `location`은 기본값 `SJ`만 사용 확인했습니다. 다른 위치 값은 확인하지 않았습니다.
-- 학교가 식단을 올리기 전 주말 등에는 오늘 날짜가 목록에 없을 수 있습니다. 호출하는 쪽에서 처리하세요 ([기숙사·학식 봇](../../guides/dormitory-cafeteria-bot/)은 첫날을 대신 보여 줍니다).
-- 빈 목록은 「공지·식단이 없음」과 「학교 쪽 문제」를 구분하지 못합니다.
-- 공지 본문은 제공하지 않습니다. 제목, 날짜, 조회수, 첨부 파일 이름만 받습니다.
-- 계약 원본: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

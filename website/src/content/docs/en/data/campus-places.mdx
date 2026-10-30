@@ -5,41 +5,71 @@ description: The campus_places method returns buildings and facilities with name
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-Get the place list used by the school's campus map. It has names, latitude and longitude and guide information for buildings and facilities, so you can use it directly in a map app or a campus guide service. Common rules are on [Common rules](../overview/).
+Get the place list used by the school's campus map, without login. It has names, latitude and longitude and guide information for buildings and facilities, so you can use it directly in a map app or a campus guide service. Common rules are on [Common rules](../overview/).
 
-## Methods
+## Request parameters
 
-| Language | Signature |
-|---|---|
-| Java | `campusPlaces()`, `campusPlaces(String placeType)` |
-| Python | `campus_places(place_type="")` |
-| Node.js | `campusPlaces(placeType = '')` |
+Python uses `snake_case` (`campus_places`); Node.js and Java use `camelCase` (`campusPlaces`). Java has two forms, `campusPlaces()` and `campusPlaces(String placeType)`; Node.js is `campusPlaces(placeType = '')`.
 
-- `place_type` is the school's place type value and defaults to an empty string. This page does not tabulate what an empty value returns or which type values the school accepts. Read the `place_type` and `category` values in the result.
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `place_type` | string | optional | `""` | The school's place type value. It is not a fixed list: pass a `place_type` value from the results to filter, or leave it empty for no type limit |
+
 - Returns a list of `CampusPlace`.
 
-## Request notes
+**School request**
 
-- `GET https://www.sejong.ac.kr/kor/intro/campus-map.do?mode=getPlaceUserList&placeType=<type>`, response array `items`. No login.
-- The contract document has no record of measuring the number of places or the list of type values.
+- `GET https://www.sejong.ac.kr/kor/intro/campus-map.do?mode=getPlaceUserList&placeType=<type>`, response array `items`.
 
-## Result fields
+## Response data structure
 
-Field names are Python `snake_case`; Node.js and Java use `camelCase`. Missing values are empty strings; latitude and longitude are numbers (`0.0` when missing or unreadable).
+Example JSON. Field names are Python `snake_case`; Node.js and Java use `camelCase`. School data changes, so the values are examples.
+
+```json
+[
+  {
+    "id": "3",
+    "name": "산들푸드",
+    "name_en": "",
+    "place_type": "WELFARE",
+    "category": "식당",
+    "latitude": 37.5495931628,
+    "longitude": 127.0751638599,
+    "info": "학생회관 B1층",
+    "phone": "02-000-0000",
+    "description": "",
+    "extra": { "orderNo": "1", "useYn": "Y" }
+  }
+]
+```
+
+Missing values are empty strings; latitude and longitude are numbers (`0.0` when missing or unreadable).
 
 | Field | School key | Meaning |
 |---|---|---|
-| `id` | `id` | Place number. A different system from cafeteria numbers ([Cafeterias](../cafeteria/)) |
+| `id` | `id` | Place number. A different system from the cafeteria numbers ([Cafeteria](../cafeteria/)) |
 | `name`, `name_en` | `placeName`, `placeNameEn` | Korean and English name |
-| `place_type` | `placeType` | Place type |
+| `place_type` | `placeType` | Place type (for example `BUILDING`, `WELFARE`) |
 | `category` | `welfareCategory` | Facility category |
-| `latitude`, `longitude` | `latitude`, `longitude` | Latitude and longitude (floating point) |
+| `latitude`, `longitude` | `latitude`, `longitude` | Latitude, longitude (floating point) |
 | `info` | `placeInfo` | Guide information |
 | `phone` | `telNum` | Phone number |
 | `description` | `description` | Description |
-| `extra` | other fields | The school's other fields |
+| `extra` | other fields | Original school fields |
 
-## Examples
+- Cached for one day (86400 seconds by default) per type value, with one school request per call.
+- School-side failures (connection, timeout, bad response, missing `items`) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
+- This method never raises.
+- An empty list cannot tell "no places" from "a problem on the school side".
+
+## Known limits
+
+- The place `id` is a different system from the cafeteria numbers in the menu answers, and nothing links the two.
+- A missing coordinate is `0.0`, so check before you plot a point.
+- `phone` and `info` are the values the school entered. Review them before you pass them on to outside users.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## Example code
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -70,17 +100,3 @@ for (const place of places) console.log(place.name, place.latitude, place.longit
 
 </TabItem>
 </Tabs>
-
-## Cache and failure behavior
-
-- Cached for one day (86400 seconds by default) per type value. One request per call.
-- School failures (connection, timeout, bad response, missing `items`) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
-- This method never raises.
-- An empty list cannot tell "no places" from "a problem on the school side".
-
-## Known limits and what was not verified
-
-- The place id is a different system from the cafeteria numbers in the menu answers, and nothing links the two (2026-10-30).
-- The value lists of `place_type` and `category`, and whether some places have empty coordinates, were not checked. A missing coordinate is `0.0`, so check before you plot a point.
-- What numbers `phone` contains was not checked. Review the values before you pass them on to outside users.
-- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

@@ -6,7 +6,7 @@ interface Props {
   locale: LandingLocale;
 }
 const { locale } = Astro.props;
-const rowsComment = LANDING_COPY[locale].hero.visualRowsComment;
+const resultComment = LANDING_COPY[locale].hero.visualResultComment;
 const languageNames = ['Java', 'Python', 'Node.js'];
 ---
 
@@ -16,7 +16,7 @@ const languageNames = ['Java', 'Python', 'Node.js'];
     <pre><code><span class="tk">from</span> sejongpeia <span class="tk">import</span> SejongPublicData
 data = SejongPublicData()
 data.lectures(<span class="ts">"20"</span>, <span class="ts">"2026"</span>, <span class="ts">"20"</span>)
-<span class="tc"># </span><span class="tn">{rowsComment}</span></code></pre>
+<span class="tc"># </span><span class="tn">{resultComment}</span></code></pre>
   </div>
   <ul class="landing-visual__languages">
     {languageNames.map((languageName) => <li>{languageName}</li>)}

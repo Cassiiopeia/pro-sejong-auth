@@ -1,6 +1,5 @@
 // 랜딩 문구: 기능 카드, 기능×언어 표, 직접 구현의 어려움 (ko/en)
 
-import { SCHOOL_DATA_SNAPSHOT } from './constants';
 import type { LandingCopy, LandingLocale } from './types';
 
 type FeatureSectionsCopy = Pick<LandingCopy, 'features' | 'matrix' | 'hardParts'>;
@@ -19,7 +18,7 @@ export const FEATURES_COPY: Record<LandingLocale, FeatureSectionsCopy> = {
         },
         {
           title: '학과·강의',
-          body: `학과·학기 코드(학부 학과 ${SCHOOL_DATA_SNAPSHOT.departmentCount}개)와 개설강좌를 학과, 과목명, 교수명으로 찾습니다. 모두 비우면 그 학기 전체(${SCHOOL_DATA_SNAPSHOT.lectureRowCount}행)입니다.`,
+          body: `학과·학기 코드와 개설강좌를 학과, 과목명, 교수명으로 찾습니다. 모두 비우면 그 학기 전체입니다.`,
           methods: 'departments · lectures',
           link: 'data/lectures/',
         },
@@ -37,13 +36,13 @@ export const FEATURES_COPY: Record<LandingLocale, FeatureSectionsCopy> = {
         },
         {
           title: '학식',
-          body: `식당 ${SCHOOL_DATA_SNAPSHOT.cafeteriaCount}곳의 목록(번호·이름·건물·위치)과 식당별 메뉴, 가격을 받습니다.`,
+          body: `식당 목록(번호·이름·건물·위치)과 식당별 메뉴, 가격을 받습니다.`,
           methods: 'cafeteria_places · cafeteria_menu',
           link: 'data/cafeteria/',
         },
         {
           title: '캠퍼스 지도',
-          body: `건물과 편의시설 ${SCHOOL_DATA_SNAPSHOT.campusPlaceCount}곳의 이름, 위치(위도·경도), 안내 정보를 받습니다.`,
+          body: `건물과 편의시설의 이름, 위치(위도·경도), 안내 정보를 받습니다.`,
           methods: 'campus_places',
           link: 'data/campus-places/',
         },
@@ -134,7 +133,7 @@ export const FEATURES_COPY: Record<LandingLocale, FeatureSectionsCopy> = {
         },
         {
           title: 'Departments and courses',
-          body: `Department and term codes (${SCHOOL_DATA_SNAPSHOT.departmentCount} undergraduate departments) and course listings by department, course name or instructor. Leave all empty for the whole term (${SCHOOL_DATA_SNAPSHOT.lectureRowCount} rows).`,
+          body: `Department and term codes and course listings by department, course name or instructor. Leave all empty for the whole term.`,
           methods: 'departments · lectures',
           link: 'data/lectures/',
         },
@@ -152,13 +151,13 @@ export const FEATURES_COPY: Record<LandingLocale, FeatureSectionsCopy> = {
         },
         {
           title: 'Cafeterias',
-          body: `The list of ${SCHOOL_DATA_SNAPSHOT.cafeteriaCount} cafeterias (number, name, building, location), plus menus and prices per cafeteria.`,
+          body: `The list of cafeterias (number, name, building, location), plus menus and prices per cafeteria.`,
           methods: 'cafeteria_places · cafeteria_menu',
           link: 'data/cafeteria/',
         },
         {
           title: 'Campus map',
-          body: `${SCHOOL_DATA_SNAPSHOT.campusPlaceCount} buildings and facilities with names, coordinates and info.`,
+          body: `Buildings and facilities with names, coordinates and info.`,
           methods: 'campus_places',
           link: 'data/campus-places/',
         },

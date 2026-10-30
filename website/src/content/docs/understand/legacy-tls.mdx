@@ -19,7 +19,7 @@ import { Aside } from '@astrojs/starlight/components';
 | Node.js | `https.Agent({ ciphers: 'DEFAULT:AES256-SHA:@SECLEVEL=1' })` | 이 라이브러리의 연결만 |
 | Java | `jdk.tls.disabledAlgorithms`에서 `TLS_RSA_*` 제거 | **JVM 전체** |
 
-- Python은 3.14 / OpenSSL 3.6, Node.js는 26 / OpenSSL 3.6에서 확인했습니다.
+- Python과 Node.js는 OpenSSL 3.x에서 이 암호를 쓰려면 목록에 직접 추가하고 보안 레벨을 `1`로 내려야 합니다.
 - `@SECLEVEL=1`을 유지하는 이유: 레벨 0으로 낮추면 약한 인증서 키까지 받아들이기 때문입니다.
 - 인증서 검증은 기본으로 켜져 있습니다 ([설정](../../auth/configuration/)).
 

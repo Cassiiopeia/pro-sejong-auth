@@ -5,9 +5,44 @@ description: Fields and types of the integrated, DHC and SIS results, the classi
 
 import { Aside } from '@astrojs/starlight/components';
 
-Names are the Java and Node.js ones (`camelCase`). Python uses `snake_case` (`student_id`, `phone_number`). The source schema is [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md).
+Fields and types of what the integrated, DHC and SIS authentication return. The request side is on [Authentication methods](../methods/); the source schema is [spec/RESULT_SCHEMA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/RESULT_SCHEMA.md).
 
-## Integrated result
+## Response data structure
+
+Example of an integrated result. The example uses Python `snake_case` names; Java and Node.js use `camelCase` (`studentId`, `phoneNumber`).
+
+```json
+{
+  "success": true,
+  "student_id": "20000000",
+  "name": "홍길동",
+  "major": "컴퓨터공학과",
+  "grade": "3",
+  "status": "재학",
+  "classic_reading": {
+    "completed_semesters": "4 학기",
+    "certified_semesters": "4 학기",
+    "certification_status": "인증",
+    "certifications": [{ "area": "서양의 역사와 사상", "required_count": "1", "certified_count": "1" }],
+    "exam_records": [],
+    "subject_substitutions": [],
+    "contest_records": [],
+    "curriculum_records": []
+  },
+  "email": "user@example.com",
+  "phone_number": "010-0000-0000",
+  "english_name": "Gildong Hong",
+  "user_category": "학부생",
+  "parent_unit_name": "",
+  "authenticated_at": "yyyy-MM-ddTHH:mm:ss",
+  "department_code": "0000",
+  "extra": null,
+  "raw_html": null,
+  "raw_json": null
+}
+```
+
+### Integrated result fields
 
 | Field | Type | Source | Rule |
 |---|---|---|---|
@@ -19,7 +54,7 @@ Names are the Java and Node.js ones (`camelCase`). Python uses `snake_case` (`st
 | `status` | string | DHC | Enrollment status (enrolled, on leave, graduated; portal text as is) |
 | `classicReading` | object | DHC | See "Classic reading" below |
 | `email` | string or null | SIS | null if the SIS lookup fails |
-| `phoneNumber` | string or null | SIS | Same. Format `010-1234-5678` |
+| `phoneNumber` | string or null | SIS | Same. Format `010-0000-0000` |
 | `englishName` | string or null | SIS | Same |
 | `userCategory` | string or null | SIS | User category, for example `학부생` |
 | `parentUnitName` | string or null | Portal main | null if the portal main call fails, empty string if there is no usable value |
@@ -28,6 +63,12 @@ Names are the Java and Node.js ones (`camelCase`). Python uses `snake_case` (`st
 | `extra` | map or null | SIS | Only with the extra option, otherwise null |
 | `rawHtml` | string or null | DHC | Only with the raw option |
 | `rawJson` | string or null | SIS | Only with the raw option. null if SIS failed |
+
+### When it fails
+
+- If the DHC step fails, the call throws and returns no result (`AUTHENTICATION_FAILED`, `DATA_FETCH_FAILED`, `SESSION_ERROR` and others; see [Error codes](../error-codes/)).
+- If the SIS step fails, the call still succeeds and only the SIS fields (contact, English name, user category, school codes) are `null`.
+- If the portal main step fails, the call still succeeds and only `parentUnitName` is `null`.
 
 <Aside type="caution" title="Do not decide anything from parentUnitName">
 It is auxiliary information: the name of the unit above the major (a college or a school), extracted from the portal screen text. It can be an empty string depending on the student type, and it is portal text whose wording changes with the academic year. Never branch on a list of values and never use it for the authentication verdict.
@@ -82,9 +123,9 @@ The school's strings as they are. The library carries no code tables or name map
 
 | Field (Python) | SIS key | Note |
 |---|---|---|
-| `departmentCode` (`department_code`) | `DEPT_CD`, else `DEPT_NO` | The two are expected to be equal, but this was not verified for every enrollment state |
+| `departmentCode` (`department_code`) | `DEPT_CD`, else `DEPT_NO` | The two hold the same department code; `DEPT_CD` is used first |
 | `organizationClassificationCode` | `ORGN_CLSF_CD` | |
-| `enrollmentStatusCode` | `STATUS_DIV_CD` | Raw code only. The meaning was not verified for every state |
+| `enrollmentStatusCode` | `STATUS_DIV_CD` | The school's raw code; no meaning mapping |
 | `userClassificationCode` | `USER_CLSF_CD` | |
 | `userClassificationLargeCode` | `USER_CLSF_L_CD` | |
 | `userClassificationMiddleCode` | `USER_CLSF_M_CD` | |
@@ -92,7 +133,7 @@ The school's strings as they are. The library carries no code tables or name map
 | `menuSystemId` / `menuSystemName` | `MENU_SYS_ID` / `MENU_SYS_NM` | |
 | `locale` | `INTG_LOCALE` | |
 
-`departmentCode` uses the same code system as the department code in [Department and term codes](../../data/codes/). That it is the same value was checked with one undergraduate account only; graduate students, double majors and others are not verified.
+`departmentCode` uses the same code system as the department code in [Department and term codes](../../data/codes/).
 
 ## null versus empty string
 

@@ -1,44 +1,52 @@
 ---
 title: Cafeterias
-description: The cafeteria_menu method returns a cafeteria's menu and prices, and cafeteria_places builds the cafeteria list, with its limits explained.
+description: The cafeteria_menu method returns a cafeteria's menu and prices, and cafeteria_places builds the cafeteria list.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-Get a cafeteria's menu and prices from the school's own cafeteria number (`cafeteria_menu`), and a list of cafeteria numbers, names, buildings and locations (`cafeteria_places`). **The school has no cafeteria list API**, so the list is built by the library: it calls the menu answer for numbers 1 to `max_place_id` (10 by default) one after the other and collects the places. That is the cause of the limits below, so please read them. Common rules are on [Common rules](../overview/).
+Get a cafeteria's menu and prices from the school's own cafeteria number (`cafeteria_menu`), and a list of cafeteria numbers, names, buildings and locations (`cafeteria_places`). No login is needed. The school has no cafeteria list API, so the list is built by the library: it calls the menu answer for numbers 1 to `max_place_id` one after the other and collects the places. Common rules are on [Common rules](../overview/).
 
-## Methods
+## Request parameters
 
-| Data | Java | Python | Node.js |
-|---|---|---|---|
-| Cafeteria menu | `cafeteriaMenu(String placeId)` | `cafeteria_menu(place_id)` | `cafeteriaMenu(placeId)` (string or number) |
-| Cafeteria list | `cafeteriaPlaces()` | `cafeteria_places()` | `cafeteriaPlaces()` |
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `place_id` (`cafeteria_menu`) | string | required | none | The school's cafeteria number. The library has no number table, so check `cafeteria_places()` |
+| `max_place_id` (`cafeteria_places`) | integer | optional | `10` | Number range `1` to `max_place_id` used to build the cafeteria list. Raise it when cafeterias are added (max `50`; outside the range it is `INVALID_INPUT` with no request) |
 
-Return `CafeteriaMenuItem` list and `CafeteriaPlace` list.
+- Naming: Python uses `snake_case`, Node.js and Java use `camelCase` (`maxPlaceId`). Node.js is `cafeteriaMenu(placeId)` and `cafeteriaPlaces({ maxPlaceId })`; Java is `cafeteriaMenu(String placeId)`, `cafeteriaPlaces()` and `cafeteriaPlaces(int maxPlaceId)`.
+- School request: `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<number>`, answer array `items`.
+- `cafeteria_places` calls the same address for numbers 1 to `max_place_id`, one at a time (no parallel requests). It is the only method where one call sends several requests.
+- For each number, one cafeteria is built from the first row of the answer. A number with no menu rows is not added. A `place_id` appears once, and the result is in number order.
 
-## Request notes
+## Response data structure
 
-### `cafeteria_menu`
+Example of `cafeteria_menu` (field names in Python style; Node.js and Java use `camelCase`). School data changes, so the values are examples.
 
-- `GET https://www.sejong.ac.kr/kor/unilife/cafeteria-info.do?mode=getMenuList&placeId=<number>`, response array `items`. No login.
-- `place_id` is the school's cafeteria number. The library carries no table of them.
+```json
+[
+  {
+    "place_id": "1", "place_name": "Cafeteria name", "building_name": "Building name", "location": "6F",
+    "date": "2026-03-02", "day": "Mon", "meal_type_id": "1", "meal_name": "Lunch",
+    "menu_name": "soup · main dish · kimchi", "price": "7000"
+  },
+  {
+    "place_id": "3", "place_name": "Another cafeteria", "building_name": "Building name", "location": "B1",
+    "date": "", "day": "", "meal_type_id": "", "meal_name": "",
+    "menu_name": "ramen", "price": "3300"
+  }
+]
+```
 
-### `cafeteria_places`
+Example of `cafeteria_places`:
 
-- Calls the same address for `placeId` 1 to `max_place_id` (10 by default, at most 50), **one request at a time** (never in parallel). It is the only method that makes several requests in one call, and a value outside the range raises `INVALID_INPUT` without a request.
-- Per number, the first row of the answer gives one place: `placeId`, `placeName`, `buildingName`, `location`. `extra` holds the row's other fields except the menu fields (`menuDate`, `day`, `mealTypeId`, `mealName`, `menuName`, `price`). A number with no rows adds nothing, the same `placeId` is listed once, and the result is in number order.
-- **One failed request fails the whole list** (last cached value or an empty list), so a partial list is never cached for a day.
+```json
+[
+  { "place_id": "1", "place_name": "Cafeteria name", "building_name": "Building name", "location": "6F", "extra": {} }
+]
+```
 
-### Why it works this way (checked 2026-10-30)
-
-- The cafeteria page (`cafeteria-info.do`) only calls `mode=getMenuList&placeId=<n>`. The mapping from a card to numbers is in a fixed table in the page script (the card "계절밥상" uses number 1, "진관키친" 3, and the card "산들푸드" shows the stalls 4, 5 and 6 together). The card list itself is page HTML, which the library does not parse.
-- `mode=getPlaceList` and `mode=getCafeteriaList` answered 404.
-- The campus map list ([Campus places](../campus-places/)) also has a cafeteria category, but its ids are a different system and nothing links the two.
-- Calling numbers 0 to 12 once each: 1, 3, 4, 5 and 6 returned menus (`place_name`, `building_name` and `location` tell which cafeteria: 1 군자관 6th floor, 3 진관홀 B1, 4 to 6 학생회관 B1). The others returned an empty list.
-
-## Result fields
-
-Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing.
+All fields are strings, and a missing value is an empty string. Depending on the cafeteria, the menu is either a dated weekly menu or a standing menu with no date. Rows of a standing-menu cafeteria have empty `date`, `day`, `meal_type_id` and `meal_name`.
 
 ### Menu (`CafeteriaMenuItem`, no `extra`)
 
@@ -47,34 +55,40 @@ Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are s
 | `place_id` | `placeId` | Cafeteria number |
 | `place_name` | `placeName` | Cafeteria name |
 | `building_name` | `buildingName` | Building |
-| `location` | `location` | Location (for example `6층`) |
-| `date` | `menuDate` | Menu date (empty for fixed-menu cafeterias) |
-| `day` | `day` | Weekday (empty for fixed-menu cafeterias) |
-| `meal_type_id` | `mealTypeId` | Meal type number (table below) |
-| `meal_name` | `mealName` | Meal name (school text) |
+| `location` | `location` | Location (for example `6F`) |
+| `date` | `menuDate` | Menu date (empty for standing-menu cafeterias) |
+| `day` | `day` | Day of the week (empty for standing-menu cafeterias) |
+| `meal_type_id` | `mealTypeId` | Meal type number (`1` lunch, `2` dinner) |
+| `meal_name` | `mealName` | Meal name (school's own text) |
 | `menu_name` | `menuName` | Menu name |
 | `price` | `price` | Price (string, for example `5500`) |
 
-### Meal type (`meal_type_id`)
-
-Only the weekly-menu cafeteria (number 1) has dates and meal types (seen 2026-10-30).
-
-| `meal_type_id` | `meal_name` |
-|---|---|
-| `1` | 중식 (lunch) |
-| `2` | 석식 (dinner) |
-
-The school page draws 1 as lunch and 2 as dinner and ignores other values. The library does not translate the number; use the `meal_name` the school sends. Rows of the fixed-menu stalls (numbers 3 to 6) have no date, weekday or meal type, so those fields are empty strings.
+The library does not translate meal type numbers, so use the `meal_name` the school gives.
 
 ### Cafeteria (`CafeteriaPlace`)
 
 | Field | Meaning |
 |---|---|
-| `place_id`, `place_name` | Cafeteria number and name |
-| `building_name`, `location` | Building and location |
-| `extra` | The school's other fields, minus the menu fields |
+| `place_id`, `place_name` | Cafeteria number, name |
+| `building_name`, `location` | Building, location |
+| `extra` | The remaining school fields, without the menu fields (date, day, meal, menu name, price) |
 
-## Examples
+### Failure behaviour
+
+- Cached per number for one day (86400 seconds by default). A school failure returns the last cached value, or an empty list. A failure with no cache returns an empty list without a request for 60 seconds (default).
+- If any one request of `cafeteria_places` fails, the whole list fails. A partial list is never cached, so only part of the list cannot stay cached for a day.
+- Neither method raises for school-side problems. Only a `max_place_id` outside the range raises `INVALID_INPUT`.
+- An empty `cafeteria_menu` does not prove the number is wrong. A number that does not exist and a day with no menu posted yet (holidays included) both return an empty list.
+
+## Known limits
+
+- The school has no cafeteria list API, so **a cafeteria whose number is above `max_place_id` is not found.** Raise `max_place_id` when cafeterias are added.
+- A cafeteria with an empty menu (weekly menu not posted, holiday) is missing from the list until the next refresh (one day by default).
+- A cafeteria with no menu number cannot appear in this list.
+- Cafeteria numbers can change, so check `cafeteria_places()` instead of hard-coding numbers. The library does not guess names from numbers.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## Example code
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -102,21 +116,3 @@ const menu = await publicData.cafeteriaMenu('1');  // menu of cafeteria 1
 
 </TabItem>
 </Tabs>
-
-Numbers can change, so ask `cafeteria_places()` instead of writing numbers into your code. The numbers the school script used on 2026-10-30 were 1 (weekly menu, lunch and dinner), and 3, 4, 5, 6 (fixed menus).
-
-## Cache and failure behavior
-
-- `cafeteria_menu`: cached for one day (86400 seconds by default) per number, one request. A failure returns the last cached value or an empty list.
-- `cafeteria_places`: cached for one day, one request per number per refresh (10 by default, at most 50). If any one fails, the result is the last cached value or an empty list, and a partial list is never cached. A failure with no cache returns an empty list without a request for 60 seconds (default).
-- Neither method raises.
-- **An empty `cafeteria_menu` does not prove a number is invalid.** It is empty both when the number does not exist and when that day has no menu (a weekly menu not yet posted, or a holiday).
-
-## Known limits and what was not verified
-
-- A cafeteria whose menu is empty on that day (weekly menu not yet posted, holiday) is missing from the list until the next refresh (the cache lifetime, one day by default). The fixed-menu stalls (3 to 6) always have rows; the weekly one (1) does not always.
-- **A cafeteria numbered above `max_place_id` is not found.** Raise `max_place_id` when cafeterias are added (at most 50).
-- One card on the school page (`빅베어레스토랑`) has no menu number at all, so it can never appear in this list.
-- The library never guesses a name from a number.
-- The per-number results above are one measurement on 2026-10-30. This page did not check whether the school has changed the numbers since. Numbers can change.
-- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)

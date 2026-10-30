@@ -19,7 +19,7 @@ Each language solves it in its own way.
 | Node.js | `https.Agent({ ciphers: 'DEFAULT:AES256-SHA:@SECLEVEL=1' })` | This library's connections only |
 | Java | Remove `TLS_RSA_*` from `jdk.tls.disabledAlgorithms` | **The whole JVM** |
 
-- Verified with Python 3.14 / OpenSSL 3.6 and Node.js 26 / OpenSSL 3.6.
+- With OpenSSL 3.x, Python and Node.js must add this cipher to the list explicitly and lower the security level to `1` to use it.
 - `@SECLEVEL=1` is kept on purpose: level 0 would also accept weak certificate keys.
 - Certificate verification stays on by default ([Configuration](../../auth/configuration/)).
 

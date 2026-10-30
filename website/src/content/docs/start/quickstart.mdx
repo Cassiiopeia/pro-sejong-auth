@@ -4,10 +4,11 @@ description: Java, Python, Node.js에서 라이브러리를 설치하고 학생 
 ---
 
 import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import LatestVersion from '../../../components/LatestVersion.astro';
 
 <Steps>
 
-1. **설치합니다.** 버전은 정확히 고정하세요. 최신 번호는 [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases)나 README의 배지에서 확인합니다 ([API 안정성](../../api-stability/)).
+1. **설치합니다.** 버전은 정확히 고정하세요. <LatestVersion label="최신 버전" /> 전체 목록은 [GitHub Releases](https://github.com/Cassiiopeia/pro-sejongpeia/releases)에 있습니다 ([API 안정성](../../api-stability/)).
 
    <Tabs syncKey="language">
      <TabItem label="Java">

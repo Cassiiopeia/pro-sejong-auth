@@ -35,7 +35,8 @@ export interface LandingCopy {
     tryDemo: string;
     quickStart: string;
     github: string;
-    visualRowsComment: string;
+    visualResultComment: string;
+    latestVersionLabel: string;
   };
   firstCall: { title: string; lead: string; authLabel: string; publicLabel: string; note: string; passwordPlaceholder: string };
   demo: {

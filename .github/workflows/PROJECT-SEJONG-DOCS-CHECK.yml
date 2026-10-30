@@ -1,5 +1,6 @@
 # 문서 점검 (마크다운 변경 시): 깨진 상대 링크, 언어별 문서 쌍의 전환 링크 누락
 # 공개 메서드 목록(spec/api-index.json)이 세 언어 구현·spec/PUBLIC_DATA.md 와 어긋나지 않는지도 점검
+# 사용자용 문서(README, 사이트)에 확인 날짜·프로젝트 버전 같은 고정값이 박히지 않았는지도 점검
 name: PROJECT-SEJONG-DOCS-CHECK
 
 on:
@@ -8,7 +9,10 @@ on:
     paths:
       - "**.md"
       - "scripts/check-docs.py"
+      - "scripts/check-fixed-values.py"
       - "scripts/check-api-index.py"
+      - "version.yml"
+      - "website/src/**"
       - "spec/api-index.json"
       - "python/src/**"
       - "node/src/**"
@@ -18,7 +22,10 @@ on:
     paths:
       - "**.md"
       - "scripts/check-docs.py"
+      - "scripts/check-fixed-values.py"
       - "scripts/check-api-index.py"
+      - "version.yml"
+      - "website/src/**"
       - "spec/api-index.json"
       - "python/src/**"
       - "node/src/**"
@@ -40,3 +47,5 @@ jobs:
         run: python scripts/check-docs.py
       - name: Check API index (spec/api-index.json vs Python, Node, Java, PUBLIC_DATA.md)
         run: python scripts/check-api-index.py
+      - name: Check fixed dates and project versions in user-facing docs
+        run: python scripts/check-fixed-values.py

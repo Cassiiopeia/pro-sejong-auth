@@ -5,37 +5,62 @@ description: The curriculum_courses method returns the suggested year and term, 
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-With a department code and a course number taken from the course listings, get the suggested year and term, course type, credits, hours and the **course overview** from that department's curriculum. There is no method for a whole curriculum list: you look up one course at a time. Common rules are on [Common rules](../overview/).
+With a department code and a course number taken from the course listings, get the suggested year and term, course type, credits, hours and the **course overview** from that department's curriculum. No login is needed, and you look up one course at a time (there is no whole-curriculum list). Common rules are on [Common rules](../overview/).
 
-## Methods
+## Request parameters
 
-| Language | Signature |
-|---|---|
-| Java | `curriculumCourses(String departmentCode, String courseNumber)` |
-| Python | `curriculum_courses(department_code, course_number)` |
-| Node.js | `curriculumCourses({ departmentCode, courseNumber })` |
+Python uses `snake_case` (`curriculum_courses`); Node.js and Java use `camelCase` (`curriculumCourses`). Node.js takes an object: `curriculumCourses({ departmentCode, courseNumber })`.
 
-- `department_code` is the SIS code (`DEPT_CD`) of a degree department. Get it from the [department list](../codes/) or from a lecture's `department_code`. `course_number` is a lecture's `course_number` (`CURI_NO`).
-- Returns a list of `CurriculumCourse` (0 or 1 rows were seen).
-- **A blank department code or course number raises `INVALID_INPUT`** and no request is sent ([Error codes](../../auth/error-codes/)).
+| Parameter | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `department_code` | string | required | - | SIS code (`DEPT_CD`) of a degree department. Get it from the [department list](../codes/) or from `department_code` in a course result and pass it in |
+| `course_number` | string | required | - | Course number. Pass `course_number` (`CURI_NO`) from a course result |
 
-## Request notes
+- Returns a list of `CurriculumCourse` (0 or 1 items for one course).
+- **An empty department code or course number raises `INVALID_INPUT`** and no request is sent ([Error codes](../../auth/error-codes/)).
 
-- `GET https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=<course number>&deptNo=<department code>`, response array `items`. No login.
-- **Without the `Accept: application/json` header the school answers 404.** All three languages send it.
-- Department codes `3513` and `3517`, taken from the timetable department list (undergraduate), each returned their own department name (2026-10-30). Those two departments are the basis for saying `deptCd` of the curriculum JSON and `DEPT_CD` are the same code system.
-- The course overview (`remark`) is the same text as the `교과목개요` report of the timetable screen. It was verified equal once, apart from line breaks.
+**School request**
 
-## Result fields
+- `GET https://www.sejong.ac.kr/curriculum/getCurriculumOneKor.do?curiNo=<course number>&deptNo=<department code>`, response array `items`.
+- Without an `Accept: application/json` header the school answers 404, so all three languages send it.
+- `deptCd` in the curriculum answer uses the same code system as `DEPT_CD` in the SIS.
 
-Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are strings, empty when missing.
+## Response data structure
+
+Example JSON. Field names are Python `snake_case`; Node.js and Java use `camelCase`. School data changes, so the values are examples.
+
+```json
+[
+  {
+    "department_code": "3517",
+    "department_name": "AI로봇학과",
+    "category_code": "20",
+    "year": "2026",
+    "course_number": "011839",
+    "name": "전공탐색",
+    "course_type_code": "1E",
+    "course_type_name": "공통교양필수",
+    "credits": "1",
+    "lecture_hours": "0",
+    "practice_hours": "1",
+    "total_hours": "1",
+    "grade_level": "1",
+    "semester_code": "2",
+    "semester_name": "2학기",
+    "overview": "신입생이 전공 관련 주제를 탐구하고 소논문으로 정리하는 과목 ...",
+    "extra": { "curiYear": "2026", "studentYear": "1" }
+  }
+]
+```
+
+All fields are strings, empty when missing.
 
 | Field | School key | Meaning |
 |---|---|---|
 | `department_code`, `department_name` | `deptCd`, `deptNm` | Department code and name |
 | `category_code` | `orgnClsfCd` | Organization category code |
 | `year` | `year` | Curriculum year |
-| `course_number`, `name` | `curiNo`, `curiNm` | Course number and name |
+| `course_number`, `name` | `curiNo`, `curiNm` | Course number, course name |
 | `course_type_code`, `course_type_name` | `curiTypeCd`, `curiTypeNm` | Course type code and name |
 | `credits` | `cdt` | Credits |
 | `lecture_hours`, `practice_hours`, `total_hours` | `lecTmNum`, `exeTmNum`, `curiTm` | Lecture, practice and total hours |
@@ -44,7 +69,20 @@ Field names are Python `snake_case`; Node.js and Java use `camelCase`. All are s
 | `overview` | **`remark`** | Course overview text |
 | `extra` | other fields | for example `curiYear`, `studentYear`, `sameSlcCnt` |
 
-## Examples
+- Cached for one day (86400 seconds by default) per department code and course number, with one school request per call.
+- School-side failures (connection, timeout, bad response, no `items`) return the last cached value or an empty list. With no cache, an empty list without a request for 60 seconds (default).
+- An empty `items` is a normal answer. A course that is not in that department's curriculum gives an empty list, not an error.
+- The only exception is an empty department code or course number (`INVALID_INPUT`).
+
+## Known limits
+
+- Only courses in a degree department's curriculum come back. A liberal-arts college or graduate department code can give an empty list.
+- The overview is the curriculum text of the current curriculum year, not a text per section or instructor.
+- The whole curriculum list is not provided. The school's list request ignores the department code and picks the department from a screen menu number, and there is no mapping from that number to a department code. For a whole department you can call this method for each course of its lecture list, one request per course.
+- The instructor syllabus is not provided. Its form carries the instructor's name and contact lines.
+- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+
+## Example code
 
 <Tabs syncKey="language">
 <TabItem label="Java">
@@ -79,20 +117,4 @@ const courses = await publicData.curriculumCourses({
 </TabItem>
 </Tabs>
 
-To find course listings first, see [Course listings](../lectures/).
-
-## Cache and failure behavior
-
-- Cached for one day (86400 seconds by default) per department code and course number. One request per call.
-- School failures (connection, timeout, bad response, missing `items`) return the last cached value or an empty list. With no cache, an empty list is returned without a request for 60 seconds (default).
-- **An empty `items` is a valid answer** (`success: true`). A course that is not in that department's curriculum gives an empty list, not an error.
-- The only exception that is raised is a blank department code or course number (`INVALID_INPUT`).
-
-## Known limits and what was not verified
-
-- Only courses in a degree department's curriculum come back. One liberal-arts college department and one graduate department that were tried each returned an empty `items`.
-- The overview is the text of the **current curriculum year**, not a per-section or per-instructor text.
-- That `deptCd` and `DEPT_CD` are the same code system was checked for two departments. Wider coverage was not measured.
-- The **whole curriculum list** is not provided. The school's list request decides the department from a screen menu number and ignores the department code, and that number exists only in page HTML with no mapping from department codes. If you need a whole department, you can call this method for each course of its lecture list, one request per course.
-- The instructor syllabus is not provided. Its form carries the instructor's name and contact lines ([survey notes](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/REFERENCE_DATA_SURVEY.md)).
-- Contract source: [spec/PUBLIC_DATA.md](https://github.com/Cassiiopeia/pro-sejongpeia/blob/main/spec/PUBLIC_DATA.md)
+To find the course listings first, see [Course listings](../lectures/).

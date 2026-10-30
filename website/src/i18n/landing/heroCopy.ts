@@ -1,6 +1,5 @@
 // 랜딩 문구: 첫 화면, 첫 호출 예시, 마무리 (ko/en)
 
-import { SCHOOL_DATA_SNAPSHOT } from './constants';
 import type { LandingCopy, LandingLocale } from './types';
 
 type HeroSectionsCopy = Pick<LandingCopy, 'hero' | 'firstCall' | 'closing'>;
@@ -13,7 +12,8 @@ export const HERO_COPY: Record<LandingLocale, HeroSectionsCopy> = {
       titleEmphasis: '모든 것을 한 번에',
       lead: '학번 인증부터 학과·강의·학사일정·학식까지. 학교 공개 데이터 15가지를 Java · Python · Node.js에서 같은 메서드, 같은 결과로 받습니다.',
       tagline: '가볍고 빠르게 · 요청은 아끼고 · 비밀번호는 저장하지 않고 · 매일 실제 포털로 점검',
-      visualRowsComment: `${SCHOOL_DATA_SNAPSHOT.lectureRowCount}행`,
+      visualResultComment: '학기 전체 개설강좌',
+      latestVersionLabel: '최신 버전',
       tryDemo: '바로 체험하기',
       quickStart: '빠른 시작',
       github: 'GitHub',
@@ -44,7 +44,8 @@ export const HERO_COPY: Record<LandingLocale, HeroSectionsCopy> = {
       titleEmphasis: 'to build on Sejong University',
       lead: 'From student login to departments, lectures, the academic calendar and cafeterias. 15 kinds of public school data, with the same methods and the same results in Java · Python · Node.js.',
       tagline: 'Fast and light · gentle on requests · never stores a password · checked against the real portal daily',
-      visualRowsComment: `${SCHOOL_DATA_SNAPSHOT.lectureRowCount} rows`,
+      visualResultComment: 'every course of the term',
+      latestVersionLabel: 'Latest version',
       tryDemo: 'Try it live',
       quickStart: 'Quick start',
       github: 'GitHub',
