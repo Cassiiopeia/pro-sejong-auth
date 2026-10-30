@@ -789,3 +789,5 @@ body {
 .sl-markdown-content table th:first-child,
 .sl-markdown-content table td:first-child { min-width: 7rem; }
 .sl-markdown-content table code { font-size: 0.78rem; padding: 0.05rem 0.25rem; overflow-wrap: anywhere; }
+/* 첫 열의 짧은 이름(파라미터, 필드)은 중간에서 끊지 않음 */
+.sl-markdown-content table td:first-child code { white-space: nowrap; overflow-wrap: normal; }
