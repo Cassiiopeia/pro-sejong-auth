@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "lastUpdated": "2026-10-29T23:29:21Z",
-    "currentVersion": "1.2.59",
+    "lastUpdated": "2026-10-30T00:42:49Z",
+    "currentVersion": "1.2.61",
     "projectType": "spring",
-    "totalReleases": 24,
+    "totalReleases": 25,
     "projectTypes": [
       "spring",
       "python",
@@ -11,6 +11,37 @@
     ]
   },
   "releases": [
+    {
+      "version": "1.2.61",
+      "project_type": "spring",
+      "project_types": [
+        "spring",
+        "python",
+        "node"
+      ],
+      "date": "2026-10-30",
+      "pr_number": 128,
+      "raw_summary": "## Summary by CodeRabbit\n\n## 릴리스 노트\n\n* **개선**\n  * 공개 데이터 클라이언트를 출처별(학사, 일정, 기숙사, 학식, 캠퍼스, 비교과)로 나누고 세 언어에서 같은 구조로 정리 (동작은 그대로)\n  * 학교 공개 데이터 주소를 공통 계약 파일 한 곳에서 관리하고 세 언어 테스트가 어긋남을 검사\n  * 코드 설명을 한 줄 요약으로 줄이고 상세 설명은 API 목록과 문서로 일원화\n  * 브랜드 이미지 원본을 한 곳으로 통합, 사이트 구성 정리\n\n* **문서**\n  * AI 에이전트 기여 정책 추가, 기여 입문용 이슈 4개 마련\n  * GitHub 언어 표시 보정",
+      "parsed_changes": {
+        "개선": {
+          "title": "개선",
+          "items": [
+            "공개 데이터 클라이언트를 출처별(학사, 일정, 기숙사, 학식, 캠퍼스, 비교과)로 나누고 세 언어에서 같은 구조로 정리 (동작은 그대로)",
+            "학교 공개 데이터 주소를 공통 계약 파일 한 곳에서 관리하고 세 언어 테스트가 어긋남을 검사",
+            "코드 설명을 한 줄 요약으로 줄이고 상세 설명은 API 목록과 문서로 일원화",
+            "브랜드 이미지 원본을 한 곳으로 통합, 사이트 구성 정리"
+          ]
+        },
+        "문서": {
+          "title": "문서",
+          "items": [
+            "AI 에이전트 기여 정책 추가, 기여 입문용 이슈 4개 마련",
+            "GitHub 언어 표시 보정"
+          ]
+        }
+      },
+      "parse_method": "markdown"
+    },
     {
       "version": "1.2.59",
       "project_type": "spring",
