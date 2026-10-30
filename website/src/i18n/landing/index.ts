@@ -4,12 +4,13 @@
 import { DEMO_COPY } from './demoCopy';
 import { FEATURES_COPY } from './featuresCopy';
 import { HERO_COPY } from './heroCopy';
+import { PILLARS_COPY } from './pillarsCopy';
 import type { LandingCopy, LandingLocale } from './types';
 
 export * from './constants';
 export type { LandingCopy, LandingLocale } from './types';
 
 export const LANDING_COPY: Record<LandingLocale, LandingCopy> = {
-  ko: { ...HERO_COPY.ko, ...DEMO_COPY.ko, ...FEATURES_COPY.ko },
-  en: { ...HERO_COPY.en, ...DEMO_COPY.en, ...FEATURES_COPY.en },
+  ko: { ...HERO_COPY.ko, ...DEMO_COPY.ko, ...FEATURES_COPY.ko, ...PILLARS_COPY.ko },
+  en: { ...HERO_COPY.en, ...DEMO_COPY.en, ...FEATURES_COPY.en, ...PILLARS_COPY.en },
 };

@@ -1,5 +1,5 @@
 ---
-// "30초 첫 호출": 언어별 설치 + 학번 인증 + 로그인 없이 학과 코드 받기
+// "30초 첫 호출": 언어별 설치 + 로그인 없이 학과 코드 받기(먼저) + 학번 인증
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
 
@@ -12,7 +12,7 @@ const copy = LANDING_COPY[locale].firstCall;
 // 코드 예시: docs/INTEGRATION_EXAMPLES, README 의 검증된 호출 형태 (코드 주석만 언어별)
 const termComment = locale === 'ko' ? '학부, 2026년 2학기' : 'undergraduate, 2026 2nd semester';
 const springComment = locale === 'ko' ? 'Spring 에서는 빈으로 주입' : 'inject it as a bean in Spring';
-const javaAuth = `// build.gradle: implementation "kr.suhsaechan:sejongpeia:<version>"
+const javaAuth = `// build.gradle: implementation "kr.suhsaechan:sejongpeia:<version>"   (latest: central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
 SejongAuthResult result = sejongAuthEngine.authenticate("21011234", "${copy.passwordPlaceholder}");
 result.getName();    // "홍길동"
 result.getMajor();   // "컴퓨터공학과"`;
@@ -53,10 +53,10 @@ const snippets = [
     {
       snippets.map((snippet) => (
         <TabItem label={snippet.label}>
-          <p class="landing-code-label">{copy.authLabel}</p>
-          <Code code={snippet.auth} lang={snippet.lang} />
           <p class="landing-code-label">{copy.publicLabel}</p>
           <Code code={snippet.publicCode} lang={snippet.lang} />
+          <p class="landing-code-label">{copy.authLabel}</p>
+          <Code code={snippet.auth} lang={snippet.lang} />
         </TabItem>
       ))
     }

@@ -19,7 +19,7 @@
 |---|---|---|
 | `implementation "kr.suhsaechan:sejongpeia:<version>"` | `pip install pro-sejongpeia==<version>` | `npm install pro-sejongpeia@<version>` |
 
-- `<version>`은 최신 릴리스 번호입니다 (README의 배지). 이 문서의 예시는 1.2.49 소스로 확인했습니다.
+- `<version>`은 최신 릴리스 번호입니다 (README의 배지, 또는 [Maven Central](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia), [PyPI](https://pypi.org/project/pro-sejongpeia/), [npm](https://www.npmjs.com/package/pro-sejongpeia)). 이 문서의 예시는 1.2.49 소스로 확인했습니다.
 - Spring Boot는 `SuhSejongAuthEngine`과 `SejongPublicData`를 빈으로 등록합니다. 일반 Java는 [README](../README.md#빠른-시작-java--spring-boot)의 「Spring 없이 쓰기 (일반 Java)」를 보세요.
 - `SejongPublicData`(공개 데이터)는 **프로세스당 하나만** 만들어 쓰세요. 메모리 캐시(기본 24시간)와 같은 요청 합치기가 인스턴스 안에 있습니다.
 - 공개 데이터는 학교 서버 실패 시 예외 없이 마지막 캐시 또는 **빈 목록**을 돌려줍니다. 빈 목록은 「데이터 없음」일 수도 「학교 쪽 문제」일 수도 있어, 화면에는 「불러오지 못했습니다」와 같은 안내를 함께 두는 것이 좋습니다.

@@ -1,0 +1,32 @@
+---
+// 이 라이브러리를 고르는 이유 4가지: 카드마다 근거 링크 (문서 사이트 안 경로 또는 저장소 주소)
+import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
+import { documentUrl } from '../i18n/links';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const copy = LANDING_COPY[locale].pillars;
+const toProofUrl = (proofLink: string) => (proofLink.startsWith('https://') ? proofLink : documentUrl(locale, proofLink));
+---
+
+<section class="landing-section" id="why">
+  <h2 class="landing-section__title">{copy.title}</h2>
+  <p class="landing-section__lead">{copy.lead}</p>
+  <ul class="landing-grid landing-grid--two">
+    {
+      copy.cards.map((card) => (
+        <li>
+          <div class="landing-pillar">
+            <h3><span class="landing-pillar__icon" aria-hidden="true">{card.icon}</span>{card.title}</h3>
+            <ul class="landing-pillar__points">
+              {card.points.map((point) => <li>{point}</li>)}
+            </ul>
+            <a class="landing-pillar__proof" href={toProofUrl(card.proofLink)}>{card.proofLabel}</a>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</section>

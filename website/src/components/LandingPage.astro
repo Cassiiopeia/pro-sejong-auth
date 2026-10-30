@@ -1,9 +1,10 @@
 ---
-// 랜딩 페이지 조립: 히어로 > 첫 호출 > 체험 > 기능 격자 > 지원 매트릭스 > 어려운 부분 > 마무리
+// 랜딩 페이지 조립: 히어로 > 기능 개요 > 선택 이유 4가지 > 첫 호출 > 체험 > 지원 매트릭스 > 어려운 부분 > 마무리
 import LandingHero from './LandingHero.astro';
+import FeatureGrid from './FeatureGrid.astro';
+import Pillars from './Pillars.astro';
 import FirstCall from './FirstCall.astro';
 import LiveDemo from './LiveDemo.astro';
-import FeatureGrid from './FeatureGrid.astro';
 import SupportMatrix from './SupportMatrix.astro';
 import HardParts from './HardParts.astro';
 import LandingClosing from './LandingClosing.astro';
@@ -17,9 +18,10 @@ const { locale } = Astro.props;
 
 <div class="landing not-content">
   <LandingHero locale={locale} />
+  <FeatureGrid locale={locale} />
+  <Pillars locale={locale} />
   <FirstCall locale={locale} />
   <LiveDemo locale={locale} />
-  <FeatureGrid locale={locale} />
   <SupportMatrix locale={locale} />
   <HardParts locale={locale} />
   <LandingClosing locale={locale} />

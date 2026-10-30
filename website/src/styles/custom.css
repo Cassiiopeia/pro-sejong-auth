@@ -1,4 +1,4 @@
-/* 브랜드 토큰: 세종 크림슨 (docs/assets/banner 와 같은 값). 라이트·다크 모두 여기서 정의 */
+/* 브랜드 토큰: 세종 크림슨 (scripts/banner/banner.html 배너와 같은 값). 라이트·다크 모두 여기서 정의 */
 :root {
   --sejong-crimson: #c20f2f;
   --sejong-crimson-strong: #a30d27;
@@ -76,81 +76,91 @@ body {
   display: none;
 }
 
-/* 히어로 */
+/* 히어로: 크림슨 면 위에 흰 글자, 오른쪽에 코드 창 (README 배너와 같은 정체성: 빨강, 여백, 대문자 영문) */
 .landing-hero {
   position: relative;
   display: grid;
-  gap: 2rem;
+  gap: 2.5rem;
   align-items: center;
-  padding: 2.5rem 0 2rem;
+  margin-top: 1.25rem;
+  padding: 2.5rem 1.5rem;
+  border-radius: 24px;
   overflow: hidden;
+  background: linear-gradient(115deg, #d9163c 0%, #c20f2f 42%, #8e0a22 100%);
+  color: #fff;
 }
 .landing-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 40% 60% at 60% 40%, color-mix(in srgb, var(--sejong-crimson) 20%, transparent), transparent);
+  background: radial-gradient(ellipse 50% 70% at 95% 0%, rgba(255, 255, 255, 0.22), transparent 70%);
   pointer-events: none;
-  z-index: -1;
+}
+.landing-hero > * {
+  position: relative;
 }
 @media (min-width: 860px) {
   .landing-hero {
-    grid-template-columns: 1.4fr 0.6fr;
-    padding-top: 3.5rem;
+    grid-template-columns: 1.15fr 0.85fr;
+    padding: 4rem 3.5rem;
   }
 }
 .landing-eyebrow {
   display: inline-block;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--sl-color-text-accent);
-  background: var(--sl-color-accent-low);
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
 }
 .landing-hero__title {
   font-size: clamp(2rem, 6vw, 3.4rem);
-  line-height: 1.15;
+  line-height: 1.18;
   letter-spacing: -0.035em;
-  margin: 1rem 0 0.9rem !important;
-  color: var(--sl-color-white);
+  margin: 1.1rem 0 1rem !important;
+  color: #fff;
 }
 .landing-hero__title em {
   font-style: normal;
-  color: var(--sl-color-text-accent);
+  color: #fff;
 }
 .landing-hero__lead {
   font-size: 1.08rem;
   line-height: 1.7;
-  color: var(--landing-muted);
-  max-width: 40rem;
-  margin-bottom: 1.5rem !important;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 38rem;
+  margin-bottom: 0.9rem !important;
+}
+.landing-hero__tagline {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 1.75rem !important;
 }
 .landing-hero__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
-.landing-hero__seal {
-  justify-self: center;
-  display: grid;
-  place-items: center;
-  width: min(160px, 46vw);
-  aspect-ratio: 1;
-  border-radius: 50%;
+.landing-hero .landing-button {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+.landing-hero .landing-button:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+.landing-hero .landing-button--primary {
   background: #fff;
-  border: 1px solid var(--landing-border);
-  box-shadow: 0 8px 28px color-mix(in srgb, var(--sejong-crimson) 18%, transparent);
+  border-color: #fff;
+  color: var(--sejong-crimson-strong);
 }
-@media (min-width: 860px) {
-  .landing-hero__seal {
-    width: 240px;
-  }
-}
-.landing-hero__seal img {
-  width: 80%;
-  height: auto;
+.landing-hero .landing-button--primary:hover {
+  background: #fff3f5;
 }
 .landing-badges {
   display: flex;
@@ -162,6 +172,79 @@ body {
   display: block;
   height: 20px;
   width: auto;
+}
+
+/* 히어로 코드 창: 어두운 창 하나와 대문자 언어 이름 */
+.landing-visual {
+  display: grid;
+  gap: 1.4rem;
+  justify-items: start;
+}
+.landing-window {
+  width: 100%;
+  max-width: 24rem;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #14161c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 22px 44px rgba(50, 0, 10, 0.45);
+}
+.landing-window__bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0.7rem 1rem;
+  background: #1b1e26;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.landing-window__bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #343a47;
+}
+.landing-window__bar b {
+  margin-left: 0.5rem;
+  font: 700 0.7rem ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8b93a3;
+}
+.landing-window pre {
+  margin: 0;
+  padding: 1rem 1.1rem 1.15rem;
+  font: 500 0.8rem/1.85 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color: #d7dbe4;
+  overflow-x: auto;
+  background: transparent;
+}
+.landing-window code {
+  font: inherit;
+  background: transparent;
+  color: inherit;
+  word-break: normal;
+}
+@media (max-width: 480px) {
+  .landing-window pre {
+    font-size: 0.68rem;
+  }
+}
+.landing-window .tk { color: #ff7a90; }
+.landing-window .ts { color: #7fd6a8; }
+.landing-window .tc { color: #6f7889; }
+.landing-window .tn { color: #ffd27a; font-weight: 700; }
+.landing-visual__languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+}
+.landing-visual__languages li {
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 /* 버튼 */
@@ -247,6 +330,7 @@ body {
   grid-template-columns: 1fr;
 }
 @media (min-width: 600px) {
+  .landing-grid--two,
   .landing-grid--three,
   .landing-grid--four {
     grid-template-columns: repeat(2, 1fr);
@@ -313,6 +397,53 @@ body {
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+/* 선택 이유 카드: 약속 제목, 근거가 있는 항목, 근거 링크 */
+.landing-pillar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  padding: 1.4rem;
+  border: 1px solid var(--landing-border);
+  border-top: 3px solid var(--sejong-crimson);
+  border-radius: var(--landing-radius);
+  background: var(--landing-surface);
+}
+.landing-pillar h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  color: var(--sl-color-white);
+}
+.landing-pillar__points {
+  display: grid;
+  gap: 0.5rem;
+}
+.landing-pillar__points li {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: var(--landing-muted);
+}
+.landing-pillar__points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sejong-crimson);
+}
+.landing-pillar__proof {
+  margin-top: auto;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--sl-color-text-accent);
 }
 
 /* 지원 매트릭스 */

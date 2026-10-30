@@ -1,0 +1,24 @@
+---
+// 히어로 오른쪽 시각 요소: 크림슨 면 위의 코드 창 하나 + 언어 이름 (README 배너와 같은 구성)
+import { LANDING_COPY, type LandingLocale } from '../i18n/landing';
+
+interface Props {
+  locale: LandingLocale;
+}
+const { locale } = Astro.props;
+const rowsComment = LANDING_COPY[locale].hero.visualRowsComment;
+const languageNames = ['Java', 'Python', 'Node.js'];
+---
+
+<div class="landing-visual" aria-hidden="true">
+  <div class="landing-window">
+    <div class="landing-window__bar"><span></span><span></span><span></span><b>main.py</b></div>
+    <pre><code><span class="tk">from</span> sejongpeia <span class="tk">import</span> SejongPublicData
+data = SejongPublicData()
+data.lectures(<span class="ts">"20"</span>, <span class="ts">"2026"</span>, <span class="ts">"20"</span>)
+<span class="tc"># </span><span class="tn">{rowsComment}</span></code></pre>
+  </div>
+  <ul class="landing-visual__languages">
+    {languageNames.map((languageName) => <li>{languageName}</li>)}
+  </ul>
+</div>

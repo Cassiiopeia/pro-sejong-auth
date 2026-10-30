@@ -11,6 +11,8 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
 
    <Tabs syncKey="language">
      <TabItem label="Java">
+       [![Maven Central](https://img.shields.io/maven-central/v/kr.suhsaechan/sejongpeia?label=Maven%20Central&color=C20F2F)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
+
        Maven Central에서 배포하므로 저장소를 따로 추가하지 않습니다. Java 17 이상, Spring Boot 3.x.
 
        ```groovy
@@ -26,6 +28,8 @@ import { Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/compon
            <version><!-- 고정할 버전 --></version>
        </dependency>
        ```
+
+       `<version>`에는 최신 버전을 넣으세요. 위 배지 또는 [Maven Central 아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인하고, 전체 버전 목록은 [저장소 목록](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/)에 있습니다.
      </TabItem>
      <TabItem label="Python">
        Python 3.9 이상, 표준 라이브러리 외 의존성이 없습니다.
