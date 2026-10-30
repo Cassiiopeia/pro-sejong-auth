@@ -1,29 +1,27 @@
 <div align="center">
 
-<img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="120">
+<div align="right">
 
-<img src="docs/assets/banner/banner-a.ko.png" alt="pro-sejongpeia: 세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js" width="880">
-
-**세종대 개발에 필요한 모든 것을 한 번에.**
-학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js 호출 한 번으로 받습니다.
-가볍고 빠르며, 요청은 아끼고, 비밀번호는 저장하지 않으며, 매일 실제 포털로 점검합니다.
-
-<sub>세종대 로그인 API · 세종대학교 포털 인증 · 학번 인증 · 학교 데이터 라이브러리</sub>
-
-**📖 [문서 사이트](https://cassiiopeia.github.io/pro-sejongpeia/)** · [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) · [빠른 시작](https://cassiiopeia.github.io/pro-sejongpeia/start/quickstart/) · [학교 데이터](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/) · [인증](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/) · [무엇을 해 주나요](#무엇을-해-주나요) · 한국어 | [English](README.en.md)
-
-<!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
-## 최신 버전 : v1.2.69 (2026-10-30)
-
-[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)
-[![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/)
-[![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia)
-[![License: MIT](https://img.shields.io/badge/License-MIT-324D60)](LICENSE)
-[![Live portal check](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+**한국어** · [English](README.en.md)
 
 </div>
 
----
+<img src="docs/assets/sejong-seal.png" alt="Sejong University seal" width="96">
+
+<img src="docs/assets/banner/banner-a.ko.png" alt="PRO SEJONGPEIA: 세종대 개발에 필요한 모든 것을 한 번에. 학번 인증부터 학과·강의·학사일정·학식까지, Java · Python · Node.js" width="880">
+
+<br>
+
+**학번 인증부터 학과·강의·학사일정·학식까지,<br>Java · Python · Node.js에서 호출 한 번으로.**
+
+가볍고 빠르며, 요청은 아끼고, 비밀번호는 저장하지 않습니다.
+
+**[문서 사이트](https://cassiiopeia.github.io/pro-sejongpeia/)** &nbsp;·&nbsp; [브라우저에서 체험](https://cassiiopeia.github.io/pro-sejongpeia/#demo) &nbsp;·&nbsp; [빠른 시작](https://cassiiopeia.github.io/pro-sejongpeia/start/quickstart/) &nbsp;·&nbsp; [학교 데이터](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/)
+
+[![Maven Central](docs/assets/badges/maven-central.svg)](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia) [![PyPI](docs/assets/badges/pypi.svg)](https://pypi.org/project/pro-sejongpeia/) [![npm](docs/assets/badges/npm.svg)](https://www.npmjs.com/package/pro-sejongpeia) [![License](docs/assets/badges/license-mit.svg)](LICENSE)<br>
+[![매일 실제 포털 점검](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml/badge.svg)](https://github.com/Cassiiopeia/pro-sejongpeia/actions/workflows/PROJECT-SEJONG-LIVE-CHECK.yml)
+
+</div>
 
 ## 무엇을 해 주나요
 
@@ -31,40 +29,40 @@
 
 | | 기능 | 이런 걸 받아요 |
 |:-:|---|---|
-| 🔐 | **학번 인증** | 학번과 포털 비밀번호로 재학생 확인. 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 같은 학교 코드. 통합 · DHC · SIS 중 골라 씁니다 |
-| 🏫 | **학과·학기 코드** | 학부와 대학원 분류, 학기 목록, 학과 전체 목록 |
-| 📚 | **개설강좌** | 학기 전체 또는 학과·과목명·교수명 검색. 시간표·강의실 포함 |
-| 🎓 | **교육과정·교과목 개요** | 학과 교육과정의 권장 학년·학기, 학점, 교과목 개요 |
-| 📅 | **학사일정** | 학부와 대학원 일정, 그리고 로그인으로 보는 수강신청·증명서 출력 같은 업무별 허용 기간 |
-| 🛏️ | **기숙사** | 7일치 식단과 공지 |
-| 🍚 | **학식** | 식당 목록과 날짜별 메뉴·가격 |
-| 📍 | **캠퍼스 장소** | 건물·복지시설의 이름, 위치 좌표, 안내 |
-| 🎉 | **비교과 일정** | 비교과 프로그램 일정, 분류, 장소 |
+| <img src="docs/assets/icons/verify.svg" width="22" alt=""> | **학번 인증** | 학번과 포털 비밀번호로 재학생 확인. 이름·학과·학년·학적, 고전독서 인증 현황, 이메일·전화번호, 학과 코드 같은 학교 코드. 통합 · DHC · SIS 중 골라 씁니다 |
+| <img src="docs/assets/icons/codes.svg" width="22" alt=""> | **학과·학기 코드** | 학부와 대학원 분류, 학기 목록, 학과 전체 목록 |
+| <img src="docs/assets/icons/lectures.svg" width="22" alt=""> | **개설강좌** | 학기 전체 또는 학과·과목명·교수명 검색. 시간표·강의실 포함 |
+| <img src="docs/assets/icons/curriculum.svg" width="22" alt=""> | **교육과정·교과목 개요** | 학과 교육과정의 권장 학년·학기, 학점, 교과목 개요 |
+| <img src="docs/assets/icons/calendar.svg" width="22" alt=""> | **학사일정** | 학부와 대학원 일정, 그리고 로그인으로 보는 수강신청·증명서 출력 같은 업무별 허용 기간 |
+| <img src="docs/assets/icons/dormitory.svg" width="22" alt=""> | **기숙사** | 7일치 식단과 공지 |
+| <img src="docs/assets/icons/cafeteria.svg" width="22" alt=""> | **학식** | 식당 목록과 날짜별 메뉴·가격 |
+| <img src="docs/assets/icons/campus.svg" width="22" alt=""> | **캠퍼스 장소** | 건물·복지시설의 이름, 위치 좌표, 안내 |
+| <img src="docs/assets/icons/events.svg" width="22" alt=""> | **비교과 일정** | 비교과 프로그램 일정, 분류, 장소 |
 
 ## 왜 이 라이브러리인가
 
 네 가지를 약속하고, 약속마다 코드나 테스트로 확인할 수 있는 근거를 붙였습니다.
 
-### ⚡ 빠르고 가볍게
+### <img src="docs/assets/icons/fast.svg" width="22" alt="" align="top"> 빠르고 가볍게
 
 - **의존성 0개** (Python, Node): 표준 라이브러리만 씁니다 (`dependencies = []`, `"dependencies": {}`).
 - **실측**: 학과 목록과 한 학과 강좌는 0.1초 안팎, 학기 전체 강좌도 1초 안팎이고 캐시에 있으면 마이크로초입니다 (Python, 서울, 새 클라이언트 5회 중앙값. 시간 대부분은 학교 서버 응답입니다).
 - **로그인 한 번**: 통합 인증은 포털에 한 번만 로그인해 DHC와 SIS를 함께 읽습니다. 세 언어 모두 0.6~0.8초 (5회 중앙값).
 
-### 🧠 요청은 아끼고
+### <img src="docs/assets/icons/efficient.svg" width="22" alt="" align="top"> 요청은 아끼고
 
 - 결과를 메모리에 **24시간 캐시**하고, 같은 인자의 **동시 호출은 요청 1번으로 합칩니다**. 캐시는 최대 500개이고 가득 차면 오래된 것부터 지웁니다.
 - 호출 하나가 보내는 요청은 1번입니다. 예외는 학식 식당 목록 하나로, 한 번 갱신에 번호 범위(기본 10)만큼 **순서대로** 보냅니다.
 - 실패한 호출은 **60초간 기억**해 학교 서버를 반복해서 두드리지 않습니다. 근거: [spec/PUBLIC_DATA.md](spec/PUBLIC_DATA.md)의 캐시 절.
 
-### 🔒 안전하게
+### <img src="docs/assets/icons/safe.svg" width="22" alt="" align="top"> 안전하게
 
 - **비밀번호를 저장하지 않습니다.** 포털 로그인 요청에만 쓰고, 오류 메시지에 담기지 않습니다 (테스트 `test_error_message_never_contains_password`).
 - **첫 실패에서 멈춥니다.** 비밀번호가 틀리면 재시도 없이 `AUTHENTICATION_FAILED`로 끝내 계정 잠금을 피하고, 잠긴 계정은 `ACCOUNT_LOCKED`로 알려 줍니다.
 - SIS 부가 필드(`extra`)에서 세션값·접속 IP·계정 상태·주민번호·계좌·주소·직원 이름을 **항상 제외**하고, 학교 서버의 내부 오류 정보는 돌려주지 않습니다.
 - 학교 서버가 실패해도 앱이 흔들리지 않습니다. 공개 데이터는 예외 대신 마지막 캐시 값이나 빈 목록을 줍니다.
 
-### ✅ 믿을 수 있게
+### <img src="docs/assets/icons/reliable.svg" width="22" alt="" align="top"> 믿을 수 있게
 
 - **매일 실제 포털 점검**: 매일 09:00(KST)에 세 언어가 실제 포털에 로그인하고, 실패하면 이슈가 자동으로 열립니다 (위 배지).
 - **세 언어가 같은 결과**: 공통 값은 [spec/contract.json](spec/contract.json) 한 곳에 두고, 어긋나면 언어별 테스트가 실패합니다.
@@ -78,10 +76,10 @@
 
 | 기능 | Java | Python | Node |
 |---|:-:|:-:|:-:|
-| **학번 인증**: 통합 · DHC · SIS · SIS 학사 업무 기간 | ✅ | ✅ | ✅ |
-| **코드·강좌**: 분류 · 학기 · 학과 · 개설강좌 · 강좌 유형 · 선택 영역 · 교육과정 | ✅ | ✅ | ✅ |
-| **일정·생활**: 학사일정(학부·대학원) · 기숙사 식단·공지 · 학식 식당·메뉴 · 캠퍼스 장소 · 비교과 일정 | ✅ | ✅ | ✅ |
-| 원본 응답, SIS 코드와 `extra` 옵션 | ✅ | ✅ | ✅ |
+| **학번 인증**: 통합 · DHC · SIS · SIS 학사 업무 기간 | ✓ | ✓ | ✓ |
+| **코드·강좌**: 분류 · 학기 · 학과 · 개설강좌 · 강좌 유형 · 선택 영역 · 교육과정 | ✓ | ✓ | ✓ |
+| **일정·생활**: 학사일정(학부·대학원) · 기숙사 식단·공지 · 학식 식당·메뉴 · 캠퍼스 장소 · 비교과 일정 | ✓ | ✓ | ✓ |
+| 원본 응답, SIS 코드와 `extra` 옵션 | ✓ | ✓ | ✓ |
 
 메서드 이름 전체(언어별 표기, Java 원본 응답 변형 포함)는 [인증 메서드](https://cassiiopeia.github.io/pro-sejongpeia/auth/methods/)와 [학교 데이터 공통 규칙](https://cassiiopeia.github.io/pro-sejongpeia/data/overview/)에 있습니다.
 
@@ -155,7 +153,7 @@ System.out.println(result.getName() + " " + result.getMajor() + " " + result.get
     <img src="docs/assets/demo-ko.png" alt="소개 페이지의 실시간 인증 데모" width="760">
   </a>
   <br>
-  <sub>소개 페이지의 실시간 데모 (▶ 눌러서 체험). 실제 인증 결과이며 개인정보 칸만 예시값으로 바꿨습니다.</sub>
+  <sub>소개 페이지의 실시간 데모 (눌러서 체험). 실제 인증 결과이며 개인정보 칸만 예시값으로 바꿨습니다.</sub>
 </p>
 
 ## 이런 곳에 씁니다
@@ -182,7 +180,7 @@ dependencies {
 </dependency>
 ```
 
-`<버전>`(`<version>`)에는 최신 버전을 넣으세요. 맨 위 최신 버전 표시 또는 [Maven Central 아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인하고, 전체 버전 목록은 [저장소 목록](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/)에 있습니다.
+`<버전>`(`<version>`)에는 최신 버전을 넣으세요. [Maven Central 아티팩트 페이지](https://central.sonatype.com/artifact/kr.suhsaechan/sejongpeia)에서 확인하고, 전체 버전 목록은 [저장소 목록](https://repo1.maven.org/maven2/kr/suhsaechan/sejongpeia/)에 있습니다.
 
 ```java
 @RestController
@@ -299,6 +297,11 @@ Java는 포털의 레거시 cipher 때문에 JVM 전체 TLS 설정을 바꿉니�
 보안 문제는 [SECURITY.md](SECURITY.md)의 비공개 신고를 이용해 주세요.
 
 이 라이브러리로 시간을 아꼈다면 ⭐ 하나가 다른 세종대 개발자들이 찾는 데 도움이 됩니다.
+
+<!-- AUTO-VERSION-SECTION: DO NOT EDIT MANUALLY -->
+## 최신 버전 : v1.2.69
+
+[전체 변경 이력](CHANGELOG.md)
 
 ## 라이선스
 

@@ -1,6 +1,6 @@
 // 브랜드 이미지 복사 (npm run dev·build 의 pre 단계): docs/assets 의 원본을 사이트 폴더로 복사한다
 // 원본은 docs/assets 한 곳 (README 도 같은 파일을 참조). 복사본은 .gitignore 대상이라 직접 고치거나 커밋하지 않는다
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,6 +15,12 @@ const BRAND_ASSET_COPIES = [
   ['sejong-seal.png', ['public/sejong-seal.png', 'src/assets/sejong-seal.png']],
   ['og.png', ['public/og.png']],
 ];
+
+// 기능 아이콘(docs/assets/icons/*.svg)은 폴더째 public/icons 로 복사
+const ICON_DIRECTORY = join(BRAND_ASSET_DIRECTORY, 'icons');
+for (const iconFileName of readdirSync(ICON_DIRECTORY).filter((name) => name.endsWith('.svg'))) {
+  BRAND_ASSET_COPIES.push([join('icons', iconFileName), [join('public/icons', iconFileName)]]);
+}
 
 for (const [sourceFileName, targetPaths] of BRAND_ASSET_COPIES) {
   const sourcePath = join(BRAND_ASSET_DIRECTORY, sourceFileName);

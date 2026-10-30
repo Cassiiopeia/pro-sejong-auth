@@ -44,7 +44,7 @@ name: README VERSION UPDATE
 # 환경변수 설정 - 사용자 맞춤 설정
 env:
   # 버전에 날짜 표시 여부 (true/false)
-  SHOW_DATE: true  # 🔧 이 값을 false로 변경하면 날짜가 표시되지 않습니다
+  SHOW_DATE: false  # 🔧 이 값을 false로 변경하면 날짜가 표시되지 않습니다
 
 on:
   push:

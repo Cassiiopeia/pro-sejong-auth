@@ -2,6 +2,7 @@
 라벨이 바뀔 때만 실행 (python3 scripts/generate-badges.py), 결과는 docs/assets/badges/*.svg"""
 
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -11,6 +12,7 @@ BADGE_URL_BY_FILE_NAME = {
     "maven-central.svg": "https://img.shields.io/badge/Maven%20Central-kr.suhsaechan%3Asejongpeia-C20F2F?logo=apachemaven&logoColor=white",
     "pypi.svg": "https://img.shields.io/badge/PyPI-pro--sejongpeia-324D60?logo=pypi&logoColor=white",
     "npm.svg": "https://img.shields.io/badge/npm-pro--sejongpeia-324D60?logo=npm&logoColor=white",
+    "license-mit.svg": "https://img.shields.io/badge/License-MIT-324D60",
 }
 
 
@@ -19,8 +21,14 @@ def main() -> int:
     for file_name, url in BADGE_URL_BY_FILE_NAME.items():
         # 기본 파이썬 User-Agent 는 차단되므로 식별 가능한 값을 보냄
         request = urllib.request.Request(url, headers={"User-Agent": "pro-sejongpeia-badge-generator"})
-        with urllib.request.urlopen(request, timeout=30) as response:
-            svg = response.read().decode("utf-8")
+        svg = ""
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    svg = response.read().decode("utf-8")
+                break
+            except OSError:
+                time.sleep(2 * (attempt + 1))
         if not svg.lstrip().startswith("<svg"):
             print(f"[generate-badges] unexpected response for {file_name}", file=sys.stderr)
             return 1

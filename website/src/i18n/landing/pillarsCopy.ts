@@ -15,7 +15,7 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
       lead: '네 가지를 약속하고, 약속마다 코드나 테스트로 확인할 수 있는 근거를 붙였습니다.',
       cards: [
         {
-          icon: '⚡',
+          icon: 'fast',
           title: '빠르고 가볍게',
           points: [
             'Python, Node는 런타임 의존성 0개 (표준 라이브러리만 사용)',
@@ -26,7 +26,7 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           proofLink: PUBLIC_DATA_SPEC_URL,
         },
         {
-          icon: '🧠',
+          icon: 'efficient',
           title: '요청은 아끼고',
           points: [
             '결과를 메모리에 24시간 캐시, 같은 인자의 동시 호출은 요청 1번으로 합침',
@@ -37,7 +37,7 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           proofLink: 'understand/failure-isolation-cache/',
         },
         {
-          icon: '🔒',
+          icon: 'safe',
           title: '안전하게',
           points: [
             '비밀번호를 저장하지 않고 오류 메시지에도 담지 않음',
@@ -48,12 +48,12 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           proofLink: 'understand/login-verdict/',
         },
         {
-          icon: '✅',
+          icon: 'reliable',
           title: '믿을 수 있게',
           points: [
             '매일 09:00(KST) 세 언어가 실제 포털에 로그인하고, 실패하면 이슈가 자동으로 열림',
             '세 언어 결과를 spec/contract.json 한 곳으로 맞추고, 어긋나면 테스트 실패',
-            '공개 메서드 19개 목록이 소스·문서와 같은지 CI가 검사',
+            '공개 메서드 목록이 소스·문서와 같은지 CI가 검사',
           ],
           proofLabel: '매일 도는 실제 포털 점검',
           proofLink: 'understand/daily-live-check/',
@@ -67,7 +67,7 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
       lead: 'Four promises, each with proof you can check in the code or the tests.',
       cards: [
         {
-          icon: '⚡',
+          icon: 'fast',
           title: 'Fast and light',
           points: [
             'Zero runtime dependencies in Python and Node (standard library only)',
@@ -78,7 +78,7 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           proofLink: PUBLIC_DATA_SPEC_URL,
         },
         {
-          icon: '🧠',
+          icon: 'efficient',
           title: 'Gentle on requests',
           points: [
             'Results cached in memory for 24 hours; simultaneous calls with the same arguments share one request',
@@ -89,7 +89,7 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           proofLink: 'understand/failure-isolation-cache/',
         },
         {
-          icon: '🔒',
+          icon: 'safe',
           title: 'Safe',
           points: [
             'The password is never stored and never put into error messages',
@@ -100,12 +100,12 @@ export const PILLARS_COPY: Record<LandingLocale, PillarsSectionCopy> = {
           proofLink: 'understand/login-verdict/',
         },
         {
-          icon: '✅',
+          icon: 'reliable',
           title: 'Trustworthy',
           points: [
             'At 09:00 KST every day all three languages sign in to the live portal, and a failure opens an issue automatically',
             'Shared values live in spec/contract.json and the tests fail when the languages drift',
-            'CI checks that the 19 public methods match the sources and the docs',
+            'CI checks that the public method list matches the sources and the docs',
           ],
           proofLabel: 'The daily live check',
           proofLink: 'understand/daily-live-check/',
