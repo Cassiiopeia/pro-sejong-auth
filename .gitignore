@@ -95,3 +95,8 @@ website/public/llms.txt
 website/public/llms-full.txt
 website/public/llms-full.en.txt
 website/public/api.json
+
+# 문서 사이트 브랜드 이미지 복사본 (원본은 docs/assets, website/scripts/sync-brand-assets.mjs 가 빌드 때 복사)
+website/public/sejong-seal.png
+website/public/og.png
+website/src/assets/sejong-seal.png
